@@ -28,7 +28,10 @@
         .btn-orange { background: var(--orange-main); color: #000; cursor: pointer; }
         .btn-gray { background: #1a1a1a; color: #444; cursor: not-allowed; }
         .btn-export-table { background: var(--orange-main); color: #000; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
-        .badge-tax { background: #1a1a1a; padding: 2px 6px; border-radius: 4px; font-size: 9px; color: #f97316; font-weight: 900; }
+        .tax-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; min-width: 250px; }
+        .tax-item { background: #111; padding: 4px 8px; border-radius: 4px; display: flex; justify-content: space-between; font-size: 9px; }
+        .tax-label { color: #555; font-weight: 700; }
+        .tax-value { color: #f97316; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -99,7 +102,7 @@
             </header>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Empresa</th><th>CNPJ</th><th>Mês</th><th>Ano</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Empresa</th><th>CNPJ</th><th>Mês</th><th>Ano</th><th>Qtd Notas</th><th>Ações</th></tr></thead>
                     <tbody id="tbody-xml"></tbody>
                 </table>
             </div>
@@ -117,8 +120,8 @@
                             <th>Empresa</th>
                             <th>CNPJ</th>
                             <th>Período</th>
-                            <th>Receita RPA</th>
-                            <th>Tributos (INSS | IRPJ | CSLL | PIS | COFINS | ICMS)</th>
+                            <th>Receita Bruta (RPA)</th>
+                            <th>Detalhamento de Tributos</th>
                             <th>DAS Total</th>
                             <th>Ações</th>
                         </tr>
@@ -140,21 +143,20 @@
         }
 
         const MONTHS = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
-        let xmlFiles = [];
-        let currentHeader = { empresa: '', cnpj: '', mes: '', ano: '', periodo: '' };
+        let xmlFilesList = [];
+        let currentHeader = { empresa: '', cnpj: '', mes: '', ano: '', periodo: '', qtdNotas: 0 };
 
         function formatarCNPJ(cnpj) {
             cnpj = cnpj.replace(/\D/g, "");
             return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
         }
 
-        // --- LÓGICA XML ---
         function handleXMLFiles(files) {
-            xmlFiles = Array.from(files);
-            document.getElementById('label-xml').innerText = `${xmlFiles.length} arquivos`;
+            xmlFilesList = Array.from(files);
+            document.getElementById('label-xml').innerText = `${xmlFilesList.length} arquivos`;
             document.getElementById('btn-run-xml').disabled = false;
             document.getElementById('btn-run-xml').className = "btn-action btn-orange";
-            lerCabecalhoXML(xmlFiles[0]);
+            lerCabecalhoXML(xmlFilesList[0]);
         }
 
         async function lerCabecalhoXML(file) {
@@ -172,12 +174,12 @@
                 m = MONTHS[mIdx - 1]; a = parts[0].length === 4 ? parts[0] : dEmi.substring(0, 4);
             }
             updateIdentity(nome, cnpjF, `${m}/${a}`);
-            currentHeader = { empresa: nome, cnpj: cnpjF, mes: m, ano: a };
+            currentHeader = { empresa: nome, cnpj: cnpjF, mes: m, ano: a, qtdNotas: xmlFilesList.length };
         }
 
         async function processarXML() {
             let itens = [];
-            for (let file of xmlFiles) {
+            for (let file of xmlFilesList) {
                 const text = await file.text();
                 const xml = new DOMParser().parseFromString(text, "text/xml");
                 const dets = xml.getElementsByTagName("det");
@@ -212,7 +214,6 @@
             alert("✅ Gravado no Histórico XML!");
         }
 
-        // --- LÓGICA PGDAS ---
         function handlePGDASFile(files) {
             document.getElementById('label-pgdas').innerText = files[0].name;
             document.getElementById('btn-run-pgdas').disabled = false;
@@ -232,11 +233,11 @@
                 cnpj: extract(/CNPJ Matriz:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/),
                 periodo: extract(/Período de Apuração:\s*(\d{2}\/\d{4})/),
                 receita: extract(/Receita Bruta Total \(RPA\).*?([\d\.,]+)/),
-                inss: extract(/CPP\/INSS.*?([\d\.,]+)/),
                 irpj: extract(/IRPJ.*?([\d\.,]+)/),
                 csll: extract(/CSLL.*?([\d\.,]+)/),
-                pis: extract(/PIS\/Pasep.*?([\d\.,]+)/),
                 cofins: extract(/Cofins.*?([\d\.,]+)/),
+                pis: extract(/PIS\/Pasep.*?([\d\.,]+)/),
+                cpp: extract(/CPP\/INSS.*?([\d\.,]+)/),
                 icms: extract(/ICMS.*?([\d\.,]+)/),
                 dasTotal: extract(/Valor Total do Principal.*?([\d\.,]+)/)
             };
@@ -264,8 +265,9 @@
                     <td class="font-bold uppercase">${it.empresa}</td>
                     <td class="font-mono text-[10px]">${it.cnpj}</td>
                     <td>${it.mes}</td><td>${it.ano}</td>
+                    <td class="font-bold text-orange-500">${it.qtdNotas || 0}</td>
                     <td><button onclick="downloadCSV_XML(${h.length-1-i})" class="btn-export-table">Planilha</button></td>
-                </tr>`).join('') || '<tr><td colspan="5" class="text-center py-10 opacity-30">VAZIO</td></tr>';
+                </tr>`).join('') || '<tr><td colspan="6" class="text-center py-10 opacity-30">VAZIO</td></tr>';
         }
 
         function downloadCSV_XML(idx) {
@@ -289,19 +291,19 @@
                     <td class="font-bold uppercase">${it.empresa}</td>
                     <td class="font-mono text-[10px]">${it.cnpj}</td>
                     <td>${it.periodo}</td>
-                    <td class="text-zinc-400">R$ ${it.receita}</td>
+                    <td class="font-bold text-zinc-400">R$ ${it.receita}</td>
                     <td>
-                        <div class="flex flex-wrap gap-1">
-                            <span class="badge-tax">INSS: ${it.inss}</span>
-                            <span class="badge-tax">IRPJ: ${it.irpj}</span>
-                            <span class="badge-tax">CSLL: ${it.csll}</span>
-                            <span class="badge-tax">PIS: ${it.pis}</span>
-                            <span class="badge-tax">COF: ${it.cofins}</span>
-                            <span class="badge-tax">ICMS: ${it.icms}</span>
+                        <div class="tax-grid">
+                            <div class="tax-item"><span class="tax-label">IRPJ</span><span class="tax-value">${it.irpj}</span></div>
+                            <div class="tax-item"><span class="tax-label">CSLL</span><span class="tax-value">${it.csll}</span></div>
+                            <div class="tax-item"><span class="tax-label">COFINS</span><span class="tax-value">${it.cofins}</span></div>
+                            <div class="tax-item"><span class="tax-label">PIS</span><span class="tax-value">${it.pis}</span></div>
+                            <div class="tax-item"><span class="tax-label">CPP</span><span class="tax-value">${it.cpp}</span></div>
+                            <div class="tax-item"><span class="tax-label">ICMS</span><span class="tax-value">${it.icms}</span></div>
                         </div>
                     </td>
                     <td class="text-orange-500 font-bold">R$ ${it.dasTotal}</td>
-                    <td><button class="btn-export-table" onclick="alert('Receita: R$ ${it.receita}')">Info</button></td>
+                    <td><button class="btn-export-table" onclick="alert('Detalhamento salvo para auditoria.')">Auditar</button></td>
                 </tr>`).join('') || '<tr><td colspan="7" class="text-center py-10 opacity-30">VAZIO</td></tr>';
         }
 
@@ -311,6 +313,8 @@
                 type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
     </script>
 </body>
 </html>
