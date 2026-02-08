@@ -28,10 +28,11 @@
         .btn-action { width: 100%; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-orange { background: var(--orange-main); color: #000; cursor: pointer; }
         .btn-gray { background: #1a1a1a; color: #444; cursor: not-allowed; }
-        .btn-export-table { background: var(--orange-main); color: #000; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
-        .activity-box { background: #080808; border: 1px solid #1a1a1a; padding: 8px; margin-bottom: 10px; border-radius: 6px; }
-        .tax-line { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 9px; margin-top: 5px; }
-        .tax-chip { background: #111; padding: 2px 5px; border-radius: 3px; border-left: 2px solid var(--orange-main); }
+        .activity-box { background: #080808; border: 1px solid #1a1a1a; padding: 12px; margin-bottom: 12px; border-radius: 8px; border-left: 3px solid var(--orange-main); }
+        .tax-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+        .tax-tag { background: #151515; padding: 4px 8px; border-radius: 4px; font-size: 10px; display: flex; flex-direction: column; }
+        .tax-tag span:first-child { color: #555; font-size: 8px; font-weight: 900; text-transform: uppercase; }
+        .tax-tag span:last-child { color: #fff; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -39,12 +40,12 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V7.2 Integrated System</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V7.2 SPA SYSTEM</p>
         </div>
         <nav>
-            <div class="section-title">Painel de Controle</div>
-            <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-desktop"></i> Módulo de Extração</div>
-            <div class="section-title">Históricos</div>
+            <div class="section-title">Extração</div>
+            <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-microchip"></i> Módulo de Carga</div>
+            <div class="section-title">Consultas</div>
             <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
             <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
         </nav>
@@ -56,8 +57,8 @@
                 <div class="flex items-center gap-4">
                     <div class="bg-orange-600 p-3 rounded-xl text-black"><i class="fas fa-database text-2xl"></i></div>
                     <div>
-                        <h2 class="text-2xl font-black italic text-white">Central de <span class="text-[#f97316]">Extração</span></h2>
-                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Mapeamento RBT12 & Segregação de Tributos</p>
+                        <h2 class="text-2xl font-black italic text-white">Central de <span class="text-[#f97316]">Processamento</span></h2>
+                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Captura RBT12 e Segregação por Atividade</p>
                     </div>
                 </div>
             </header>
@@ -73,23 +74,23 @@
                 </div>
 
                 <div class="dashboard-card p-6 orange-border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4 flex items-center gap-2"><i class="fas fa-file-archive"></i> Extrator XML / ZIP</h4>
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4 flex items-center gap-2"><i class="fas fa-file-archive"></i> XML / ZIP</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input').click()">
-                        <i class="fas fa-file-zipper text-2xl text-zinc-700 mb-2"></i>
-                        <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase text-center">Selecionar arquivos</p>
+                        <i class="fas fa-upload text-2xl text-zinc-700 mb-2"></i>
+                        <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Selecionar arquivos</p>
                         <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
                     </div>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-action btn-gray mt-4" disabled>Extrair e Gravar XML</button>
+                    <button id="btn-run-xml" onclick="processarXML()" class="btn-action btn-gray mt-4" disabled>Gravar XML</button>
                 </div>
 
                 <div class="dashboard-card p-6 orange-border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4 flex items-center gap-2"><i class="fas fa-file-invoice"></i> Extrator PGDAS (HTML)</h4>
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4 flex items-center gap-2"><i class="fas fa-search-dollar"></i> PGDAS (HTML)</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('pgdas-input').click()">
-                        <i class="fas fa-search-dollar text-2xl text-zinc-700 mb-2"></i>
+                        <i class="fas fa-file-invoice text-2xl text-zinc-700 mb-2"></i>
                         <p id="label-pgdas" class="text-[9px] text-zinc-500 font-bold uppercase">Upload Extrato</p>
                         <input type="file" id="pgdas-input" accept=".html" class="hidden" onchange="handlePGDASFile(this.files)">
                     </div>
-                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-action btn-gray mt-4" disabled>Extrair Atividades & Gravar</button>
+                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-action btn-gray mt-4" disabled>Extrair e Gravar PGDAS</button>
                 </div>
             </div>
         </div>
@@ -103,9 +104,9 @@
                 <table>
                     <thead>
                         <tr>
-                            <th width="25%">Empresa / CNPJ / Ref</th>
-                            <th width="15%">RBT12</th>
-                            <th width="50%">Detalhamento por Atividade (Receita / Tributos)</th>
+                            <th width="20%">Empresa / CNPJ / Ref</th>
+                            <th width="10%">RBT12</th>
+                            <th width="60%">Atividades e Tributos Detalhados</th>
                             <th width="10%">Total DAS</th>
                         </tr>
                     </thead>
@@ -121,7 +122,7 @@
             </header>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Empresa</th><th>CNPJ</th><th>Mês/Ano</th><th>Notas</th><th>Ações</th></tr></thead>
+                    <thead><tr><th>Empresa</th><th>CNPJ</th><th>Referência</th><th>Notas</th><th>Ações</th></tr></thead>
                     <tbody id="tbody-xml"></tbody>
                 </table>
             </div>
@@ -129,7 +130,7 @@
     </main>
 
     <script>
-        const MONTH_MAP = {"01":"JANEIRO","02":"FEVEREIRO","03":"MARÇO","04":"ABRIL","05":"MAIO","06":"JUNHO","07":"JULHO","08":"AGOSTO","09":"SETEMBRO","10":"OUTUBRO","11":"NOVEMBRO","12":"DEZEMBRO"};
+        const MONTHS = {"01":"JANEIRO","02":"FEVEREIRO","03":"MARÇO","04":"ABRIL","05":"MAIO","06":"JUNHO","07":"JULHO","08":"AGOSTO","09":"SETEMBRO","10":"OUTUBRO","11":"NOVEMBRO","12":"DEZEMBRO"};
 
         function showTab(tabId, element) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -140,143 +141,143 @@
             if(tabId === 'pgdas-history-panel') renderPGDASHistory();
         }
 
-        // --- LÓGICA PGDAS (EXTRAÇÃO COMPLETA) ---
         function handlePGDASFile(files) {
             document.getElementById('label-pgdas').innerText = files[0].name;
-            document.getElementById('btn-run-pgdas').disabled = false;
-            document.getElementById('btn-run-pgdas').className = "btn-action btn-orange";
+            const btn = document.getElementById('btn-run-pgdas');
+            btn.disabled = false; btn.className = "btn-action btn-orange";
         }
 
         async function processarPGDAS() {
-            const text = await document.getElementById('pgdas-input').files[0].text();
+            const file = document.getElementById('pgdas-input').files[0];
+            const text = await file.text();
             const doc = new DOMParser().parseFromString(text, "text/html");
 
-            // 1. Dados Básicos e RBT12
-            const find = (id) => doc.querySelector(`span[id*="${id}"]`)?.innerText.trim() || "---";
-            
-            const rawPeriodo = find("txtPeriodoApuracao"); // "01/11/2025 a 30/11/2025"
-            let periodoExtenso = rawPeriodo;
+            // Função para buscar por Span ID ou por texto próximo
+            const findValue = (idPart) => {
+                return doc.querySelector(`span[id*="${idPart}"]`)?.innerText.trim() || "0,00";
+            };
+
+            // 1. Extração do Período e conversão para NOVEMBRO/2025
+            const rawPeriodo = findValue("txtPeriodoApuracao"); // Ex: 01/10/2025 a 31/10/2025
+            let refExtenso = rawPeriodo;
             if(rawPeriodo.includes('/')) {
                 const parts = rawPeriodo.split('/');
-                periodoExtenso = `${MONTH_MAP[parts[1]]}/${parts[2].substring(0,4)}`;
+                refExtenso = `${MONTHS[parts[1]]}/${parts[2].substring(0,4)}`;
             }
 
-            const rbt12 = find("txtReceitaBrutaAcumulada");
+            // 2. Captura RBT12
+            const rbt12 = findValue("txtReceitaBrutaAcumulada");
 
-            // 2. Varredura de Atividades (Varrer todos os blocos de tributos)
+            // 3. Varredura por Atividade (Lógica Robusta)
             const atividades = [];
-            // Selecionamos todos os containers que podem conter "Atividade"
-            const blocks = doc.querySelectorAll('table'); 
-            
-            blocks.forEach(block => {
-                const textContent = block.innerText;
-                if(textContent.includes("Valor do Débito por Tributo para a Atividade")) {
-                    const descAtividade = block.querySelector('tr:nth-child(1) td:nth-child(2)')?.innerText.trim() || "Atividade Não Identificada";
-                    const receitaAtiv = block.querySelector('tr:nth-child(2) td:nth-child(2)')?.innerText.trim() || "0,00";
+            const tables = doc.querySelectorAll('table');
+
+            tables.forEach(table => {
+                if (table.innerText.includes("Valor do Débito por Tributo para a Atividade")) {
+                    const rows = Array.from(table.querySelectorAll('tr'));
                     
-                    // Extração de tributos específicos dentro deste bloco
-                    const getTax = (taxName) => {
-                        const rows = Array.from(block.querySelectorAll('tr'));
-                        const targetRow = rows.find(r => r.innerText.includes(taxName));
-                        return targetRow ? targetRow.querySelector('td:last-child')?.innerText.trim() : "0,00";
+                    // Descrição e Receita (Geralmente nas primeiras linhas da tabela de atividade)
+                    const descricao = rows[0]?.querySelectorAll('td')[1]?.innerText.trim() || "Atividade Diversa";
+                    const receitaAtividade = rows[1]?.querySelectorAll('td')[1]?.innerText.trim() || "0,00";
+
+                    // Função para pegar valor da célula ao lado do nome do imposto
+                    const getTaxVal = (name) => {
+                        const r = rows.find(row => row.innerText.includes(name));
+                        return r ? r.querySelector('td:last-child')?.innerText.trim() : "0,00";
                     };
 
                     atividades.push({
-                        descricao: descAtividade,
-                        receita: receitaAtiv,
-                        irpj: getTax("IRPJ"),
-                        csll: getTax("CSLL"),
-                        cofins: getTax("Cofins"),
-                        pis: getTax("PIS"),
-                        cpp: getTax("CPP"),
-                        icms: getTax("ICMS"),
-                        iss: getTax("ISS"),
-                        total: getTax("Valor Total do Principal")
+                        descricao: descricao,
+                        receita: receitaAtividade,
+                        irpj: getTaxVal("IRPJ"),
+                        csll: getTaxVal("CSLL"),
+                        cofins: getTaxVal("Cofins"),
+                        pis: getTaxVal("PIS"),
+                        cpp: getTaxVal("CPP"),
+                        icms: getTaxVal("ICMS"),
+                        ipi: getTaxVal("IPI"),
+                        iss: getTaxVal("ISS"),
+                        total: getTaxVal("Valor Total do Principal")
                     });
                 }
             });
 
-            const dataFinal = {
-                empresa: find("txtNomeEmpresarial"),
-                cnpj: find("txtCnpjMatriz"),
-                periodo: periodoExtenso,
+            const dataObj = {
+                empresa: findValue("txtNomeEmpresarial"),
+                cnpj: findValue("txtCnpjMatriz"),
+                periodo: refExtenso,
                 rbt12: rbt12,
                 atividades: atividades,
-                dasTotal: find("txtValorTotalPrincipal")
+                dasTotal: findValue("txtValorTotalPrincipal")
             };
 
-            document.getElementById('disp-empresa').value = dataFinal.empresa;
-            document.getElementById('disp-cnpj').value = dataFinal.cnpj;
-            document.getElementById('disp-periodo').value = dataFinal.periodo;
+            // Atualiza campos de identificação na UI
+            document.getElementById('disp-empresa').value = dataObj.empresa;
+            document.getElementById('disp-cnpj').value = dataObj.cnpj;
+            document.getElementById('disp-periodo').value = dataObj.periodo;
 
-            saveHistory('pgdas_audit_history', dataFinal);
-            alert("✅ Extração PGDAS completa! " + atividades.length + " atividades mapeadas.");
+            saveHistory('pgdas_audit_v2', dataObj);
+            alert("✅ PGDAS gravado com " + atividades.length + " atividades!");
         }
 
         function renderPGDASHistory() {
-            const h = JSON.parse(localStorage.getItem('pgdas_audit_history')) || [];
-            document.getElementById('tbody-pgdas').innerHTML = h.reverse().map(it => `
+            const h = JSON.parse(localStorage.getItem('pgdas_audit_v2')) || [];
+            const tbody = document.getElementById('tbody-pgdas');
+            if(h.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-20 opacity-30">VAZIO</td></tr>'; return; }
+
+            tbody.innerHTML = h.reverse().map(it => `
                 <tr>
                     <td>
-                        <div class="font-bold text-white uppercase text-[10px]">${it.empresa}</div>
+                        <div class="font-black text-white uppercase text-[10px]">${it.empresa}</div>
                         <div class="text-[9px] text-zinc-500">${it.cnpj}</div>
-                        <div class="text-[10px] font-black text-orange-500 mt-1">${it.periodo}</div>
+                        <div class="inline-block bg-orange-600/20 text-orange-500 text-[9px] font-black px-2 py-0.5 rounded mt-1">${it.periodo}</div>
                     </td>
                     <td class="font-bold text-zinc-300">R$ ${it.rbt12}</td>
                     <td>
-                        ${it.atividades.map(ativ => `
+                        ${it.atividades.map(a => `
                             <div class="activity-box">
-                                <div class="font-black text-zinc-400 text-[8px] uppercase mb-1">${ativ.descricao}</div>
-                                <div class="text-[10px] text-white font-bold mb-1 underline">Receita: R$ ${ativ.receita}</div>
-                                <div class="tax-line">
-                                    <div class="tax-chip">IRPJ: ${ativ.irpj}</div>
-                                    <div class="tax-chip">CSLL: ${ativ.csll}</div>
-                                    <div class="tax-chip">PIS: ${ativ.pis}</div>
-                                    <div class="tax-chip">COFINS: ${ativ.cofins}</div>
-                                    <div class="tax-chip">CPP: ${ativ.cpp}</div>
-                                    <div class="tax-chip">ICMS: ${ativ.icms}</div>
-                                    <div class="tax-chip">ISS: ${ativ.iss}</div>
-                                    <div class="tax-chip font-black text-white">SUM: ${ativ.total}</div>
+                                <div class="text-[8px] font-black text-zinc-500 uppercase">${a.descricao}</div>
+                                <div class="text-[10px] text-white font-bold mt-1">Receita da Atividade: R$ ${a.receita}</div>
+                                <div class="tax-grid">
+                                    <div class="tax-tag"><span>IRPJ</span><span>${a.irpj}</span></div>
+                                    <div class="tax-tag"><span>CSLL</span><span>${a.csll}</span></div>
+                                    <div class="tax-tag"><span>PIS</span><span>${a.pis}</span></div>
+                                    <div class="tax-tag"><span>COFINS</span><span>${a.cofins}</span></div>
+                                    <div class="tax-tag"><span>CPP</span><span>${a.cpp}</span></div>
+                                    <div class="tax-tag"><span>ICMS</span><span>${a.icms}</span></div>
+                                    <div class="tax-tag"><span>IPI</span><span>${a.ipi}</span></div>
+                                    <div class="tax-tag"><span>TOTAL</span><span class="text-orange-500 font-bold">${a.total}</span></div>
                                 </div>
                             </div>
                         `).join('')}
                     </td>
-                    <td class="text-orange-500 font-black text-[13px]">R$ ${it.dasTotal}</td>
-                </tr>`).join('') || '<tr><td colspan="4" class="text-center py-20 opacity-30">VAZIO</td></tr>';
+                    <td class="text-orange-500 font-black text-[14px]">R$ ${it.dasTotal}</td>
+                </tr>
+            `).join('');
         }
 
-        // --- LÓGICA XML (SIMPLIFICADA) ---
+        // --- LÓGICA XML (MANUTENÇÃO) ---
         let xmlFilesList = [];
         async function handleXMLFiles(files) {
             xmlFilesList = Array.from(files);
-            document.getElementById('label-xml').innerText = `${xmlFilesList.length} arquivos`;
-            document.getElementById('btn-run-xml').disabled = false;
-            document.getElementById('btn-run-xml').className = "btn-action btn-orange";
+            document.getElementById('label-xml').innerText = xmlFilesList.length + " arquivos";
+            const btn = document.getElementById('btn-run-xml');
+            btn.disabled = false; btn.className = "btn-action btn-orange";
         }
 
-        async function processarXML() {
-             // Lógica básica para gravação no histórico mantida
-             saveHistory('xml_audit_history', { 
-                 empresa: "Processado em Lote", 
-                 cnpj: "---", 
-                 mes: "---", 
-                 ano: "---", 
-                 qtdNotas: xmlFilesList.length,
-                 itens: [] 
-             });
-             alert("✅ Gravado no Histórico XML!");
+        function processarXML() {
+            saveHistory('xml_audit_history', { 
+                empresa: "Processado em Lote", cnpj: "---", mes: "---", ano: "---", 
+                qtdNotas: xmlFilesList.length, itens: [] 
+            });
+            alert("✅ Gravado!");
         }
 
         function renderXMLHistory() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             document.getElementById('tbody-xml').innerHTML = h.reverse().map(it => `
-                <tr>
-                    <td class="font-bold">${it.empresa}</td>
-                    <td>${it.cnpj}</td>
-                    <td>${it.mes}/${it.ano}</td>
-                    <td class="font-bold text-orange-500">${it.qtdNotas}</td>
-                    <td><button class="btn-export-table">CSV</button></td>
-                </tr>`).join('') || '<tr><td colspan="5" class="text-center py-10 opacity-30">VAZIO</td></tr>';
+                <tr><td class="font-bold">${it.empresa}</td><td>${it.cnpj}</td><td>${it.mes}/${it.ano}</td><td class="font-bold text-orange-500">${it.qtdNotas}</td><td><button class="bg-orange-500 text-black px-3 py-1 rounded text-[10px] font-black">CSV</button></td></tr>
+            `).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30">VAZIO</td></tr>';
         }
 
         function saveHistory(key, obj) {
@@ -286,7 +287,7 @@
 
         function clearHistory(type) {
             if(confirm("Limpar?")) {
-                localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_audit_history');
+                localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_audit_v2');
                 type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
             }
         }
