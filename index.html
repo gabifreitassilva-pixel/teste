@@ -2,77 +2,269 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Histórico de Extrações XML</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FISCAL AUDIT - V7.2 Integrated System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; padding: 30px; }
-        table { width: 100%; border-collapse: collapse; background: #0a0a0a; border-radius: 8px; overflow: hidden; }
-        th { background: #111; padding: 15px; text-align: left; color: #444; font-size: 10px; text-transform: uppercase; border-bottom: 2px solid #1a1a1a; }
-        td { padding: 12px 15px; border-bottom: 1px solid #0d0d0d; font-size: 13px; }
-        tr:hover td { background: #0f0f0f; }
-        .btn-export { background: #f97316; color: #000; font-weight: 900; font-size: 10px; padding: 8px 15px; border-radius: 4px; text-transform: uppercase; }
+        :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
+        body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 300px; background: var(--bg-dark); border-right: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; }
+        .nav-link { padding: 12px 25px; font-size: 11px; font-weight: 700; color: #ffffff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; text-transform: uppercase; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { color: var(--orange-main); background: #080808; border-left-color: var(--orange-main); }
+        .section-title { padding: 25px 25px 10px; font-size: 9px; font-weight: 900; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+        .main-container { flex: 1; position: relative; background: #050505; overflow-y: auto; }
+        .tab-content { display: none; padding: 40px; }
+        .tab-content.active { display: block; }
+        .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #080808; color: #f97316; font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        td { padding: 15px; font-size: 12px; border-bottom: 1px solid #111; color: #ccc; }
+        .dashboard-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 15px; }
+        .orange-border { border: 1.5px solid var(--orange-main); }
+        input { background: #080808 !important; border: 1px solid var(--border-color) !important; color: #fff !important; padding: 10px; border-radius: 5px; font-size: 12px; width: 100%; outline: none; }
+        .btn-action { width: 100%; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-orange { background: var(--orange-main); color: #000; cursor: pointer; }
+        .btn-gray { background: #1a1a1a; color: #444; cursor: not-allowed; }
+        .btn-export-table { background: #f97316; color: #000; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2 class="text-2xl font-black italic uppercase mb-10">Histórico <span class="text-[#f97316]">XML</span></h2>
+    <aside class="sidebar">
+        <div class="p-8 border-b border-zinc-900 mb-2">
+            <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V7.2 Integrated System</p>
+        </div>
+        <nav>
+            <div class="section-title">Modulo de Extração</div>
+            <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-file-code"></i> Extrator XML</div>
+            <div class="section-title">Historico e Consultas</div>
+            <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-csv"></i> Histórico XML</div>
+            <div class="section-title">Ações</div>
+            <div class="nav-link" style="color: #f97316;" onclick="alert('Iniciando Auditoria...')"><i class="fas fa-bolt"></i> Auditar</div>
+        </nav>
+    </aside>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Empresa / CNPJ</th>
-                <th>Mês Extraído</th>
-                <th>Qtd Notas</th>
-                <th class="text-right">Ação</th>
-            </tr>
-        </thead>
-        <tbody id="corpo-tabela"></tbody>
-    </table>
+    <main class="main-container">
+        <div id="extrator-panel" class="tab-content active">
+            <header class="flex justify-between items-center mb-10">
+                <div class="flex items-center gap-4">
+                    <div class="bg-orange-600 p-3 rounded-xl text-black"><i class="fas fa-database text-2xl"></i></div>
+                    <div><h2 class="text-2xl font-black italic text-white">Extrator <span class="text-[#f97316]">XML</span> Massivo</h2><p id="header-empresa" class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Extração Total de Tags Fiscais</p></div>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="dashboard-card p-6 orange-border">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-6 flex items-center gap-2"><i class="fas fa-id-card"></i> Identificação</h4>
+                    <div class="space-y-4">
+                        <div><label class="text-[9px] text-zinc-600 font-bold uppercase">Empresa</label><input type="text" id="disp-empresa" readonly></div>
+                        <div><label class="text-[9px] text-zinc-600 font-bold uppercase">CNPJ</label><input type="text" id="disp-cnpj" readonly></div>
+                        <div><label class="text-[9px] text-zinc-600 font-bold uppercase">Período Fiscal</label><input type="text" id="disp-periodo" readonly></div>
+                    </div>
+                </div>
+                <div class="dashboard-card p-6 orange-border">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4 flex items-center gap-2"><i class="fas fa-cloud-upload-alt"></i> Upload XML</h4>
+                    <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input-file').click()">
+                        <i class="fas fa-file-code text-3xl text-zinc-800 mb-2"></i>
+                        <p id="upload-label" class="text-[10px] text-zinc-600 font-bold uppercase text-center">Selecionar XMLs</p>
+                        <input type="file" id="xml-input-file" multiple accept=".xml" class="hidden" onchange="window.handleFiles(this.files)">
+                    </div>
+                    <button id="btn-extract-main" onclick="window.extrairDadosXML()" class="btn-action btn-gray mt-4" disabled>EXTRAIR DADOS XML</button>
+                </div>
+                <div class="dashboard-card p-6 orange-border">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-6 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportação</h4>
+                    <button id="btn-export-main" class="btn-action btn-gray mb-3" onclick="window.exportarExcelTudo()" disabled>Exportar e Salvar</button>
+                    <button onclick="location.reload()" class="btn-action border border-zinc-800 text-zinc-500">Reiniciar</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <div class="dashboard-card p-5 border-l-4 border-orange-500"><p class="text-[9px] text-zinc-500 uppercase font-bold">Notas Lidas</p><h3 id="kpi-notas" class="text-3xl font-black mt-1">0</h3></div>
+                <div class="dashboard-card p-5 border-l-4 border-orange-500"><p class="text-[9px] text-zinc-500 uppercase font-bold">Total Itens</p><h3 id="kpi-itens" class="text-3xl font-black mt-1">0</h3></div>
+                <div class="dashboard-card p-5 border-l-4 border-red-600"><p class="text-[9px] text-zinc-500 uppercase font-bold text-red-600">Erros NCM</p><h3 id="kpi-erros" class="text-3xl font-black text-red-600 mt-1">0%</h3></div>
+            </div>
+        </div>
+
+        <div id="xml-history-panel" class="tab-content">
+            <header class="flex justify-between items-center mb-8">
+                <div><h2 class="text-2xl font-black italic text-white">Histórico de <span class="text-[#f97316]">Extrações XML</span></h2><p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Registro de arquivos processados</p></div>
+                <button onclick="limparHistorico()" class="text-[10px] font-bold text-zinc-600 hover:text-red-500 uppercase tracking-widest transition"><i class="fas fa-trash-alt mr-2"></i> Limpar Tudo</button>
+            </header>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Empresa</th><th>Mês</th><th>Ano</th><th>Ações</th></tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <tr><td colspan="4" class="text-center py-20 text-zinc-600 uppercase font-bold text-[10px]">VAZIO</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
     <script>
-        function carregar() {
-            const corpo = document.getElementById('corpo-tabela');
-            const dados = JSON.parse(localStorage.getItem('xml_export_history')) || [];
+        function showTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+            if (tabId === 'xml-history-panel') renderizarHistorico();
+        }
 
-            if (dados.length === 0) {
-                corpo.innerHTML = `<tr><td colspan="4" class="text-center py-20 opacity-20 font-black">NENHUMA EXTRAÇÃO SALVA.</td></tr>`;
+        const MONTHS = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+        let xmlFiles = [];
+        let masterData = [];
+        window.tempSummary = { empresa: '', mes: '', ano: '' };
+
+        window.handleFiles = function(files) {
+            xmlFiles = Array.from(files);
+            document.getElementById('upload-label').innerText = xmlFiles.length + " XMLs";
+            document.getElementById('btn-extract-main').disabled = false;
+            document.getElementById('btn-extract-main').className = "btn-action btn-orange";
+            document.getElementById('kpi-notas').innerText = xmlFiles.length;
+            lerCabecalho(xmlFiles[0]);
+        };
+
+        async function lerCabecalho(file) {
+            const text = await file.text();
+            const xml = new DOMParser().parseFromString(text, "text/xml");
+            const nome = xml.getElementsByTagName("xNome")[0]?.textContent || "EMPRESA DESCONHECIDA";
+            const cnpjRaw = xml.getElementsByTagName("CNPJ")[0]?.textContent || "00.000.000/0000-00";
+            const dEmi = xml.getElementsByTagName("dEmi")[0]?.textContent || "";
+            
+            let mes = "N/A", ano = "N/A";
+            if(dEmi.length >= 7) {
+                const parts = dEmi.split('-');
+                const mIdx = parseInt(parts.length > 1 ? parts[1] : dEmi.substring(4, 6));
+                mes = MONTHS[mIdx - 1] || "N/A";
+                ano = parts[0].length === 4 ? parts[0] : dEmi.substring(0, 4);
+            }
+            
+            document.getElementById('disp-empresa').value = nome;
+            document.getElementById('disp-cnpj').value = cnpjRaw;
+            document.getElementById('disp-periodo').value = `${mes} / ${ano}`;
+            window.tempSummary = { empresa: nome, mes: mes, ano: ano };
+        }
+
+        window.extrairDadosXML = async function() {
+            masterData = [];
+            let ncmErros = 0;
+            for (let file of xmlFiles) {
+                const text = await file.text();
+                const xml = new DOMParser().parseFromString(text, "text/xml");
+                const dets = xml.getElementsByTagName("det");
+                const nNF = xml.getElementsByTagName("nNF")[0]?.textContent || "---";
+
+                Array.from(dets).forEach(det => {
+                    const ncm = det.getElementsByTagName("NCM")[0]?.textContent || "";
+                    if (ncm === "00000000" || ncm === "") ncmErros++;
+                    masterData.push({
+                        Empresa: window.tempSummary.empresa,
+                        Documento: nNF,
+                        Produto: det.getElementsByTagName("xProd")[0]?.textContent || "",
+                        NCM: ncm,
+                        Status_Extracao: (ncm === "00000000" || ncm === "") ? "NCM ZERADO" : "CONFORME"
+                    });
+                });
+            }
+            document.getElementById('kpi-itens').innerText = masterData.length;
+            document.getElementById('kpi-erros').innerText = masterData.length > 0 ? ((ncmErros/masterData.length)*100).toFixed(1) + "%" : "0%";
+            document.getElementById('btn-export-main').disabled = false;
+            document.getElementById('btn-export-main').className = "btn-action btn-orange";
+            alert("✅ Dados extraídos!");
+        };
+
+        window.exportarExcelTudo = function() {
+            if(masterData.length === 0) return;
+            
+            // 1. Salvar no Banco de Dados do Navegador
+            try {
+                let history = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+                history.push({
+                    empresa: window.tempSummary.empresa,
+                    mes: window.tempSummary.mes,
+                    ano: window.tempSummary.ano,
+                    itens: masterData
+                });
+                localStorage.setItem('xml_audit_history', JSON.stringify(history));
+                
+                // 2. Gerar CSV
+                let csv = "\ufeffEmpresa;Documento;Produto;NCM;Status_Extracao\n";
+                masterData.forEach(d => {
+                    csv += `${d.Empresa};${d.Documento};${d.Produto};${d.NCM};${d.Status_Extracao}\n`;
+                });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `EXTRACAO_${window.tempSummary.empresa}.csv`;
+                link.click();
+
+                alert("✅ Salvo no Histórico com sucesso!");
+                renderizarHistorico(); // Força atualização imediata
+            } catch (e) {
+                alert("Erro ao salvar: O navegador pode estar bloqueando o armazenamento local.");
+            }
+        };
+
+        function renderizarHistorico() {
+            const tbody = document.getElementById('history-table-body');
+            const history = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-20 text-zinc-600 uppercase font-bold text-[10px]">VAZIO</td></tr>`;
                 return;
             }
 
-            corpo.innerHTML = dados.reverse().map((reg, i) => {
-                const idxReal = dados.length - 1 - i;
+            tbody.innerHTML = history.reverse().map((item, index) => {
+                const realIdx = history.length - 1 - index;
                 return `
-                <tr>
-                    <td>
-                        <div class="font-bold uppercase">${reg.empresa}</div>
-                        <div class="text-[10px] text-zinc-600 font-mono">${reg.cnpj}</div>
-                    </td>
-                    <td class="font-bold text-orange-500">${reg.mesFiscal}</td>
-                    <td>${reg.totalNotas} Notas</td>
-                    <td class="text-right">
-                        <button onclick="reExportar(${idxReal})" class="btn-export">Exportar Planilha</button>
-                    </td>
-                </tr>`;
+                    <tr>
+                        <td class="text-white font-bold uppercase">${item.empresa}</td>
+                        <td class="text-zinc-400 font-bold">${item.mes}</td>
+                        <td class="text-zinc-400 font-bold">${item.ano}</td>
+                        <td class="flex items-center gap-4">
+                            <button onclick="baixarNovamente(${realIdx})" class="btn-export-table">Exportar Planilha</button>
+                            <button onclick="removerItem(${realIdx})" class="text-zinc-700 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
             }).join('');
         }
 
-        function reExportar(idx) {
-            const dados = JSON.parse(localStorage.getItem('xml_export_history'));
-            const reg = dados[idx];
-            let csv = "\ufeffEmpresa;CNPJ;Mes;Nota;Produto;NCM;CFOP;Unidade;Qtd;Unitario;Total_Item;CST_PIS;CST_COFINS;CST_ICMS;Credito_Calculado\n";
-            reg.itens.forEach(d => {
-                csv += `${d.Empresa};${d.CNPJ};${d.Mes};${d.Nota};${d.Produto};${d.NCM};${d.CFOP};${d.Unidade};${d.Qtd};${d.Unitario};${d.Total_Item};${d.CST_PIS};${d.CST_COFINS};${d.CST_ICMS};${d.Credito_Calculado}\n`;
+        window.baixarNovamente = function(idx) {
+            const history = JSON.parse(localStorage.getItem('xml_audit_history'));
+            const data = history[idx];
+            let csv = "\ufeffEmpresa;Documento;Produto;NCM;Status_Extracao\n";
+            data.itens.forEach(d => {
+                csv += `${d.Empresa};${d.Documento};${d.Produto};${d.NCM};${d.Status_Extracao}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `RE_EXPORT_${reg.empresa}.csv`;
+            link.download = `EXTRACAO_${data.empresa}_RETIRADA.csv`;
             link.click();
+        };
+
+        function removerItem(idx) {
+            if(confirm("Excluir?")) {
+                let history = JSON.parse(localStorage.getItem('xml_audit_history'));
+                history.splice(idx, 1);
+                localStorage.setItem('xml_audit_history', JSON.stringify(history));
+                renderizarHistorico();
+            }
         }
 
-        window.onload = carregar;
+        function limparHistorico() {
+            if(confirm("Limpar tudo?")) {
+                localStorage.removeItem('xml_audit_history');
+                renderizarHistorico();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderizarHistorico);
     </script>
 </body>
 </html>
