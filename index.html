@@ -10,22 +10,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
         body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
         .sidebar { width: 300px; background: var(--bg-dark); border-right: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; }
         .nav-link { padding: 12px 25px; font-size: 11px; font-weight: 700; color: #ffffff; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; text-transform: uppercase; border-left: 3px solid transparent; }
         .nav-link:hover, .nav-link.active { color: var(--orange-main); background: #080808; border-left-color: var(--orange-main); }
         .section-title { padding: 25px 25px 10px; font-size: 9px; font-weight: 900; color: #444; text-transform: uppercase; letter-spacing: 2px; }
-        
         .main-container { flex: 1; position: relative; background: #050505; overflow-y: auto; }
         .tab-content { display: none; padding: 40px; }
         .tab-content.active { display: block; }
-
         .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #080808; color: #f97316; font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
         td { padding: 15px; font-size: 12px; border-bottom: 1px solid #111; color: #ccc; }
-        tr:hover { background: #0c0c0c; }
-
         .dashboard-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 15px; }
         .orange-border { border: 1.5px solid var(--orange-main); }
         input { background: #080808 !important; border: 1px solid var(--border-color) !important; color: #fff !important; padding: 10px; border-radius: 5px; font-size: 12px; width: 100%; outline: none; }
@@ -47,6 +42,8 @@
             <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-file-code"></i> Extrator XML</div>
             <div class="section-title">Historico e Consultas</div>
             <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-csv"></i> Histórico XML</div>
+            <div class="section-title">Ações</div>
+            <div class="nav-link" style="color: #f97316;" onclick="alert('Iniciando Auditoria...')"><i class="fas fa-bolt"></i> Auditar</div>
         </nav>
     </aside>
 
@@ -55,7 +52,7 @@
             <header class="flex justify-between items-center mb-10">
                 <div class="flex items-center gap-4">
                     <div class="bg-orange-600 p-3 rounded-xl text-black"><i class="fas fa-database text-2xl"></i></div>
-                    <div><h2 class="text-2xl font-black italic text-white">Extrator <span class="text-[#f97316]">XML</span> Massivo</h2><p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Extração Total de Tags Fiscais</p></div>
+                    <div><h2 class="text-2xl font-black italic text-white">Extrator <span class="text-[#f97316]">XML</span> Massivo</h2><p id="header-empresa" class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Extração Total de Tags Fiscais</p></div>
                 </div>
             </header>
 
@@ -93,22 +90,17 @@
 
         <div id="xml-history-panel" class="tab-content">
             <header class="flex justify-between items-center mb-8">
-                <div><h2 class="text-2xl font-black italic text-white">Histórico de <span class="text-[#f97316]">Extrações XML</span></h2><p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Registro de arquivos processados localmente</p></div>
+                <div><h2 class="text-2xl font-black italic text-white">Histórico de <span class="text-[#f97316]">Extrações XML</span></h2><p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Registro de arquivos processados</p></div>
                 <button onclick="limparHistorico()" class="text-[10px] font-bold text-zinc-600 hover:text-red-500 uppercase tracking-widest transition"><i class="fas fa-trash-alt mr-2"></i> Limpar Tudo</button>
             </header>
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Empresa</th>
-                            <th>CNPJ</th>
-                            <th>Mês</th>
-                            <th>Ano</th>
-                            <th>Ações</th>
-                        </tr>
+                        <tr><th>Empresa</th><th>CNPJ</th><th>Mês</th><th>Ano</th><th>Ações</th></tr>
                     </thead>
                     <tbody id="history-table-body">
-                        </tbody>
+                        <tr><td colspan="5" class="text-center py-20 text-zinc-600 uppercase font-bold text-[10px]">VAZIO</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -130,19 +122,26 @@
 
         window.handleFiles = function(files) {
             xmlFiles = Array.from(files);
-            document.getElementById('upload-label').innerText = xmlFiles.length + " XMLs Selecionados";
+            document.getElementById('upload-label').innerText = xmlFiles.length + " XMLs";
             document.getElementById('btn-extract-main').disabled = false;
             document.getElementById('btn-extract-main').className = "btn-action btn-orange";
             document.getElementById('kpi-notas').innerText = xmlFiles.length;
             lerCabecalho(xmlFiles[0]);
         };
 
+        function formatarCNPJ(cnpj) {
+            cnpj = cnpj.replace(/\D/g, "");
+            return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+        }
+
         async function lerCabecalho(file) {
             const text = await file.text();
             const xml = new DOMParser().parseFromString(text, "text/xml");
             const nome = xml.getElementsByTagName("xNome")[0]?.textContent || "EMPRESA DESCONHECIDA";
-            const cnpjRaw = xml.getElementsByTagName("CNPJ")[0]?.textContent || "00.000.000/0000-00";
+            const cnpjRaw = xml.getElementsByTagName("CNPJ")[0]?.textContent || "00000000000000";
             const dEmi = xml.getElementsByTagName("dEmi")[0]?.textContent || "";
+            
+            const cnpjFormatado = formatarCNPJ(cnpjRaw);
             
             let mes = "N/A", ano = "N/A";
             if(dEmi.length >= 7) {
@@ -153,9 +152,9 @@
             }
             
             document.getElementById('disp-empresa').value = nome;
-            document.getElementById('disp-cnpj').value = cnpjRaw;
+            document.getElementById('disp-cnpj').value = cnpjFormatado;
             document.getElementById('disp-periodo').value = `${mes} / ${ano}`;
-            window.tempSummary = { empresa: nome, cnpj: cnpjRaw, mes: mes, ano: ano };
+            window.tempSummary = { empresa: nome, cnpj: cnpjFormatado, mes: mes, ano: ano };
         }
 
         window.extrairDadosXML = async function() {
@@ -184,13 +183,12 @@
             document.getElementById('kpi-erros').innerText = masterData.length > 0 ? ((ncmErros/masterData.length)*100).toFixed(1) + "%" : "0%";
             document.getElementById('btn-export-main').disabled = false;
             document.getElementById('btn-export-main').className = "btn-action btn-orange";
-            alert("✅ Dados extraídos com sucesso!");
+            alert("✅ Dados extraídos!");
         };
 
         window.exportarExcelTudo = function() {
             if(masterData.length === 0) return;
             
-            // Grava no LocalStorage incluindo o CNPJ
             try {
                 let history = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
                 history.push({
@@ -202,7 +200,6 @@
                 });
                 localStorage.setItem('xml_audit_history', JSON.stringify(history));
                 
-                // Gera o CSV
                 let csv = "\ufeffEmpresa;CNPJ;Documento;Produto;NCM;Status_Extracao\n";
                 masterData.forEach(d => {
                     csv += `${d.Empresa};${d.CNPJ};${d.Documento};${d.Produto};${d.NCM};${d.Status_Extracao}\n`;
@@ -213,10 +210,10 @@
                 link.download = `EXTRACAO_${window.tempSummary.empresa}.csv`;
                 link.click();
 
-                alert("✅ Salvo no Histórico!");
-                renderizarHistorico(); 
+                alert("✅ Salvo no Histórico com sucesso!");
+                renderizarHistorico();
             } catch (e) {
-                alert("Erro ao salvar no navegador.");
+                alert("Erro ao salvar.");
             }
         };
 
@@ -260,7 +257,7 @@
         };
 
         function removerItem(idx) {
-            if(confirm("Deseja excluir este registro permanentemente?")) {
+            if(confirm("Excluir?")) {
                 let history = JSON.parse(localStorage.getItem('xml_audit_history'));
                 history.splice(idx, 1);
                 localStorage.setItem('xml_audit_history', JSON.stringify(history));
@@ -269,7 +266,7 @@
         }
 
         function limparHistorico() {
-            if(confirm("ATENÇÃO: Isso apagará TODO o seu histórico. Confirmar?")) {
+            if(confirm("Limpar tudo?")) {
                 localStorage.removeItem('xml_audit_history');
                 renderizarHistorico();
             }
