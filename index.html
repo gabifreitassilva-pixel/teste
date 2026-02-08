@@ -42,8 +42,6 @@
             <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-file-code"></i> Extrator XML</div>
             <div class="section-title">Historico e Consultas</div>
             <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-csv"></i> Histórico XML</div>
-            <div class="section-title">Ações</div>
-            <div class="nav-link" style="color: #f97316;" onclick="alert('Iniciando Auditoria...')"><i class="fas fa-bolt"></i> Auditar</div>
         </nav>
     </aside>
 
@@ -52,7 +50,7 @@
             <header class="flex justify-between items-center mb-10">
                 <div class="flex items-center gap-4">
                     <div class="bg-orange-600 p-3 rounded-xl text-black"><i class="fas fa-database text-2xl"></i></div>
-                    <div><h2 class="text-2xl font-black italic text-white">Extrator <span class="text-[#f97316]">XML</span> Massivo</h2><p id="header-empresa" class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Extração Total de Tags Fiscais</p></div>
+                    <div><h2 class="text-2xl font-black italic text-white">Extrator <span class="text-[#f97316]">XML</span> Massivo</h2><p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.3em]">Extração Total de Tags Fiscais</p></div>
                 </div>
             </header>
 
@@ -75,8 +73,8 @@
                     <button id="btn-extract-main" onclick="window.extrairDadosXML()" class="btn-action btn-gray mt-4" disabled>EXTRAIR DADOS XML</button>
                 </div>
                 <div class="dashboard-card p-6 orange-border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-6 flex items-center gap-2"><i class="fas fa-file-excel"></i> Exportação</h4>
-                    <button id="btn-export-main" class="btn-action btn-gray mb-3" onclick="window.exportarExcelTudo()" disabled>Exportar e Salvar</button>
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-6 flex items-center gap-2"><i class="fas fa-save"></i> Armazenamento</h4>
+                    <button id="btn-save-main" class="btn-action btn-gray mb-3" onclick="window.armazenarDados()" disabled>Armazenar Dados no Histórico</button>
                     <button onclick="location.reload()" class="btn-action border border-zinc-800 text-zinc-500">Reiniciar</button>
                 </div>
             </div>
@@ -175,18 +173,22 @@
                         Documento: nNF,
                         Produto: det.getElementsByTagName("xProd")[0]?.textContent || "",
                         NCM: ncm,
+                        PIS_CST: det.getElementsByTagName("PIS")[0]?.getElementsByTagName("CST")[0]?.textContent || "",
+                        ICMS_CSOSN: det.getElementsByTagName("ICMS")[0]?.getElementsByTagName("CSOSN")[0]?.textContent || det.getElementsByTagName("ICMS")[0]?.getElementsByTagName("CST")[0]?.textContent || "",
                         Status_Extracao: (ncm === "00000000" || ncm === "") ? "NCM ZERADO" : "CONFORME"
                     });
                 });
             }
             document.getElementById('kpi-itens').innerText = masterData.length;
             document.getElementById('kpi-erros').innerText = masterData.length > 0 ? ((ncmErros/masterData.length)*100).toFixed(1) + "%" : "0%";
-            document.getElementById('btn-export-main').disabled = false;
-            document.getElementById('btn-export-main').className = "btn-action btn-orange";
-            alert("✅ Dados extraídos!");
+            
+            const btnSave = document.getElementById('btn-save-main');
+            btnSave.disabled = false;
+            btnSave.className = "btn-action btn-orange";
+            alert("✅ Dados extraídos e prontos para armazenamento!");
         };
 
-        window.exportarExcelTudo = function() {
+        window.armazenarDados = function() {
             if(masterData.length === 0) return;
             
             try {
@@ -200,20 +202,10 @@
                 });
                 localStorage.setItem('xml_audit_history', JSON.stringify(history));
                 
-                let csv = "\ufeffEmpresa;CNPJ;Documento;Produto;NCM;Status_Extracao\n";
-                masterData.forEach(d => {
-                    csv += `${d.Empresa};${d.CNPJ};${d.Documento};${d.Produto};${d.NCM};${d.Status_Extracao}\n`;
-                });
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `EXTRACAO_${window.tempSummary.empresa}.csv`;
-                link.click();
-
-                alert("✅ Salvo no Histórico com sucesso!");
+                alert("✅ Dados armazenados no Histórico XML com sucesso!");
                 renderizarHistorico();
             } catch (e) {
-                alert("Erro ao salvar.");
+                alert("Erro ao salvar dados localmente.");
             }
         };
 
@@ -235,29 +227,31 @@
                         <td class="text-zinc-400 font-bold">${item.mes}</td>
                         <td class="text-zinc-400 font-bold">${item.ano}</td>
                         <td class="flex items-center gap-4">
-                            <button onclick="baixarNovamente(${realIdx})" class="btn-export-table">Exportar Planilha</button>
+                            <button onclick="baixarPlanilha(${realIdx})" class="btn-export-table">
+                                <i class="fas fa-file-excel mr-2"></i> Exportar Planilha
+                            </button>
                             <button onclick="removerItem(${realIdx})" class="text-zinc-700 hover:text-red-500"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
             }).join('');
         }
 
-        window.baixarNovamente = function(idx) {
+        window.baixarPlanilha = function(idx) {
             const history = JSON.parse(localStorage.getItem('xml_audit_history'));
             const data = history[idx];
-            let csv = "\ufeffEmpresa;CNPJ;Documento;Produto;NCM;Status_Extracao\n";
+            let csv = "\ufeffEmpresa;CNPJ;Documento;Produto;NCM;PIS_CST;ICMS_CSOSN;Status_Extracao\n";
             data.itens.forEach(d => {
-                csv += `${d.Empresa};${d.CNPJ};${d.Documento};${d.Produto};${d.NCM};${d.Status_Extracao}\n`;
+                csv += `${d.Empresa};${d.CNPJ};${d.Documento};${d.Produto};${d.NCM};${d.PIS_CST};${d.ICMS_CSOSN};${d.Status_Extracao}\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = `EXTRACAO_${data.empresa}_RETIRADA.csv`;
+            link.download = `EXTRACAO_XML_${data.empresa}.csv`;
             link.click();
         };
 
         function removerItem(idx) {
-            if(confirm("Excluir?")) {
+            if(confirm("Deseja excluir este registro?")) {
                 let history = JSON.parse(localStorage.getItem('xml_audit_history'));
                 history.splice(idx, 1);
                 localStorage.setItem('xml_audit_history', JSON.stringify(history));
@@ -266,7 +260,7 @@
         }
 
         function limparHistorico() {
-            if(confirm("Limpar tudo?")) {
+            if(confirm("Deseja limpar todo o histórico?")) {
                 localStorage.removeItem('xml_audit_history');
                 renderizarHistorico();
             }
