@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V7.2 Integrated System</title>
+    <title>FISCAL AUDIT - V7.7 Pro Integrated</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -23,9 +23,7 @@
         table { width: 100%; border-collapse: collapse; }
         th { background: #080808; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
         td { padding: 12px 15px; font-size: 11px; border-bottom: 1px solid #111; color: #ccc; vertical-align: top; }
-        .orange-border { border: 1.5px solid var(--orange-main); }
         .btn-action { width: 100%; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-orange { background: var(--orange-main); color: #000; cursor: pointer; }
         .activity-item { background: #0d0d0d; border: 1px solid #1a1a1a; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid var(--orange-main); }
         .tax-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 8px; }
         .tax-unit { font-size: 9px; display: flex; flex-direction: column; }
@@ -39,7 +37,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V7.5 Pro Audit</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V7.7 Integrated Audit</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -60,24 +58,24 @@
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-[#0a0a0a] p-6 rounded-xl orange-border border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Módulo XML / ZIP</h4>
+                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-orange-600/30">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP (Lote)</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input').click()">
                         <i class="fas fa-file-zipper text-3xl text-zinc-700 mb-2"></i>
                         <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Selecionar XML/ZIP</p>
                         <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
                     </div>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-action bg-zinc-900 text-zinc-600 mt-4" disabled>Gravar no Histórico</button>
+                    <button id="btn-run-xml" onclick="processarXML()" class="btn-action bg-zinc-900 text-zinc-600 mt-4" disabled>Gravar XMLs</button>
                 </div>
 
-                <div class="bg-[#0a0a0a] p-6 rounded-xl orange-border border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Módulo PGDAS-D (PDF)</h4>
+                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-orange-600/30">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga PGDAS-D (PDF em Lote)</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('pgdas-input').click()">
                         <i class="fas fa-file-pdf text-3xl text-zinc-700 mb-2"></i>
-                        <p id="label-pgdas" class="text-[9px] text-zinc-500 font-bold uppercase">Upload PDFs em Lote</p>
+                        <p id="label-pgdas" class="text-[9px] text-zinc-500 font-bold uppercase">Upload PDFs</p>
                         <input type="file" id="pgdas-input" multiple accept=".pdf" class="hidden" onchange="handlePGDASFiles(this.files)">
                     </div>
-                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-action bg-zinc-900 text-zinc-600 mt-4" disabled>Processar Lote PGDAS</button>
+                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-action bg-zinc-900 text-zinc-600 mt-4" disabled>Gravar PGDAS</button>
                 </div>
             </div>
         </div>
@@ -87,7 +85,7 @@
                 <h2 class="text-2xl font-black italic text-white">Histórico <span class="text-[#f97316]">XML</span></h2>
                 <div class="flex gap-4">
                     <button onclick="exportBatchXML()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-700 transition"><i class="fas fa-file-excel mr-2"></i> Exportar Selecionados</button>
-                    <button onclick="clearHistory('xml')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-bold uppercase border border-red-500/30 hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash mr-2"></i> Limpar</button>
+                    <button onclick="clearHistory('xml')" class="text-zinc-600 hover:text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-trash mr-2"></i> Limpar</button>
                 </div>
             </header>
             <div class="table-container">
@@ -109,7 +107,7 @@
         <div id="pgdas-history-panel" class="tab-content">
             <header class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-black italic text-white">Histórico <span class="text-[#f97316]">PGDAS</span></h2>
-                <button onclick="clearHistory('pgdas')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-bold uppercase border border-red-500/30"><i class="fas fa-trash"></i></button>
+                <button onclick="clearHistory('pgdas')" class="text-zinc-600 hover:text-red-500 text-[10px] font-bold uppercase"><i class="fas fa-trash mr-2"></i> Limpar</button>
             </header>
             <div class="table-container">
                 <table>
@@ -134,49 +132,50 @@
             if(tabId === 'pgdas-history-panel') renderPGDASHistory();
         }
 
+        // --- LÓGICA XML ---
         let xmlBuffer = [];
         async function handleXMLFiles(files) {
             xmlBuffer = [];
             for (let file of files) {
                 if (file.name.endsWith('.zip')) {
                     const zip = await JSZip.loadAsync(file);
-                    for (let filename of Object.keys(zip.files).filter(f => f.toLowerCase().endsWith('.xml'))) {
-                        xmlBuffer.push(await zip.files[filename].async("text"));
-                    }
+                    const xmls = Object.keys(zip.files).filter(f => f.toLowerCase().endsWith('.xml'));
+                    for (let f of xmls) xmlBuffer.push(await zip.files[f].async("text"));
                 } else { xmlBuffer.push(await file.text()); }
             }
-            document.getElementById('label-xml').innerText = `${xmlBuffer.length} arquivos carregados`;
-            document.getElementById('btn-run-xml').disabled = false;
-            document.getElementById('btn-run-xml').className = "btn-action btn-orange";
+            document.getElementById('label-xml').innerText = `${xmlBuffer.length} arquivos prontos`;
+            const btn = document.getElementById('btn-run-xml');
+            btn.disabled = false; btn.className = "btn-action btn-orange text-black";
         }
 
         function processarXML() {
             const history = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const xmlByEmpresaMes = {};
-            let ignorados = 0;
+            const groups = {};
+            let skips = 0;
 
             xmlBuffer.forEach(text => {
                 const xml = new DOMParser().parseFromString(text, "text/xml");
                 const nNF = xml.getElementsByTagName("nNF")[0]?.textContent || "S/N";
-                const xNome = xml.getElementsByTagName("xNome")[0]?.textContent || "DESCONHECIDA";
-                const cnpj = xml.getElementsByTagName("CNPJ")[0]?.textContent || "0000";
+                const cnpj = xml.getElementsByTagName("CNPJ")[0]?.textContent || "000";
+                const xNome = xml.getElementsByTagName("xNome")[0]?.textContent || "EMPRESA";
                 const dEmi = xml.getElementsByTagName("dEmi")[0]?.textContent || xml.getElementsByTagName("dhEmi")[0]?.textContent || "";
+                
                 if (!dEmi) return;
                 const mes = parseInt(dEmi.substring(dEmi.includes('-') ? 5 : 4, dEmi.includes('-') ? 7 : 6));
                 const ano = dEmi.substring(0, 4);
                 const ref = `${MONTHS[mes-1]}/${ano}`;
                 const key = `${cnpj}_${mes}_${ano}`;
 
-                if (history.some(h => h.key === key)) { ignorados++; return; }
+                if (history.some(h => h.key === key)) { skips++; return; }
 
-                if (!xmlByEmpresaMes[key]) xmlByEmpresaMes[key] = { key, empresa: xNome, cnpj, ref, mesSort: parseInt(ano+mes.toString().padStart(2,'0')), setNotas: new Set(), itens: [] };
-                
-                xmlByEmpresaMes[key].setNotas.add(nNF);
+                if (!groups[key]) groups[key] = { key, empresa: xNome, cnpj, ref, mesSort: parseInt(ano + mes.toString().padStart(2,'0')), setNotas: new Set(), itens: [] };
+
+                groups[key].setNotas.add(nNF);
                 Array.from(xml.getElementsByTagName("det")).forEach(det => {
                     const vProd = parseFloat(det.getElementsByTagName("vProd")[0]?.textContent || 0);
                     const ncm = det.getElementsByTagName("NCM")[0]?.textContent || "0";
                     const pisCST = det.getElementsByTagName("PIS")[0]?.getElementsByTagName("CST")[0]?.textContent || "";
-                    xmlByEmpresaMes[key].itens.push({
+                    groups[key].itens.push({
                         Empresa: xNome, CNPJ: cnpj, Mes: ref, Nota: nNF, Produto: det.getElementsByTagName("xProd")[0]?.textContent || "",
                         NCM: ncm, Credito: (["2105", "2202", "8708"].some(p => ncm.startsWith(p)) && (pisCST === "01" || pisCST === "49")) ? (vProd * 0.0198).toFixed(2) : "0.00",
                         CFOP: det.getElementsByTagName("CFOP")[0]?.textContent || "", Unidade: det.getElementsByTagName("uCom")[0]?.textContent || "",
@@ -187,11 +186,11 @@
                 });
             });
 
-            Object.values(xmlByEmpresaMes).forEach(g => {
+            Object.values(groups).forEach(g => {
                 history.push({...g, qtd: g.setNotas.size, setNotas: undefined});
             });
             localStorage.setItem('xml_audit_history', JSON.stringify(history));
-            alert(`✅ Gravado com sucesso! ${ignorados > 0 ? `(${ignorados} duplicatas ignoradas)` : ''}`); 
+            alert(`✅ Concluído! Novos registros: ${Object.keys(groups).length}. Ignorados: ${skips}`);
             renderXMLHistory();
         }
 
@@ -203,58 +202,52 @@
                     <td><div class="font-bold text-white uppercase text-[10px]">${it.empresa}</div><div class="text-[9px] text-zinc-500">${it.cnpj}</div></td>
                     <td class="font-bold text-orange-500">${it.ref}</td>
                     <td class="font-black text-white text-sm">${it.qtd}</td>
-                    <td><button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] font-black uppercase">CSV</button></td>
+                    <td><button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] font-black">CSV</button></td>
                 </tr>
             `).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30">VAZIO</td></tr>';
         }
 
-        function downloadOneXML(idx) {
+        function downloadOneXML(idx) { 
             const h = (JSON.parse(localStorage.getItem('xml_audit_history')) || []).sort((a,b) => a.mesSort - b.mesSort);
-            generateCSV([h[idx]]);
+            generateCSV([h[idx]]); 
         }
 
         function exportBatchXML() {
             const h = (JSON.parse(localStorage.getItem('xml_audit_history')) || []).sort((a,b) => a.mesSort - b.mesSort);
-            const selected = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[parseInt(cb.dataset.idx)]);
-            if (selected.length === 0) return alert("Selecione ao menos um período!");
-            generateCSV(selected, "LOTE_AUDITORIA");
+            const sel = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[parseInt(cb.dataset.idx)]);
+            if (!sel.length) return alert("Selecione os períodos!");
+            generateCSV(sel, "LOTE_AUDITORIA");
         }
 
-        function generateCSV(records, filename = "RELATORIO") {
+        function generateCSV(recs, file = "RELATORIO") {
             let csv = "\ufeffEmpresa;CNPJ;Mes;Nota;Produto;NCM;Credito;CFOP;Unidade;Qtd;Unitario;CST_PIS;CST_COFINS;CST_ICMS\n";
-            records.forEach(rec => {
-                rec.itens.forEach(d => {
-                    csv += `${d.Empresa};${d.CNPJ};${d.Mes};${d.Nota};${d.Produto};${d.NCM};${d.Credito};${d.CFOP};${d.Unidade};${d.Qtd};${d.Unitario};${d.CST_PIS};${d.CST_COFINS};${d.CST_ICMS}\n`;
-                });
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `${filename}.csv`;
-            link.click();
+            recs.forEach(r => r.itens.forEach(d => { csv += `${d.Empresa};${d.CNPJ};${d.Mes};${d.Nota};${d.Produto};${d.NCM};${d.Credito};${d.CFOP};${d.Unidade};${d.Qtd};${d.Unitario};${d.CST_PIS};${d.CST_COFINS};${d.CST_ICMS}\n`; }));
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `${file}.csv`; link.click();
         }
 
-        function toggleSelectAll(master) {
-            document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = master.checked);
-        }
+        function toggleSelectAll(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
 
-        // --- PGDAS ---
+        // --- LÓGICA PGDAS ---
         let pgdasFiles = [];
         function handlePGDASFiles(files) {
             pgdasFiles = Array.from(files);
             document.getElementById('label-pgdas').innerText = `${pgdasFiles.length} arquivos`;
-            document.getElementById('btn-run-pgdas').disabled = false;
-            document.getElementById('btn-run-pgdas').className = "btn-action btn-orange";
+            const btn = document.getElementById('btn-run-pgdas');
+            btn.disabled = false; btn.className = "btn-action btn-orange text-black";
         }
 
         async function processarPGDAS() {
             const history = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
             let novos = 0;
+            const parseCur = (v) => parseFloat(v.replace(/\./g,'').replace(',','.')) || 0;
+
             for(let file of pgdasFiles) {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 let text = "";
                 for (let i = 1; i <= pdf.numPages; i++) {
-                    text += (await (await pdf.getPage(i)).getTextContent()).items.map(it => it.str).join(" ") + " ";
+                    const page = await pdf.getPage(i);
+                    text += (await page.getTextContent()).items.map(it => it.str).join(" ") + " ";
                 }
                 const t = text.replace(/\s+/g, ' ');
                 const cnpj = (t.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || [""])[0];
@@ -265,19 +258,20 @@
                 
                 if (history.some(h => h.razao === razao && h.ref === ref)) continue;
 
-                let soma = 0, atividades = [];
+                let somaDasTotal = 0, atividades = [];
                 t.split("Valor do Débito por Tributo para a Atividade").slice(1).forEach(b => {
                     const impostos = b.split("Total")[1]?.match(/[\d.]+,\d{2}/g);
-                    if (impostos) {
-                        soma += parseFloat(impostos[8].replace('.','').replace(',','.'));
+                    if (impostos && impostos.length >= 9) {
+                        somaDasTotal += parseCur(impostos[8]);
                         atividades.push({ desc: b.match(/^(.*?)\s*Receita/)[1].trim(), receita: b.match(/R\$\s*([\d.]+,\d{2})/)[1], total: impostos[8], det: impostos });
                     }
                 });
-                history.push({ razao, cnpj, ref, mSort, rbt12: (t.match(/RBT12\)\s*[\d.,]+\s*[\d.,]+\s*([\d.]+,\d{2})/) || ["","0,00"])[1], atividades, dasTotal: soma.toLocaleString('pt-BR',{minimumFractionDigits:2}) });
+
+                history.push({ razao, cnpj, ref, mSort, rbt12: (t.match(/RBT12\)\s*[\d.,]+\s*[\d.,]+\s*([\d.]+,\d{2})/) || ["","0,00"])[1], atividades, dasTotal: somaDasTotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) });
                 novos++;
             }
             localStorage.setItem('pgdas_pdf_audit', JSON.stringify(history));
-            alert(`✅ ${novos} declarações novas gravadas!`); renderPGDASHistory();
+            alert(`✅ ${novos} declarações novas processadas!`); renderPGDASHistory();
         }
 
         function renderPGDASHistory() {
@@ -288,19 +282,14 @@
                     <td class="font-bold text-zinc-400">R$ ${it.rbt12}</td>
                     <td>${it.atividades.map(a => `<div class="activity-item"><div class="text-[8px] font-black uppercase text-zinc-500">${a.desc}</div><div class="text-[9px] font-bold text-white">Receita: R$ ${a.receita}</div><div class="tax-grid">
                         <div class="tax-unit"><span>IRPJ</span><span>${a.det[0]}</span></div><div class="tax-unit"><span>CSLL</span><span>${a.det[1]}</span></div><div class="tax-unit"><span>PIS</span><span>${a.det[3]}</span></div><div class="tax-unit"><span>COFINS</span><span>${a.det[2]}</span></div>
-                        <div class="tax-unit"><span>CPP</span><span>${a.det[4]}</span></div><div class="tax-unit"><span>ICMS</span><span>${a.det[5]}</span></div><div class="tax-unit"><span>TOTAL</span><span class="text-white">${a.total}</span></div>
+                        <div class="tax-unit"><span>CPP</span><span>${a.det[4]}</span></div><div class="tax-unit"><span>ICMS</span><span>${a.det[5]}</span></div><div class="tax-unit"><span>SUM</span><span class="text-white">${a.total}</span></div>
                     </div></div>`).join('')}</td>
                     <td class="text-orange-500 font-black text-[12px]">R$ ${it.dasTotal}</td>
                 </tr>
             `).join('') || '<tr><td colspan="4" class="text-center py-20 opacity-30">VAZIO</td></tr>';
         }
 
-        function clearHistory(type) {
-            if(confirm("Deseja limpar?")) {
-                localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit');
-                type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
-            }
-        }
+        function clearHistory(type) { if(confirm("Deseja limpar?")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
         document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
     </script>
 </body>
