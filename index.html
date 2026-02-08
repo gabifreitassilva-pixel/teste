@@ -28,9 +28,9 @@
         .btn-orange { background: var(--orange-main); color: #000; cursor: pointer; }
         .btn-gray { background: #1a1a1a; color: #444; cursor: not-allowed; }
         .btn-export-table { background: var(--orange-main); color: #000; padding: 6px 14px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
-        .tax-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; min-width: 250px; }
-        .tax-item { background: #111; padding: 4px 8px; border-radius: 4px; display: flex; justify-content: space-between; font-size: 9px; }
-        .tax-label { color: #555; font-weight: 700; }
+        .tax-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; min-width: 300px; }
+        .tax-item { background: #111; padding: 4px 8px; border-radius: 4px; display: flex; flex-direction: column; font-size: 9px; }
+        .tax-label { color: #555; font-weight: 700; margin-bottom: 2px; }
         .tax-value { color: #f97316; font-weight: 900; }
     </style>
 </head>
@@ -120,8 +120,8 @@
                             <th>Empresa</th>
                             <th>CNPJ</th>
                             <th>Período</th>
-                            <th>Receita Bruta (RPA)</th>
-                            <th>Detalhamento de Tributos</th>
+                            <th>Receita RPA</th>
+                            <th>Tributos Detalhados</th>
                             <th>DAS Total</th>
                             <th>Ações</th>
                         </tr>
@@ -151,6 +151,25 @@
             return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
         }
 
+        function updateIdentity(n, c, p) {
+            document.getElementById('disp-empresa').value = n;
+            document.getElementById('disp-cnpj').value = c;
+            document.getElementById('disp-periodo').value = p;
+        }
+
+        function saveHistory(key, obj) {
+            let h = JSON.parse(localStorage.getItem(key)) || [];
+            h.push(obj); localStorage.setItem(key, JSON.stringify(h));
+        }
+
+        function clearHistory(type) {
+            if(confirm("Limpar histórico?")) {
+                localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_audit_history');
+                type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
+            }
+        }
+
+        // --- LÓGICA XML ---
         function handleXMLFiles(files) {
             xmlFilesList = Array.from(files);
             document.getElementById('label-xml').innerText = `${xmlFilesList.length} arquivos`;
@@ -214,50 +233,6 @@
             alert("✅ Gravado no Histórico XML!");
         }
 
-        function handlePGDASFile(files) {
-            document.getElementById('label-pgdas').innerText = files[0].name;
-            document.getElementById('btn-run-pgdas').disabled = false;
-            document.getElementById('btn-run-pgdas').className = "btn-action btn-orange";
-        }
-
-        async function processarPGDAS() {
-            const file = document.getElementById('pgdas-input').files[0];
-            const text = await file.text();
-            const doc = new DOMParser().parseFromString(text, "text/html");
-            const bodyText = doc.body.innerText;
-
-            const extract = (regex) => bodyText.match(regex)?.[1]?.trim() || "0,00";
-
-            const data = {
-                empresa: extract(/Nome Empresarial:\s*(.*)/),
-                cnpj: extract(/CNPJ Matriz:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/),
-                periodo: extract(/Período de Apuração:\s*(\d{2}\/\d{4})/),
-                receita: extract(/Receita Bruta Total \(RPA\).*?([\d\.,]+)/),
-                irpj: extract(/IRPJ.*?([\d\.,]+)/),
-                csll: extract(/CSLL.*?([\d\.,]+)/),
-                cofins: extract(/Cofins.*?([\d\.,]+)/),
-                pis: extract(/PIS\/Pasep.*?([\d\.,]+)/),
-                cpp: extract(/CPP\/INSS.*?([\d\.,]+)/),
-                icms: extract(/ICMS.*?([\d\.,]+)/),
-                dasTotal: extract(/Valor Total do Principal.*?([\d\.,]+)/)
-            };
-
-            updateIdentity(data.empresa, data.cnpj, data.periodo);
-            saveHistory('pgdas_audit_history', data);
-            alert("✅ Gravado no Histórico PGDAS!");
-        }
-
-        function updateIdentity(n, c, p) {
-            document.getElementById('disp-empresa').value = n;
-            document.getElementById('disp-cnpj').value = c;
-            document.getElementById('disp-periodo').value = p;
-        }
-
-        function saveHistory(key, obj) {
-            let h = JSON.parse(localStorage.getItem(key)) || [];
-            h.push(obj); localStorage.setItem(key, JSON.stringify(h));
-        }
-
         function renderXMLHistory() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             document.getElementById('tbody-xml').innerHTML = h.reverse().map((it, i) => `
@@ -284,6 +259,44 @@
             link.click();
         }
 
+        // --- LÓGICA PGDAS (AJUSTADA CONFORME EXTRATO SIMPLES.HTML) ---
+        function handlePGDASFile(files) {
+            document.getElementById('label-pgdas').innerText = files[0].name;
+            document.getElementById('btn-run-pgdas').disabled = false;
+            document.getElementById('btn-run-pgdas').className = "btn-action btn-orange";
+        }
+
+        async function processarPGDAS() {
+            const file = document.getElementById('pgdas-input').files[0];
+            const text = await file.text();
+            const doc = new DOMParser().parseFromString(text, "text/html");
+            const bodyContent = doc.body.innerText;
+
+            // Função helper para regex no conteúdo do HTML
+            const getVal = (regex) => {
+                const match = bodyContent.match(regex);
+                return match ? match[1].trim() : "0,00";
+            };
+
+            const data = {
+                empresa: getVal(/Nome Empresarial:\s*(.*)/),
+                cnpj: getVal(/CNPJ Matriz:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/),
+                periodo: getVal(/Período de Apuração:\s*(\d{2}\/\d{4})/),
+                receita: getVal(/Receita Bruta Total \(RPA\).*?([\d\.,]+)/),
+                irpj: getVal(/IRPJ.*?([\d\.,]+)/),
+                csll: getVal(/CSLL.*?([\d\.,]+)/),
+                cofins: getVal(/Cofins.*?([\d\.,]+)/),
+                pis: getVal(/PIS\/Pasep.*?([\d\.,]+)/),
+                cpp: getVal(/CPP\/INSS.*?([\d\.,]+)/),
+                icms: getVal(/ICMS.*?([\d\.,]+)/),
+                dasTotal: getVal(/Valor Total do Principal.*?([\d\.,]+)/)
+            };
+
+            updateIdentity(data.empresa, data.cnpj, data.periodo);
+            saveHistory('pgdas_audit_history', data);
+            alert("✅ Dados PGDAS extraídos e gravados com sucesso!");
+        }
+
         function renderPGDASHistory() {
             const h = JSON.parse(localStorage.getItem('pgdas_audit_history')) || [];
             document.getElementById('tbody-pgdas').innerHTML = h.reverse().map(it => `
@@ -294,24 +307,17 @@
                     <td class="font-bold text-zinc-400">R$ ${it.receita}</td>
                     <td>
                         <div class="tax-grid">
-                            <div class="tax-item"><span class="tax-label">IRPJ</span><span class="tax-value">${it.irpj}</span></div>
-                            <div class="tax-item"><span class="tax-label">CSLL</span><span class="tax-value">${it.csll}</span></div>
-                            <div class="tax-item"><span class="tax-label">COFINS</span><span class="tax-value">${it.cofins}</span></div>
-                            <div class="tax-item"><span class="tax-label">PIS</span><span class="tax-value">${it.pis}</span></div>
-                            <div class="tax-item"><span class="tax-label">CPP</span><span class="tax-value">${it.cpp}</span></div>
-                            <div class="tax-item"><span class="tax-label">ICMS</span><span class="tax-value">${it.icms}</span></div>
+                            <div class="tax-item"><span class="tax-label">IRPJ</span><span class="tax-value">R$ ${it.irpj}</span></div>
+                            <div class="tax-item"><span class="tax-label">CSLL</span><span class="tax-value">R$ ${it.csll}</span></div>
+                            <div class="tax-item"><span class="tax-label">COFINS</span><span class="tax-value">R$ ${it.cofins}</span></div>
+                            <div class="tax-item"><span class="tax-label">PIS</span><span class="tax-value">R$ ${it.pis}</span></div>
+                            <div class="tax-item"><span class="tax-label">CPP</span><span class="tax-value">R$ ${it.cpp}</span></div>
+                            <div class="tax-item"><span class="tax-label">ICMS</span><span class="tax-value">R$ ${it.icms}</span></div>
                         </div>
                     </td>
                     <td class="text-orange-500 font-bold">R$ ${it.dasTotal}</td>
-                    <td><button class="btn-export-table" onclick="alert('Detalhamento salvo para auditoria.')">Auditar</button></td>
+                    <td><button class="btn-export-table" onclick="alert('Auditoria detalhada disponível em Módulos Futuros')">Auditar</button></td>
                 </tr>`).join('') || '<tr><td colspan="7" class="text-center py-10 opacity-30">VAZIO</td></tr>';
-        }
-
-        function clearHistory(type) {
-            if(confirm("Limpar histórico?")) {
-                localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_audit_history');
-                type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
-            }
         }
 
         document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
