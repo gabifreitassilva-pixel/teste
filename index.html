@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V14.0 FINAL</title>
+    <title>FISCAL AUDIT - V14.2 MASTER FINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -22,14 +22,27 @@
         .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #080808; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; }
-        td { padding: 12px 15px; font-size: 11px; border-bottom: 1px solid #111; color: #ccc; }
+        td { padding: 12px 15px; font-size: 11px; border-bottom: 1px solid #111; color: #ccc; vertical-align: top; }
         .btn-orange { background: var(--orange-main); color: #000 !important; font-weight: 900; border-radius: 8px; padding: 10px; text-transform: uppercase; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; }
         .trash-icon { color: #dc2626 !important; cursor: pointer; }
-        .activity-item { background: #0d0d0d; border: 1px solid #1a1a1a; padding: 12px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid var(--orange-main); }
-        .tax-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 10px; border-top: 1px solid #1a1a1a; padding-top: 8px; }
+        .activity-item { background: #0d0d0d; border: 1px solid #1a1a1a; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid var(--orange-main); }
+        .tax-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 10px; border-top: 1px solid #222; padding-top: 8px; }
         .tax-unit { font-size: 7px; display: flex; flex-direction: column; }
         .tax-unit span:first-child { color: #666; font-weight: 800; text-transform: uppercase; }
         .tax-total { color: var(--orange-main) !important; font-weight: 900; }
+        /* Destaque para a descrição da receita */
+        .desc-receita { 
+            font-size: 9px; 
+            font-weight: 700; 
+            color: #ccc; 
+            margin-top: 5px; 
+            margin-bottom: 10px; 
+            padding: 8px; 
+            background: #151515; 
+            border-radius: 4px; 
+            border: 1px dashed #333;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +50,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V14.0 FINAL</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V14.2 FINAL</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -99,7 +112,8 @@
         function showTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); 
+            const target = document.getElementById(id);
+            if(target) target.classList.add('active'); 
             if(el) el.classList.add('active');
             if(id === 'xml-history-panel') renderXMLHistory();
             if(id === 'pgdas-history-panel') renderPGDASHistory();
@@ -140,8 +154,7 @@
                 const ref = `${MONTHS_FULL[parseInt(dEmi.substring(4,6))-1]}/${dEmi.substring(0,4)}`;
                 const key = `${cnpjRaw}_${dEmi.substring(0,6)}`;
 
-                // === TRAVA DE DUPLICIDADE ===
-                // Verifica se a nota já existe no histórico. Se sim, return (que age como continue no forEach)
+                // TRAVA DE DUPLICIDADE: Não para o loop, apenas ignora
                 const jaExiste = h.some(x => x.key === key && x.itens.some(i => i.Nota === nDoc && i.Data.includes(dEmi.substring(6,8))));
                 if (jaExiste) {
                     countDuplicados++;
@@ -168,12 +181,10 @@
                 });
             });
 
-            // Mesclar novos grupos com o histórico existente
             Object.values(groups).forEach(g => {
                 const idx = h.findIndex(x => x.key === g.key);
                 if(idx === -1) h.push(g);
                 else {
-                    // Adiciona apenas notas que não existam (segurança extra)
                     g.itens.forEach(novoItem => {
                         if(!h[idx].itens.some(i => i.Nota === novoItem.Nota)) {
                             h[idx].itens.push(novoItem);
@@ -183,7 +194,7 @@
             });
 
             localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert(`✅ Processamento concluído!\nNovos itens gravados.\n(${countDuplicados} arquivos repetidos foram pulados)`);
+            alert(`✅ Processamento concluído!\n(${countDuplicados} notas repetidas ignoradas)`);
             renderXMLHistory();
         }
 
@@ -195,46 +206,49 @@
             for(let file of pgdasFiles) {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 let text = ""; for(let i=1; i<=pdf.numPages; i++) text += (await (await pdf.getPage(i)).getTextContent()).items.map(it => it.str).join(" ") + " ";
-                const t = text.replace(/\s+/g, ' '); // Remove quebras de linha excessivas
+                const t = text.replace(/\s+/g, ' ');
                 
                 const cnpjRaw = (t.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || [""])[0];
                 const p = t.match(/Período de Apuração:\s*01\/(\d{2})\/(\d{4})/);
                 if(!p) continue;
                 const ref = `${MONTHS_FULL[parseInt(p[1])-1]}/${p[2]}`;
                 
-                if(h.some(x => x.cnpj === cnpjRaw && x.ref === ref)) continue; // Trava PGDAS Duplicado
+                // Trava PGDAS Duplicado
+                if(h.some(x => x.cnpj === cnpjRaw && x.ref === ref)) continue; 
 
                 let atividades = [];
-                // --- NOVA LÓGICA DE CAPTURA PELA FRASE 'Atividade :' ---
-                // Divide o texto onde começa cada nova atividade
-                const partes = t.split("Atividade :"); 
+                // *** ESTRATÉGIA DE EXTRAÇÃO: CAPTURA O QUE ESTÁ ENTRE OS DELIMITADORES EXATOS ***
                 
-                // Começa do 1 pois o 0 é cabeçalho
-                for(let i=1; i<partes.length; i++) {
-                    const parte = partes[i];
+                // Dividimos o texto por blocos que começam com a frase chave dos tributos
+                const blocos = t.split("Valor do Débito por Tributo para a Atividade");
+                
+                for(let i=1; i<blocos.length; i++) {
+                    const bloco = blocos[i];
                     
-                    // A descrição é tudo até chegar em "Receita Bruta Informada"
-                    const fimDesc = parte.indexOf("Receita Bruta Informada");
-                    if(fimDesc === -1) continue;
+                    // A descrição está no INÍCIO do bloco, ANTES de "Receita Bruta Informada"
+                    const fimDescricao = bloco.indexOf("Receita Bruta Informada");
+                    if (fimDescricao === -1) continue;
+
+                    let descricaoCapturada = bloco.substring(0, fimDescricao).trim();
+                    // Remove " (R$):" ou dois pontos se sobrarem no inicio
+                    descricaoCapturada = descricaoCapturada.replace(/^[\s:\(R\$\)]+/, '').trim();
+
+                    // Pega a receita
+                    const receitaMatch = bloco.match(/Receita Bruta Informada.*?:.*?([\d\.]+,[\d]{2})/);
+                    const receitaValor = receitaMatch ? receitaMatch[1] : "0,00";
+
+                    // Pega a tabela de impostos que vem DEPOIS da receita
+                    // Ignora o valor da receita e pega os proximos 9 valores (impostos + total)
+                    const valoresPosReceita = bloco.substring(fimDescricao).match(/[\d\.]+,[\d]{2}/g);
+                    // O array 'valoresPosReceita' terá: [0]=Receita, [1]=IRPJ, [2]=CSLL... etc.
                     
-                    const descricaoLimpa = parte.substring(0, fimDesc).trim();
-                    
-                    // Extrai valores (assume que a tabela vem logo depois da Receita)
-                    // Procura a sequência de valores monetários
-                    const valores = parte.match(/[\d\.]+,[\d]{2}/g) || [];
-                    // O primeiro valor geralmente é a Receita Bruta (RPA ou RBT12), pulamos
-                    // Os impostos vêm depois. Vamos pegar os últimos 9 valores do bloco se possível
-                    
-                    // Refinamento: Busca a tabela específica de débitos
-                    if(parte.includes("Valor do Débito por Tributo para a Atividade")) {
-                        const trechoTabela = parte.split("Valor do Débito por Tributo para a Atividade")[1];
-                        const nums = trechoTabela.match(/[\d\.]+,[\d]{2}/g) || Array(9).fill("0,00");
-                        
+                    if (valoresPosReceita && valoresPosReceita.length >= 10) {
                         atividades.push({
-                            desc: descricaoLimpa,
-                            rec: (parte.match(/Receita Bruta Informada.*?R\$\s*([\d\.]+,[\d]{2})/) || ["","0,00"])[1],
-                            ir: nums[0], csll: nums[1], cofins: nums[2], pis: nums[3],
-                            cpp: nums[4], icms: nums[5], ipi: nums[6], iss: nums[7], total: nums[8]
+                            desc: descricaoCapturada, // Texto completo que você pediu
+                            rec: receitaValor,
+                            ir: valoresPosReceita[1], csll: valoresPosReceita[2], cofins: valoresPosReceita[3],
+                            pis: valoresPosReceita[4], cpp: valoresPosReceita[5], icms: valoresPosReceita[6],
+                            ipi: valoresPosReceita[7], iss: valoresPosReceita[8], total: valoresPosReceita[9]
                         });
                     }
                 }
@@ -243,7 +257,7 @@
                 processados++;
             }
             localStorage.setItem('pgdas_pdf_audit', JSON.stringify(h));
-            alert(`✅ ${processados} novos PGDAS gravados com sucesso!`); renderPGDASHistory();
+            alert(`✅ ${processados} PGDAS processados!`); renderPGDASHistory();
         }
 
         function renderXMLHistory() {
@@ -264,8 +278,8 @@
                 <td class="text-orange-500 font-bold uppercase">${it.ref}</td>
                 <td>${it.atividades.map(a => `
                     <div class="activity-item">
-                        <div class="text-[9px] font-black text-white uppercase leading-tight mb-2 border-b border-zinc-800 pb-1">${a.desc}</div>
-                        <div class="text-[9px] font-bold text-zinc-400 mb-2">Receita Ref: <span class="text-green-400">R$ ${a.rec}</span></div>
+                        <div class="text-[9px] font-bold text-white mb-1 uppercase">Receita Bruta: <span class="text-orange-500">R$ ${a.rec}</span></div>
+                        <div class="desc-receita">${a.desc}</div>
                         <div class="tax-grid">
                             <div class="tax-unit"><span>IRPJ</span><span>${a.ir}</span></div>
                             <div class="tax-unit"><span>CSLL</span><span>${a.csll}</span></div>
