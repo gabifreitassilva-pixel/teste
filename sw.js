@@ -4,7 +4,7 @@ const CACHE_NAME = 'fiscal-audit-v13-6-fixed';
 const ASSETS = [
     './',
     './index.html',
-    './auditoria.html',
+    './auditar.html',
     './base reduzida.html',
     './auto pecas.html',
     './pis e cofins.html'
@@ -45,3 +45,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
