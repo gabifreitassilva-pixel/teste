@@ -13,25 +13,20 @@
         .btn-primary:hover { background: #fff; }
         .btn-action { background: #1a1a1a; border: 1px solid #333; color: #ccc; }
         .btn-action:hover { border-color: #f97316; color: #fff; }
-        
-        /* Tabela */
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th { background: #111; color: #f97316; text-align: left; padding: 10px; border-bottom: 2px solid #222; }
         td { padding: 8px 10px; border-bottom: 1px solid #1a1a1a; color: #ccc; }
         tr.error-row { background: rgba(239, 68, 68, 0.05); }
         tr.error-row:hover { background: rgba(239, 68, 68, 0.1); }
-        
-        /* Modal */
         #edit-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 50; }
         .modal-box { background: #0f0f0f; width: 500px; padding: 25px; border-radius: 12px; border: 1px solid #333; box-shadow: 0 0 50px rgba(249, 115, 22, 0.1); }
     </style>
 </head>
 <body>
-
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-2xl font-black italic text-white">ROBÔ DE <span class="text-orange-500">AUDITORIA</span></h1>
-            <p class="text-zinc-500 text-xs">Cruzamento: XML vs. Legislação (Convênio 142/18 e Lei Federal)</p>
+            <p class="text-zinc-500 text-xs">Cruzamento: XML vs. Legislação (Convênio 142/18 e PIS/COFINS)</p>
         </div>
         <div class="flex gap-3">
             <a href="index.html" class="btn btn-action">Voltar</a>
@@ -53,8 +48,8 @@
             <p id="val-recover" class="text-2xl font-black text-green-500">R$ 0,00</p>
         </div>
         <div class="card border-l-4 border-orange-500">
-            <h3 class="text-xs text-zinc-500 font-bold uppercase">Faturamento PGDAS</h3>
-            <p id="val-pgdas" class="text-2xl font-black">R$ 0,00</p>
+            <h3 class="text-xs text-zinc-500 font-bold uppercase">Faturamento XML</h3>
+            <p id="val-xml" class="text-2xl font-black">R$ 0,00</p>
         </div>
     </div>
 
@@ -82,210 +77,113 @@
         <div class="modal-box">
             <h3 class="text-orange-500 font-bold text-lg mb-4">Correção Manual de Item</h3>
             <input type="hidden" id="edit-index">
-            
             <label class="block text-xs text-zinc-500 mb-1">Produto</label>
             <input type="text" id="edit-prod" class="w-full bg-black border border-zinc-700 text-white p-2 rounded mb-3 text-sm" disabled>
-            
             <div class="grid grid-cols-2 gap-4 mb-3">
                 <div>
-                    <label class="block text-xs text-zinc-500 mb-1">NCM (Classificação)</label>
+                    <label class="block text-xs text-zinc-500 mb-1">NCM</label>
                     <input type="text" id="edit-ncm" class="w-full bg-black border border-zinc-700 text-white p-2 rounded text-sm focus:border-orange-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-500 mb-1">CST / CSOSN</label>
                     <select id="edit-cst" class="w-full bg-black border border-zinc-700 text-white p-2 rounded text-sm focus:border-orange-500 outline-none">
                         <option value="102">102 - Tributado SN</option>
-                        <option value="500">500 - ICMS Cobrado Ant. (ST)</option>
+                        <option value="500">500 - ICMS ST</option>
                         <option value="01">01 - Tributado Integral</option>
                         <option value="04">04 - Monofásico PIS/COFINS</option>
                         <option value="06">06 - Alíquota Zero</option>
                     </select>
                 </div>
             </div>
-
-            <div class="p-3 bg-zinc-900 border border-zinc-800 rounded text-xs text-zinc-400 mb-4">
-                <i class="fas fa-robot mr-1 text-orange-500"></i> <span id="bot-hint">Aguardando análise do novo NCM...</span>
-            </div>
-
             <div class="flex justify-end gap-2">
                 <button onclick="closeModal()" class="btn btn-action">Cancelar</button>
-                <button onclick="saveCorrection()" class="btn btn-primary">Salvar Alteração</button>
+                <button onclick="saveCorrection()" class="btn btn-primary">Salvar</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === BANCO DE DADOS DA LEGISLAÇÃO (SIMULADO PARA PERFORMANCE) ===
-        // O Robô usará estes prefixos para identificar se o NCM está na lei
-        // Em produção, isso seria carregado lendo o HTML dos arquivos que você subiu.
         const RULE_SET = {
-            MONOFASICO: ['2203', '2202', '210690', '8708', '4011', '3303', '3304', '3305', '3307', '3004'], // Bebidas, Peças, Pneus, Perfumaria, Remédios
-            ST_ICMS: ['2203', '2202', '3208', '3209', '3401', '3917', '3919', '3923', '4011', '4013', '6907', '7009', '7318', '8201', '8481', '8535', '8536', '8544', '9403'] // Cerveja, Tintas, Sabão, Construção, Peças
+            MONOFASICO: ['2203', '2202', '210690', '8708', '4011', '3303', '3304', '3305', '3307', '3004', '4013', '7009'],
+            ST_ICMS: ['2203', '2202', '3208', '3209', '3401', '3917', '3919', '3923', '4011', '4013', '6907', '7009', '7318']
         };
-
         let currentData = [];
-        let pgdasTotal = 0;
 
-        async function runAuditBot() {
-            // 1. Carregar Dados
+        function runAuditBot() {
             const xmlHistory = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const pgdasHistory = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
-            
-            // Calcular total PGDAS para referência
-            pgdasTotal = pgdasHistory.reduce((acc, p) => acc + parseFloat(p.rbt12 ? p.rbt12.replace('.','').replace(',','.') : "0"), 0); // Simplificação: usando RBT12 como proxy ou somar receitas mensais
-            // Melhor: Somar receitas mensais
-            pgdasTotal = pgdasHistory.reduce((acc, p) => {
-                const mes = p.atividades.reduce((a, at) => a + parseFloat(at.rec.replace('.','').replace(',','.')), 0);
-                return acc + mes;
-            }, 0);
-
-            document.getElementById('val-pgdas').innerText = pgdasTotal.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-
-            // 2. Flatten XML Items (Transformar em lista única de itens)
             currentData = [];
+            let totalXml = 0;
+
             xmlHistory.forEach(lote => {
                 lote.itens.forEach(item => {
-                    // Adiciona metadados para análise
-                    currentData.push({
-                        ...item,
-                        id: Math.random().toString(36).substr(2, 9), // ID temporário
-                        status: 'PENDENTE',
-                        sugestao: '',
-                        valor: parseFloat(item.ValorTotal.replace('.','').replace(',','.'))
-                    });
+                    const valor = parseFloat(item.ValorTotal.replace('.','').replace(',','.'));
+                    totalXml += valor;
+                    currentData.push({ ...item, id: Math.random(), status: 'PENDENTE', sugestao: '', valor });
                 });
             });
 
-            // 3. O Cérebro do Robô (Loop de Análise)
-            let errors = 0;
-            let recoveryPot = 0;
+            document.getElementById('val-xml').innerText = totalXml.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
 
+            let errors = 0, recoveryPot = 0;
             currentData.forEach(item => {
                 const ncm = item.NCM.replace(/\./g, '');
-                const cst = item.CSOSN || item.CST_PIS; // Pega o que tiver
-                
-                let isMono = RULE_SET.MONOFASICO.some(r => ncm.startsWith(r));
-                let isST = RULE_SET.ST_ICMS.some(r => ncm.startsWith(r));
-                let isTributado = cst === '102' || cst === '01' || cst === '49';
+                const cst = item.CSOSN || item.CST_PIS;
+                const isMono = RULE_SET.MONOFASICO.some(r => ncm.startsWith(r));
+                const isST = RULE_SET.ST_ICMS.some(r => ncm.startsWith(r));
+                const isTrib = cst === '102' || cst === '01';
 
-                if ((isMono || isST) && isTributado) {
+                if ((isMono || isST) && isTrib) {
                     item.status = 'ERRO';
-                    item.sugestao = isMono ? 'Reclassificar MONOFÁSICO (04/06)' : 'Reclassificar ICMS-ST (500/60)';
-                    item.newCST = isMono ? '04' : '500';
+                    item.sugestao = isMono ? 'Sugerido: Monofásico (04)' : 'Sugerido: ICMS-ST (500)';
                     errors++;
-                    recoveryPot += item.valor; // Assume que o valor todo foi tributado indevidamente
+                    recoveryPot += item.valor;
                 } else {
                     item.status = 'OK';
-                    item.sugestao = 'Correto conf. Legislação';
+                    item.sugestao = 'Correto';
                 }
             });
 
-            // 4. Atualizar Interface
             document.getElementById('count-items').innerText = currentData.length;
             document.getElementById('count-errors').innerText = errors;
             document.getElementById('val-recover').innerText = recoveryPot.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
-            
             renderTable();
         }
 
         function renderTable() {
             const tbody = document.getElementById('audit-body');
             tbody.innerHTML = '';
-
-            // Mostrar apenas erros primeiro, ou tudo? Vamos mostrar os erros no topo.
             currentData.sort((a, b) => (a.status === 'ERRO' ? -1 : 1));
-
-            currentData.forEach((item, index) => {
+            currentData.slice(0, 500).forEach((item, index) => {
                 const isErr = item.status === 'ERRO';
-                const rowClass = isErr ? 'error-row' : '';
-                const icon = isErr ? '<i class="fas fa-exclamation-triangle text-red-500"></i>' : '<i class="fas fa-check text-green-500"></i>';
-                
                 tbody.innerHTML += `
-                    <tr class="${rowClass}">
+                    <tr class="${isErr ? 'error-row' : ''}">
                         <td>${item.Data}</td>
-                        <td>
-                            <div class="font-bold text-white">${item.Produto}</div>
-                            <div class="text-[10px] text-zinc-500">NCM: ${item.NCM} | Val: R$ ${item.ValorTotal}</div>
-                        </td>
-                        <td class="${isErr ? 'text-red-400 font-bold' : 'text-zinc-400'}">${item.CSOSN || item.CST_PIS}</td>
-                        <td class="text-xs ${isErr ? 'text-orange-400' : 'text-zinc-500'}">${icon} ${item.sugestao}</td>
+                        <td><div class="font-bold text-white">${item.Produto}</div><div class="text-[10px] text-zinc-500">${item.NCM}</div></td>
+                        <td class="${isErr ? 'text-red-400 font-bold' : ''}">${item.CSOSN || item.CST_PIS}</td>
+                        <td class="text-xs ${isErr ? 'text-orange-400' : 'text-zinc-500'}">${item.sugestao}</td>
                         <td><span class="badge ${isErr ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'} px-2 py-1 rounded text-[9px] font-bold">${item.status}</span></td>
-                        <td>
-                            <button onclick="openEditModal(${index})" class="bg-zinc-800 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs">
-                                <i class="fas fa-pen"></i> Editar
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                        <td><button onclick="openEditModal(${index})" class="bg-zinc-800 text-white px-3 py-1 rounded text-xs">Editar</button></td>
+                    </tr>`;
             });
         }
 
-        // === LÓGICA DE EDIÇÃO E CORREÇÃO ===
-        let editingIndex = -1;
-
-        function openEditModal(idx) {
-            editingIndex = idx;
-            const item = currentData[idx];
-            
-            document.getElementById('edit-index').value = idx;
-            document.getElementById('edit-prod').value = item.Produto;
-            document.getElementById('edit-ncm').value = item.NCM;
-            document.getElementById('edit-cst').value = item.newCST || (item.CSOSN || '102');
-            
-            checkNCMRealTime(item.NCM); // Já roda uma verificação ao abrir
-            
+        let editIdx = -1;
+        function openEditModal(i) {
+            editIdx = i;
+            document.getElementById('edit-prod').value = currentData[i].Produto;
+            document.getElementById('edit-ncm').value = currentData[i].NCM;
             document.getElementById('edit-modal').style.display = 'flex';
         }
-
-        function closeModal() {
-            document.getElementById('edit-modal').style.display = 'none';
-        }
-
-        // "Robô" assistente no modal
-        document.getElementById('edit-ncm').addEventListener('input', function(e) {
-            checkNCMRealTime(e.target.value);
-        });
-
-        function checkNCMRealTime(ncmCode) {
-            const clean = ncmCode.replace(/\./g, '');
-            const isMono = RULE_SET.MONOFASICO.some(r => clean.startsWith(r));
-            const isST = RULE_SET.ST_ICMS.some(r => clean.startsWith(r));
-            const hint = document.getElementById('bot-hint');
-
-            if(isMono) {
-                hint.innerHTML = `<span class="text-green-400">Achado na Lei Federal!</span> Este NCM é Monofásico. CST Sugerido: 04.`;
-                document.getElementById('edit-cst').value = '04';
-            } else if (isST) {
-                hint.innerHTML = `<span class="text-blue-400">Achado no Convênio 142!</span> Este NCM é ST. CST Sugerido: 500.`;
-                document.getElementById('edit-cst').value = '500';
-            } else {
-                hint.innerHTML = `<span class="text-zinc-500">NCM não encontrado nas listas de benefício. Provavelmente tributado normal.</span>`;
+        function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+        function saveCorrection() {
+            if(editIdx > -1) {
+                currentData[editIdx].NCM = document.getElementById('edit-ncm').value;
+                currentData[editIdx].CSOSN = document.getElementById('edit-cst').value;
+                currentData[editIdx].status = 'CORRIGIDO';
+                renderTable();
+                closeModal();
             }
         }
-
-        function saveCorrection() {
-            if (editingIndex === -1) return;
-            
-            const newNCM = document.getElementById('edit-ncm').value;
-            const newCST = document.getElementById('edit-cst').value;
-            
-            // Atualiza o objeto na memória
-            currentData[editingIndex].NCM = newNCM;
-            currentData[editingIndex].CSOSN = newCST; // Atualiza para o novo
-            currentData[editingIndex].status = 'CORRIGIDO'; // Marca como corrigido manual
-            currentData[editingIndex].sugestao = 'Ajuste Manual pelo Usuário';
-            
-            // Aqui você poderia salvar de volta no localStorage se quisesse persistir a correção
-            // Para este exemplo, atualizamos a tela
-            
-            closeModal();
-            renderTable();
-            
-            // Recalcula totais (Simples)
-            let errors = currentData.filter(i => i.status === 'ERRO').length;
-            document.getElementById('count-errors').innerText = errors;
-        }
-
     </script>
 </body>
 </html>
