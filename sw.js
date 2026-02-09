@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-v12.0-master-total';
+const CACHE_NAME = 'fiscal-audit-v12.2-master-total';
 
 // Lista completa e atualizada de todos os anexos e dependências
 const ASSETS = [
@@ -66,3 +66,4 @@ self.addEventListener('fetch', (event) => {
         fetch(event.request).catch(() => caches.match(event.request))
     );
 });
+
