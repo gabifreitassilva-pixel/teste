@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V11.6 MASTER RECOVERY</title>
+    <title>FISCAL AUDIT - V11.7 MASTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -40,7 +40,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V11.6 RECOVERY</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V11.7 MASTER</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -50,6 +50,9 @@
             <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
             <div class="section-title">Auditoria</div>
             <div class="nav-link" onclick="showTab('cross-panel', this)"><i class="fas fa-sync"></i> Cruzar Informações</div>
+            <div class="nav-link" onclick="showTab('rectify-panel', this)"><i class="fas fa-edit"></i> Painel Retificações</div>
+            <div class="nav-link" onclick="showTab('save-panel', this)"><i class="fas fa-save"></i> Gravar Auditoria</div>
+            <div class="nav-link" onclick="showTab('global-panel', this)"><i class="fas fa-globe"></i> Histórico Global</div>
             <div class="section-title">Legislação</div>
             <div class="nav-link" onclick="showTab('leg-state', this)"><i class="fas fa-map-marker-alt"></i> Estadual</div>
             <div class="nav-link" onclick="showTab('leg-fed', this)"><i class="fas fa-flag"></i> Federal</div>
@@ -132,6 +135,9 @@
         </div>
 
         <div id="cross-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-[#f97316]">CRUZAR INFORMAÇÕES</h2></div>
+        <div id="rectify-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">PAINEL DE RETIFICAÇÕES</h2></div>
+        <div id="save-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">GRAVAR AUDITORIA</h2></div>
+        <div id="global-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">HISTÓRICO GLOBAL</h2></div>
     </main>
 
     <script>
@@ -142,12 +148,13 @@
         function showTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active'); el.classList.add('active');
+            const target = document.getElementById(tabId);
+            if(target) target.classList.add('active'); 
+            if(el) el.classList.add('active');
             if(tabId === 'xml-history-panel') renderXMLHistory();
             if(tabId === 'pgdas-history-panel') renderPGDASHistory();
         }
 
-        // --- MOTOR XML (RESTAURADO ITEM A ITEM) ---
         let xmlBuffer = [];
         async function handleXMLFiles(files) {
             xmlBuffer = [];
@@ -187,7 +194,6 @@
             alert("✅ XML Processado!"); renderXMLHistory();
         }
 
-        // --- MOTOR PGDAS (RESTAURADO FATIAMENTO ATIVIDADES) ---
         let pgdasFiles = [];
         function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs prontos`; document.getElementById('btn-run-pgdas').disabled = false; }
         async function processarPGDAS() {
