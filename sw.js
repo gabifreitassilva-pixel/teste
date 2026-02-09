@@ -1,4 +1,5 @@
-const CACHE_NAME = 'fiscal-audit-v10.4-pro';
+const CACHE_NAME = 'fiscal-audit-v10.5-pro';
+
 const ASSETS = [
     './',
     './index.html',
