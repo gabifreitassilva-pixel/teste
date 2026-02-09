@@ -1,4 +1,3 @@
-// 1. Atualize o nome da versão toda vez que mudar o index.html
 const CACHE_NAME = 'fiscal-audit-v9.1-pro';
 
 const ASSETS = [
@@ -8,13 +7,11 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-    // Adicione aqui outros ícones ou fontes se houver
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// Instalação: Armazena os arquivos no cache
 self.addEventListener('install', (event) => {
-    self.skipWaiting(); // Força o SW a se tornar ativo imediatamente
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll(ASSETS);
@@ -22,7 +19,6 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Ativação: Limpa caches de versões anteriores (v8.5, etc)
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -32,10 +28,9 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    self.clients.claim(); // Garante que o SW controle a página imediatamente
+    self.clients.claim();
 });
 
-// Estratégia de Busca: Tenta rede primeiro (para dados atualizados), se falhar usa cache
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request).catch(() => {
