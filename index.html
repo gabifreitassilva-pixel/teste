@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V11.7 MASTER</title>
+    <title>FISCAL AUDIT - V11.8 MASTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -33,6 +33,8 @@
         .tax-unit { font-size: 9px; display: flex; flex-direction: column; }
         .tax-unit span:first-child { color: #555; font-weight: 800; font-size: 8px; }
         .tax-unit span:last-child { color: #f97316; font-weight: 600; }
+        .btn-delete { color: #ef4444; transition: 0.2s; cursor: pointer; }
+        .btn-delete:hover { color: #f87171; transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -40,7 +42,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V11.7 MASTER</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V11.8 MASTER</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -50,9 +52,6 @@
             <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
             <div class="section-title">Auditoria</div>
             <div class="nav-link" onclick="showTab('cross-panel', this)"><i class="fas fa-sync"></i> Cruzar Informações</div>
-            <div class="nav-link" onclick="showTab('rectify-panel', this)"><i class="fas fa-edit"></i> Painel Retificações</div>
-            <div class="nav-link" onclick="showTab('save-panel', this)"><i class="fas fa-save"></i> Gravar Auditoria</div>
-            <div class="nav-link" onclick="showTab('global-panel', this)"><i class="fas fa-globe"></i> Histórico Global</div>
             <div class="section-title">Legislação</div>
             <div class="nav-link" onclick="showTab('leg-state', this)"><i class="fas fa-map-marker-alt"></i> Estadual</div>
             <div class="nav-link" onclick="showTab('leg-fed', this)"><i class="fas fa-flag"></i> Federal</div>
@@ -85,14 +84,20 @@
         <div id="xml-history-panel" class="tab-content">
             <header class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-black italic text-white">Histórico XML</h2>
-                <button onclick="exportBatchXML()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase">Exportar Lote por CNPJ</button>
+                <div class="flex gap-2">
+                    <button onclick="clearFullHistory('xml')" class="bg-red-900/30 text-red-500 border border-red-900/50 px-4 py-2 rounded-lg text-[9px] font-black uppercase">Limpar Tudo</button>
+                    <button onclick="exportBatchXML()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase">Exportar Lote por CNPJ</button>
+                </div>
             </header>
-            <div class="table-container"><table><thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa</th><th>Ref</th><th>Qtd Nota</th><th>Ações</th></tr></thead><tbody id="tbody-xml"></tbody></table></div>
+            <div class="table-container"><table><thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa</th><th>Ref</th><th>Qtd Nota</th><th width="100">Ações</th></tr></thead><tbody id="tbody-xml"></tbody></table></div>
         </div>
 
         <div id="pgdas-history-panel" class="tab-content">
-            <header class="flex justify-between items-center mb-6"><h2 class="text-2xl font-black italic text-white">Histórico PGDAS</h2></header>
-            <div class="table-container"><table><thead><tr><th width="20%">Razão Social</th><th width="10%">RBT12</th><th width="60%">Atividades</th><th width="10%">Total DAS</th></tr></thead><tbody id="tbody-pgdas"></tbody></table></div>
+            <header class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black italic text-white">Histórico PGDAS</h2>
+                <button onclick="clearFullHistory('pgdas')" class="bg-red-900/30 text-red-500 border border-red-900/50 px-4 py-2 rounded-lg text-[9px] font-black uppercase">Limpar Tudo</button>
+            </header>
+            <div class="table-container"><table><thead><tr><th width="20%">Razão Social</th><th width="10%">RBT12</th><th width="60%">Atividades</th><th width="10%">Total DAS</th><th width="40"></th></tr></thead><tbody id="tbody-pgdas"></tbody></table></div>
         </div>
 
         <div id="leg-state" class="tab-content">
@@ -135,9 +140,6 @@
         </div>
 
         <div id="cross-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-[#f97316]">CRUZAR INFORMAÇÕES</h2></div>
-        <div id="rectify-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">PAINEL DE RETIFICAÇÕES</h2></div>
-        <div id="save-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">GRAVAR AUDITORIA</h2></div>
-        <div id="global-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">HISTÓRICO GLOBAL</h2></div>
     </main>
 
     <script>
@@ -155,6 +157,7 @@
             if(tabId === 'pgdas-history-panel') renderPGDASHistory();
         }
 
+        // --- MOTOR XML ---
         let xmlBuffer = [];
         async function handleXMLFiles(files) {
             xmlBuffer = [];
@@ -183,10 +186,7 @@
                 if (!groups[key]) groups[key] = { key, empresa: xNome, cnpj, cnpjRaw: cnpj, ref, mesSort: parseInt(a+m), qtd: 0, itens: [] };
                 groups[key].qtd++;
                 Array.from(xml.getElementsByTagName("det")).forEach(det => {
-                    const vProd = parseFloat(det.getElementsByTagName("vProd")[0]?.textContent || 0);
-                    const ncm = det.getElementsByTagName("NCM")[0]?.textContent || "0";
-                    const pisCST = det.getElementsByTagName("PIS")[0]?.getElementsByTagName("CST")[0]?.textContent || "";
-                    groups[key].itens.push({ Empresa: xNome, CNPJ: cnpj, Mes: ref, Nota: nNF, Produto: det.getElementsByTagName("xProd")[0]?.textContent, NCM: ncm, Valor: vProd, CST_PIS: pisCST });
+                    groups[key].itens.push({ Empresa: xNome, CNPJ: cnpj, Mes: ref, Nota: nNF, Produto: det.getElementsByTagName("xProd")[0]?.textContent, NCM: det.getElementsByTagName("NCM")[0]?.textContent, Valor: parseFloat(det.getElementsByTagName("vProd")[0]?.textContent || 0), CST_PIS: det.getElementsByTagName("PIS")[0]?.getElementsByTagName("CST")[0]?.textContent || "" });
                 });
             });
             Object.values(groups).forEach(g => history.push(g));
@@ -194,6 +194,7 @@
             alert("✅ XML Processado!"); renderXMLHistory();
         }
 
+        // --- MOTOR PGDAS ---
         let pgdasFiles = [];
         function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs prontos`; document.getElementById('btn-run-pgdas').disabled = false; }
         async function processarPGDAS() {
@@ -219,14 +220,48 @@
             alert("✅ PGDAS Processado!"); renderPGDASHistory();
         }
 
+        // --- RENDERERS COM FUNÇÃO DE EXCLUSÃO ---
         function renderXMLHistory() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr><td><input type="checkbox" class="xml-sel" data-idx="${i}"></td><td><b class="text-white uppercase">${it.empresa}</b></td><td class="text-orange-500 font-bold">${it.ref}</td><td class="text-white font-black">${it.qtd}</td><td><button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase">Planilha</button></td></tr>`).join('');
+            document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr>
+                <td><input type="checkbox" class="xml-sel" data-idx="${i}"></td>
+                <td><b class="text-white uppercase">${it.empresa}</b></td>
+                <td class="text-orange-500 font-bold">${it.ref}</td>
+                <td class="text-white font-black">${it.qtd}</td>
+                <td class="flex items-center gap-4">
+                    <button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase">Planilha</button>
+                    <i class="fas fa-trash-alt btn-delete" onclick="deleteEntry('xml', ${i})" title="Excluir Período"></i>
+                </td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Nenhum XML carregado</td></tr>';
         }
 
         function renderPGDASHistory() {
             const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
-            document.getElementById('tbody-pgdas').innerHTML = h.map(it => `<tr><td><b class="text-white uppercase">${it.razao}</b><br><small>${it.cnpj}</small></td><td class="font-bold text-zinc-400">R$ ${it.rbt12}</td><td>${it.atividades.map(a => `<div class="activity-item"><div class="text-[8px] font-black uppercase text-zinc-500">${a.desc} - R$ ${a.receita}</div><div class="tax-grid"><div class="tax-unit"><span>PIS</span><span>${a.det[3]}</span></div><div class="tax-unit"><span>COFINS</span><span>${a.det[2]}</span></div><div class="tax-unit"><span>ICMS</span><span>${a.det[5]}</span></div><div class="tax-unit"><span>TOTAL</span><span class="text-white">${a.total}</span></div></div></div>`).join('')}</td><td class="text-orange-500 font-black text-[12px]">R$ ${it.dasTotal}</td></tr>`).join('');
+            document.getElementById('tbody-pgdas').innerHTML = h.map((it, i) => `<tr>
+                <td><b class="text-white uppercase">${it.razao}</b><br><small>${it.cnpj}</small></td>
+                <td class="font-bold text-zinc-400">R$ ${it.rbt12}</td>
+                <td>${it.atividades.map(a => `<div class="activity-item"><div class="text-[8px] font-black uppercase text-zinc-500">${a.desc} - R$ ${a.receita}</div><div class="tax-grid"><div class="tax-unit"><span>PIS</span><span>${a.det[3]}</span></div><div class="tax-unit"><span>COFINS</span><span>${a.det[2]}</span></div><div class="tax-unit"><span>ICMS</span><span>${a.det[5]}</span></div><div class="tax-unit"><span>TOTAL</span><span class="text-white">${a.total}</span></div></div></div>`).join('')}</td>
+                <td class="text-orange-500 font-black text-[12px]">R$ ${it.dasTotal}</td>
+                <td><i class="fas fa-trash-alt btn-delete" onclick="deleteEntry('pgdas', ${i})" title="Excluir Período"></i></td>
+            </tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Nenhum PGDAS carregado</td></tr>';
+        }
+
+        // --- FUNÇÕES DE EXCLUSÃO ---
+        function deleteEntry(type, index) {
+            const key = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
+            let h = JSON.parse(localStorage.getItem(key)) || [];
+            if(confirm(`Deseja excluir este período do histórico?`)) {
+                h.splice(index, 1);
+                localStorage.setItem(key, JSON.stringify(h));
+                type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
+            }
+        }
+
+        function clearFullHistory(type) {
+            const key = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
+            if(confirm(`ALERTA: Deseja apagar TODO o histórico de ${type.toUpperCase()}? Esta ação não pode ser desfeita.`)) {
+                localStorage.removeItem(key);
+                type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
+            }
         }
 
         function downloadOneXML(idx) {
