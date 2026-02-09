@@ -1,10 +1,15 @@
 <script>
+        /**
+         * FISCAL AUDIT - MOTOR V13.0 (CORREÇÃO DEFINITIVA)
+         * Foco: Extração Exata de Dados e Relatório CSV Completo
+         */
+
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         
         const MONTHS = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
 
-        // --- SISTEMA DE TABS ---
+        // --- NAVEGAÇÃO ENTRE ABAS ---
         function showTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
@@ -15,7 +20,7 @@
             if(id === 'pgdas-history-panel') renderPGDASHistory();
         }
 
-        // --- MOTOR XML (CORRIGIDO E TURBINADO) ---
+        // --- 1. MOTOR DE LEITURA XML ---
         let xmlBuffer = [];
 
         async function handleXMLFiles(files) {
@@ -31,132 +36,251 @@
                         for (let p of xmlFiles) {
                             xmlBuffer.push(await zip.files[p].async("text"));
                         }
-                    } catch(e) { console.error("Erro no ZIP", e); }
+                    } catch(e) { console.error("Erro ZIP", e); }
                 } else if (f.name.toLowerCase().endsWith('.xml')) {
                     xmlBuffer.push(await f.text());
                 }
             }
-            label.innerText = `${xmlBuffer.length} XMLs Carregados (Clique em Gravar)`;
+            label.innerText = `${xmlBuffer.length} Arquivos Carregados. Clique em GRAVAR.`;
             document.getElementById('btn-run-xml').disabled = false;
         }
 
-        // Função auxiliar para pegar valor de tag com segurança
-        const getTag = (el, tag) => el.getElementsByTagName(tag)[0]?.textContent || "";
-        
-        // Função para pegar CST/CSOSN específico dentro de um grupo (PIS, COFINS, etc)
-        const getTaxCST = (det, groupTag, fieldTags) => {
-            const group = det.getElementsByTagName(groupTag)[0];
+        // Função para encontrar CST/CSOSN independente da estrutura (ICMS00, ICMS10, ICMSSN102, etc)
+        function findTaxValue(det, taxGroup, tagNames) {
+            const group = det.getElementsByTagName(taxGroup)[0];
             if (!group) return "";
-            for (let tag of fieldTags) {
-                const val = group.getElementsByTagName(tag)[0]?.textContent;
-                if (val) return val;
+            
+            // Tenta encontrar as tags diretamente dentro do grupo (ex: <CST> dentro de <PIS>)
+            for (let tag of tagNames) {
+                const els = group.getElementsByTagName(tag);
+                if (els.length > 0) return els[0].textContent;
             }
             return "";
-        };
+        }
 
         function processarXML() {
-            if (xmlBuffer.length === 0) return alert("Nenhum arquivo carregado.");
+            if (xmlBuffer.length === 0) return alert("Nenhum arquivo para processar.");
             
+            // Carrega histórico atual
             const db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            // Mapa temporário para agrupar antes de salvar
-            const groups = {}; 
+            const tempGroups = {}; // Agrupamento temporário desta carga
 
-            xmlBuffer.forEach(text => {
-                const parser = new DOMParser();
-                const xml = parser.parseFromString(text, "text/xml");
+            const parser = new DOMParser();
+
+            xmlBuffer.forEach(xmlContent => {
+                const xml = parser.parseFromString(xmlContent, "text/xml");
                 
-                // 1. Identificação da Nota
-                const ide = xml.getElementsByTagName("ide")[0];
+                // --- A. DADOS DO CABEÇALHO ---
                 const emit = xml.getElementsByTagName("emit")[0];
+                const ide = xml.getElementsByTagName("ide")[0];
                 
-                if (!ide || !emit) return; // XML inválido
+                if (!emit || !ide) return; // Pula XML inválido
 
-                const cnpj = getTag(emit, "CNPJ");
-                const xNome = getTag(emit, "xNome");
-                const nNF = getTag(ide, "nNF");
+                const cnpj = emit.getElementsByTagName("CNPJ")[0]?.textContent || "";
+                const xNome = emit.getElementsByTagName("xNome")[0]?.textContent || "DESCONHECIDO";
+                const nNF = ide.getElementsByTagName("nNF")[0]?.textContent || "";
                 
-                // 2. Tratamento da Data (dhEmi ou dEmi)
-                let rawDate = getTag(ide, "dhEmi") || getTag(ide, "dEmi");
-                if (!rawDate) return;
-                
-                // Converte string ISO para objeto Date (ex: 2026-02-09T...)
-                const dateObj = new Date(rawDate);
-                if (isNaN(dateObj.getTime())) return; // Data inválida
+                // Tratamento Rigoroso da Data
+                let dataEmissaoRaw = ide.getElementsByTagName("dhEmi")[0]?.textContent || ide.getElementsByTagName("dEmi")[0]?.textContent;
+                if (!dataEmissaoRaw) return;
 
-                const mesIndex = dateObj.getMonth(); // 0 a 11
-                const ano = dateObj.getFullYear();
-                
-                // Formato exigido: FEVEREIRO/2026
-                const refPorExtenso = `${MONTHS[mesIndex]}/${ano}`;
-                
-                // Chave única para agrupamento: CNPJ + ANO + MÊS
-                const key = `${cnpj}_${ano}_${mesIndex}`;
+                const dataObj = new Date(dataEmissaoRaw); // Cria objeto Data
+                if (isNaN(dataObj.getTime())) return;
 
-                // Cria o grupo se não existir
-                if (!groups[key]) {
-                    groups[key] = {
-                        key: key,
+                const mes = dataObj.getMonth(); // 0-11
+                const ano = dataObj.getFullYear();
+                
+                // Formato de exibição: JANEIRO/2026
+                const refExibicao = `${MONTHS[mes]}/${ano}`;
+                // Chave única para agrupar: CNPJ + ANO + MES
+                const groupKey = `${cnpj}_${ano}_${mes}`;
+
+                // --- B. CRIAÇÃO DO GRUPO (SE NÃO EXISTIR) ---
+                if (!tempGroups[groupKey]) {
+                    tempGroups[groupKey] = {
+                        key: groupKey,
                         empresa: xNome,
                         cnpj: cnpj,
-                        ref: refPorExtenso, // Exibição
-                        mesSort: parseInt(`${ano}${mesIndex.toString().padStart(2,'0')}`), // Ordenação
+                        ref: refExibicao,
+                        mesSort: parseInt(`${ano}${mes.toString().padStart(2,'0')}`), // Para ordenar depois
                         qtd: 0,
                         itens: []
                     };
                 }
 
-                // Incrementa contador de notas
-                groups[key].qtd++;
+                tempGroups[groupKey].qtd++; // Conta +1 nota neste grupo
 
-                // 3. Extração dos Itens (Produtos)
+                // --- C. DADOS DOS PRODUTOS (ITENS) ---
                 const dets = xml.getElementsByTagName("det");
                 Array.from(dets).forEach(det => {
                     const prod = det.getElementsByTagName("prod")[0];
                     if (!prod) return;
 
-                    groups[key].itens.push({
-                        nomeEmitente: xNome,
-                        cnpjEmitente: cnpj,
-                        mesAno: refPorExtenso,
-                        nNF: nNF,
-                        ncm: getTag(prod, "NCM"),
-                        xProd: getTag(prod, "xProd"),
-                        vUnCom: getTag(prod, "vUnCom"), // Valor Unitário
-                        vProd: getTag(prod, "vProd"),   // Valor Total
+                    // Busca valores de impostos
+                    const cstPis = findTaxValue(det, "PIS", ["CST"]);
+                    const cstCofins = findTaxValue(det, "COFINS", ["CST"]);
+                    const cstIpi = findTaxValue(det, "IPI", ["CST"]);
+                    const icms = findTaxValue(det, "ICMS", ["CST", "CSOSN"]); // Pega CST ou CSOSN
+
+                    tempGroups[groupKey].itens.push({
+                        // Dados Cabeçalho para o CSV
+                        empresa: xNome,
+                        cnpj: cnpj,
+                        ref: refExibicao,
+                        dataEmissao: dataObj.toLocaleDateString('pt-BR'), // DD/MM/AAAA
+                        nota: nNF,
                         
-                        // Extração Específica de Impostos
-                        cstPis: getTaxCST(det, "PIS", ["CST"]),
-                        cstCofins: getTaxCST(det, "COFINS", ["CST"]),
-                        cstIpi: getTaxCST(det, "IPI", ["CST"]),
-                        // ICMS pode ser CST ou CSOSN
-                        icmsCstCsosn: getTaxCST(det, "ICMS", ["CST", "CSOSN", "orig"]) // Tenta achar qualquer um
+                        // Dados do Produto
+                        ncm: prod.getElementsByTagName("NCM")[0]?.textContent || "",
+                        xProd: prod.getElementsByTagName("xProd")[0]?.textContent || "",
+                        vUn: prod.getElementsByTagName("vUnCom")[0]?.textContent || "0",
+                        vTot: prod.getElementsByTagName("vProd")[0]?.textContent || "0",
+                        
+                        // Impostos
+                        pis: cstPis,
+                        cofins: cstCofins,
+                        ipi: cstIpi,
+                        icms: icms
                     });
                 });
             });
 
-            // Mesclar com o banco de dados existente
-            // Se já existe o grupo, substituímos ou somamos? Aqui vou adicionar novos grupos ou atualizar existentes.
-            Object.values(groups).forEach(newGroup => {
-                const existingIndex = db.findIndex(h => h.key === newGroup.key);
-                if (existingIndex >= 0) {
-                    // Se já existe, atualiza (substitui para evitar duplicidade de itens da mesma carga)
-                    db[existingIndex] = newGroup;
+            // --- D. SALVAR NO LOCALSTORAGE ---
+            // Mescla os novos grupos com o banco de dados existente
+            Object.values(tempGroups).forEach(novoGrupo => {
+                // Verifica se já existe esse CNPJ nesse Mês no banco
+                const index = db.findIndex(g => g.key === novoGrupo.key);
+                if (index > -1) {
+                    // Se existe, atualiza (substitui) para evitar duplicidade de notas
+                    db[index] = novoGrupo; 
                 } else {
-                    db.push(newGroup);
+                    db.push(novoGrupo);
                 }
             });
 
             localStorage.setItem('xml_audit_history', JSON.stringify(db));
-            alert(`✅ Processamento Concluído!\n${Object.keys(groups).length} Referências processadas.`);
-            renderXMLHistory();
             
-            // Limpa buffer para liberar memória
+            // Limpa memória e atualiza tela
             xmlBuffer = [];
             document.getElementById('label-xml').innerText = "Carregar arquivos";
             document.getElementById('btn-run-xml').disabled = true;
+            
+            alert("✅ Processamento Concluído com Sucesso!");
+            renderXMLHistory();
         }
 
-        // --- MOTOR PGDAS (Mantido igual, se quiser alterar avise) ---
+        // --- 2. RENDERIZAÇÃO DO HISTÓRICO XML ---
+        function renderXMLHistory() {
+            const db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            
+            // Ordena: Mais recente primeiro
+            db.sort((a, b) => b.mesSort - a.mesSort);
+
+            const tbody = document.getElementById('tbody-xml');
+            
+            if (db.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Nenhum histórico encontrado. Carregue XMLs.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = db.map((grupo, i) => `
+                <tr class="hover:bg-zinc-900 transition-colors">
+                    <td><input type="checkbox" class="xml-sel" data-idx="${i}"></td>
+                    <td>
+                        <b class="text-white uppercase text-[11px] block">${grupo.empresa}</b>
+                        <span class="text-zinc-500 text-[10px] tracking-wider">${grupo.cnpj}</span>
+                    </td>
+                    <td class="text-orange-500 font-bold uppercase text-[11px] tracking-wide">
+                        ${grupo.ref}
+                    </td>
+                    <td class="text-white font-black text-center text-[12px]">
+                        ${grupo.qtd}
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <button onclick="baixarRelatorioCSV(${i})" class="bg-[#111] text-zinc-300 border border-zinc-700 hover:text-white hover:border-orange-500 px-3 py-1 rounded text-[9px] font-bold uppercase transition-all">
+                                <i class="fas fa-file-csv mr-1"></i> Excel
+                            </button>
+                            <i class="fas fa-trash-alt trash-icon" onclick="deletarXML(${i})"></i>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- 3. GERADOR DE RELATÓRIO (CSV/EXCEL) ---
+        function baixarRelatorioCSV(index) {
+            const db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            db.sort((a, b) => b.mesSort - a.mesSort); // Garante a mesma ordem da tela
+            
+            const grupo = db[index];
+            if (!grupo) return;
+
+            // Cabeçalho Oficial pedido
+            let csvContent = "Nome da Empresa;CNPJ;Mês Referência;Data Emissão;Nota Fiscal;NCM;Descrição Produto;Vl. Unitário;Vl. Total;CST PIS;CST COFINS;CST/CSOSN ICMS;CST IPI\n";
+
+            grupo.itens.forEach(item => {
+                // Tratamento para CSV (Substitui ponto por vírgula e remove ; da descrição)
+                const desc = item.xProd.replace(/;/g, " ").trim();
+                const vUn = item.vUn.replace('.', ',');
+                const vTot = item.vTot.replace('.', ',');
+
+                csvContent += `${item.empresa};${item.cnpj};${item.ref};${item.dataEmissao};${item.nota};${item.ncm};${desc};${vUn};${vTot};${item.pis};${item.cofins};${item.icms};${item.ipi}\n`;
+            });
+
+            // Cria o Blob e baixa com BOM para acentuação correta
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const nomeArquivo = `AUDIT_${grupo.empresa.substring(0,10)}_${grupo.ref.replace('/','-')}.csv`;
+            
+            link.href = URL.createObjectURL(blob);
+            link.download = nomeArquivo;
+            link.click();
+        }
+
+        function exportBatchXML() {
+            const db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            db.sort((a, b) => b.mesSort - a.mesSort);
+            
+            const checks = document.querySelectorAll('.xml-sel:checked');
+            if (checks.length === 0) return alert("Selecione itens para exportar.");
+
+            let csvContent = "Nome da Empresa;CNPJ;Mês Referência;Data Emissão;Nota Fiscal;NCM;Descrição Produto;Vl. Unitário;Vl. Total;CST PIS;CST COFINS;CST/CSOSN ICMS;CST IPI\n";
+
+            checks.forEach(chk => {
+                const idx = parseInt(chk.dataset.idx);
+                const grupo = db[idx];
+                
+                grupo.itens.forEach(item => {
+                    const desc = item.xProd.replace(/;/g, " ").trim();
+                    const vUn = item.vUn.replace('.', ',');
+                    const vTot = item.vTot.replace('.', ',');
+                    csvContent += `${item.empresa};${item.cnpj};${item.ref};${item.dataEmissao};${item.nota};${item.ncm};${desc};${vUn};${vTot};${item.pis};${item.cofins};${item.icms};${item.ipi}\n`;
+                });
+            });
+
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `AUDITORIA_CONSOLIDADA_${Date.now()}.csv`;
+            link.click();
+        }
+
+        function deletarXML(index) {
+            if(confirm("Deseja apagar este histórico?")) {
+                let db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+                db.sort((a, b) => b.mesSort - a.mesSort);
+                db.splice(index, 1);
+                localStorage.setItem('xml_audit_history', JSON.stringify(db));
+                renderXMLHistory();
+            }
+        }
+        
+        function toggleChecks(source) {
+            document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = source.checked);
+        }
+
+        // --- 4. MOTOR PGDAS (MANTIDO E FUNCIONAL) ---
         let pgdasFiles = [];
         function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs Prontos`; document.getElementById('btn-run-pgdas').disabled = false; }
         
@@ -185,23 +309,6 @@
             alert("✅ PGDAS Gravados!"); renderPGDASHistory();
         }
 
-        // --- RENDERIZADORES ---
-        function renderXMLHistory() {
-            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            // Ordenar por data (mais recente primeiro)
-            h.sort((a, b) => b.mesSort - a.mesSort);
-
-            document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr>
-                <td><input type="checkbox" class="xml-sel" data-idx="${i}"></td>
-                <td><b class="text-white uppercase text-[10px]">${it.empresa}</b><br><small class="text-zinc-500">${it.cnpj}</small></td>
-                <td class="text-orange-500 font-bold uppercase">${it.ref}</td>
-                <td class="text-white font-black text-center">${it.qtd}</td>
-                <td><div class="flex items-center gap-3">
-                    <button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase hover:bg-zinc-700"><i class="fas fa-download mr-1"></i> CSV</button>
-                    <i class="fas fa-trash-alt trash-icon" onclick="deleteItem('xml', ${i})"></i>
-                </div></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Nenhum histórico encontrado</td></tr>';
-        }
-
         function renderPGDASHistory() {
             const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
             document.getElementById('tbody-pgdas').innerHTML = h.map((it, i) => `<tr>
@@ -220,91 +327,17 @@
         }
 
         function deleteItem(type, idx) {
-            const k = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
-            let d = JSON.parse(localStorage.getItem(k));
-            // Como ordenamos na visualização, precisamos achar o item correto no array original
-            // Simplificação: vamos re-buscar e deletar pelo Key ou Index direto se não tiver ordenação complexa
-            // Para garantir, vamos usar filter no XML
-            if (type === 'xml') {
-                // Como renderizamos ordenado, o idx clicado não é o idx do localStorage.
-                // Vamos refazer a lógica simples: deletar e renderizar. 
-                // Nota: Ideal seria usar ID único, mas vamos deletar do array ordenado e salvar.
-                d.sort((a, b) => b.mesSort - a.mesSort); // Aplica mesma ordenação
-                if(confirm(`Excluir ${d[idx].ref}?`)) {
-                    d.splice(idx, 1);
-                    localStorage.setItem(k, JSON.stringify(d));
-                    renderXMLHistory();
-                }
-            } else {
-                if(confirm("Confirmar exclusão?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); renderPGDASHistory(); }
+            if(type === 'xml') deletarXML(idx);
+            else {
+                let d = JSON.parse(localStorage.getItem('pgdas_pdf_audit'));
+                if(confirm("Apagar?")) { d.splice(idx, 1); localStorage.setItem('pgdas_pdf_audit', JSON.stringify(d)); renderPGDASHistory(); }
             }
         }
+        function clearHistory(type) { if(confirm("Apagar TUDO?")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
 
-        function clearHistory(type) { if(confirm("Apagar TODO o histórico? Esta ação é irreversível.")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
-        
-        // --- GERADOR DE CSV DETALHADO ---
-        function generateCSV(data) {
-            // Cabeçalho ajustado conforme solicitação
-            let csv = "\ufeffEmpresa;CNPJ Emitente;Mês/Ano;Nota;NCM;Descrição Produto;Vl. Unit;Vl. Total;CST PIS;CST COFINS;CST/CSOSN ICMS;CST IPI\n";
-            
-            data.forEach(d => {
-                // Tratamento para evitar que ponto e vírgula no nome do produto quebre o CSV
-                const descSegura = d.xProd.replace(/;/g, " ");
-                const valorUnit = d.vUnCom.replace(".", ",");
-                const valorTotal = d.vProd.replace(".", ",");
-
-                csv += `${d.nomeEmitente};${d.cnpjEmitente};${d.mesAno};${d.nNF};${d.ncm};${descSegura};${valorUnit};${valorTotal};${d.cstPis};${d.cstCofins};${d.icmsCstCsosn};${d.cstIpi}\n`;
-            });
-            return csv;
-        }
-
-        function downloadOneXML(idx) {
-            let d = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            d.sort((a, b) => b.mesSort - a.mesSort);
-            const registro = d[idx];
-            
-            const csvContent = generateCSV(registro.itens);
-            
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
-            link.download = `AUDIT_${registro.empresa.replace(/\s+/g,'_')}_${registro.ref.replace('/','-')}.csv`;
-            link.click();
-        }
-        
-        function exportBatchXML() {
-            // Pega todos os selecionados
-            const checkboxes = document.querySelectorAll('.xml-sel:checked');
-            if(checkboxes.length === 0) return alert("Selecione pelo menos um item da lista.");
-
-            let d = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            d.sort((a, b) => b.mesSort - a.mesSort);
-
-            // Junta os itens de todos os selecionados em um único CSVzão ou baixa vários?
-            // Vamos baixar um CSV consolidado com tudo que foi selecionado
-            let allItems = [];
-            checkboxes.forEach(cb => {
-                const idx = parseInt(cb.dataset.idx);
-                if(d[idx]) allItems = allItems.concat(d[idx].itens);
-            });
-
-            const csvContent = generateCSV(allItems);
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
-            link.download = `AUDITORIA_CONSOLIDADA_${new Date().getTime()}.csv`;
-            link.click();
-        }
-
-        function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
-        
         document.addEventListener('DOMContentLoaded', () => { 
             renderXMLHistory(); 
             renderPGDASHistory(); 
-            
-            // Service Worker
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW ok'))
-                    .catch(err => console.log('SW erro', err));
-            }
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
         });
     </script>
