@@ -1,34 +1,15 @@
-const CACHE_NAME = 'fiscal-audit-v11.1-master';
+const CACHE_NAME = 'fiscal-audit-v11.5-final';
 
-// Lista exata baseada nos arquivos do seu repositório
 const ASSETS = [
     './',
     './index.html',
-    './base reduzida.html',
-    './Artigos de papelaria.html',
     './auto pecas.html',
-    './bebidas alcolicas exceto cerveja e chope.html',
-    './Bicicletas.html',
-    './Brinquedos e artigos de esporte.html',
-    './cerveja chopes refrigerante agua e outras bebidas.html',
-    './cimentos.html',
-    './Eletronicos e eletrodomesticosl.html',
-    './energia eletrica.html',
-    './ferramenta.html',
-    './Instrumentos Musicais.html',
-    './lampadas reatores e starters.html',
-    './materiais de contrucao e congeneres vidros e metais.html',
-    './materiais de contrucao e congeneres.html',
-    './Materiais eletricos.html',
-    './Perfumaria e higiene pessoal.html',
-    './Pneumáticos e Câmaras de Ar.html',
-    './produto de limpezal.html',
     './Produtos alimenticios.html',
-    './Ração Animal.html',
-    './Sorvete e Preparado para Sorvete.html',
-    './Tintas, Vernizes e Produtos Químicos.html',
-    './Veículos Automotores Novos.html',
+    './Perfumaria e higiene pessoal.html',
+    './bebidas alcolicas exceto cerveja e chope.html',
+    './cimentos.html',
     './pis e cofins.html',
+    './base reduzida.html',
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
@@ -38,27 +19,16 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('Instalando Cache V11.1...');
-            return cache.addAll(ASSETS);
-        })
-    );
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-            );
-        })
-    );
+    event.waitUntil(caches.keys().then((keys) => Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    )));
     self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
-    );
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
