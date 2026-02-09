@@ -1,5 +1,6 @@
-const CACHE_NAME = 'fiscal-audit-v11.0-master';
+const CACHE_NAME = 'fiscal-audit-v11.1-master';
 
+// Lista exata baseada nos arquivos do seu repositório
 const ASSETS = [
     './',
     './index.html',
@@ -35,17 +36,16 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// Instalação e Cache
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
+            console.log('Instalando Cache V11.1...');
             return cache.addAll(ASSETS);
         })
     );
 });
 
-// Ativação e Limpeza de Cache Antigo
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -57,7 +57,6 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Estratégia de busca (Network First com Fallback para Cache)
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         fetch(event.request).catch(() => caches.match(event.request))
