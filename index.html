@@ -109,28 +109,7 @@
                 <a href="base reduzida.html" target="_blank" class="legis-card"><h4>Base Reduzida</h4><p>Anexo II SP</p></a>
                 <a href="Artigos de papelaria.html" target="_blank" class="legis-card"><h4>Papelaria e Papel</h4><p>Anexo XVI</p></a>
                 <a href="auto pecas.html" target="_blank" class="legis-card"><h4>Autopeças</h4><p>Anexo XIV</p></a>
-                <a href="bebidas alcolicas exceto cerveja e chope.html" target="_blank" class="legis-card"><h4>Bebidas Alcoólicas</h4><p>Anexo III</p></a>
-                <a href="Bicicletas.html" target="_blank" class="legis-card"><h4>Bicicletas</h4><p>Anexo XXIII-A</p></a>
-                <a href="Brinquedos e artigos de esporte.html" target="_blank" class="legis-card"><h4>Brinquedos e Esporte</h4><p>Anexo XVII</p></a>
-                <a href="cerveja chopes refrigerante agua e outras bebidas.html" target="_blank" class="legis-card"><h4>Cerveja e Águas</h4><p>Anexo IV</p></a>
-                <a href="cimentos.html" target="_blank" class="legis-card"><h4>Cimento</h4><p>Anexo VI</p></a>
-                <a href="Eletronicos e eletrodomesticosl.html" target="_blank" class="legis-card"><h4>Eletrônicos</h4><p>Anexo XV</p></a>
-                <a href="energia eletrica.html" target="_blank" class="legis-card"><h4>Energia Elétrica</h4><p>Anexo VIII</p></a>
-                <a href="ferramenta.html" target="_blank" class="legis-card"><h4>Ferramentas</h4><p>Anexo XXIV</p></a>
-                <a href="Instrumentos Musicais.html" target="_blank" class="legis-card"><h4>Instrumentos Musicais</h4><p>Anexo XXII-A</p></a>
-                <a href="lampadas reatores e starters.html" target="_blank" class="legis-card"><h4>Lâmpadas e Reatores</h4><p>Anexo X</p></a>
-                <a href="materiais de contrucao e congeneres.html" target="_blank" class="legis-card"><h4>Construção P1</h4><p>Anexo XI</p></a>
-                <a href="materiais de contrucao e congeneres vidros e metais.html" target="_blank" class="legis-card"><h4>Construção P2</h4><p>Anexo XI</p></a>
-                <a href="Materiais eletricos.html" target="_blank" class="legis-card"><h4>Materiais Elétricos</h4><p>Anexo XVIII</p></a>
-                <a href="Perfumaria e higiene pessoal.html" target="_blank" class="legis-card"><h4>Perfumaria</h4><p>Anexo XIII</p></a>
-                <a href="Pneumáticos e Câmaras de Ar.html" target="_blank" class="legis-card"><h4>Pneus e Câmaras</h4><p>Anexo XVI</p></a>
-                <a href="produto de limpezal.html" target="_blank" class="legis-card"><h4>Produtos de Limpeza</h4><p>Anexo XXI</p></a>
-                <a href="Produtos alimenticios.html" target="_blank" class="legis-card"><h4>Alimentos</h4><p>Anexo XII</p></a>
-                <a href="Ração Animal.html" target="_blank" class="legis-card"><h4>Ração Animal</h4><p>Anexo XXII</p></a>
-                <a href="Sorvete e Preparado para Sorvete.html" target="_blank" class="legis-card"><h4>Sorvetes</h4><p>Anexo XXVI</p></a>
-                <a href="Tintas, Vernizes e Produtos Químicos.html" target="_blank" class="legis-card"><h4>Tintas e Químicos</h4><p>Anexo XXIII</p></a>
-                <a href="Veículos Automotores Novos.html" target="_blank" class="legis-card"><h4>Veículos Novos</h4><p>Anexo XXV/XXVI</p></a>
-            </div>
+                </div>
         </div>
 
         <div id="leg-fed" class="tab-content">
@@ -161,7 +140,7 @@
             if(id === 'pgdas-history-panel') renderPGDASHistory();
         }
 
-        // --- MOTOR XML (LOGICA V10.5 COMPLETA) ---
+        // --- MOTOR XML ---
         let xmlBuffer = [];
         async function handleXMLFiles(files) {
             xmlBuffer = [];
@@ -197,12 +176,12 @@
             alert("✅ XMLs Gravados!"); renderXMLHistory();
         }
 
-        // --- MOTOR PGDAS (LOGICA V10.5 COMPLETA COM RBT12 E ATIVIDADES) ---
+        // --- MOTOR PGDAS ---
         let pgdasFiles = [];
         function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs Prontos`; document.getElementById('btn-run-pgdas').disabled = false; }
+        
         async function processarPGDAS() {
             const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
-            const parseCur = (v) => parseFloat(v.replace(/\./g,'').replace(',','.')) || 0;
             for(let file of pgdasFiles) {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 let text = ""; for(let i=1; i<=pdf.numPages; i++) text += (await (await pdf.getPage(i)).getTextContent()).items.map(it => it.str).join(" ") + " ";
@@ -213,7 +192,6 @@
                 const ref = `${MONTHS[parseInt(p[1])-1]}/${p[2]}`;
                 if(h.some(x => x.cnpj === cnpj && x.ref === ref)) continue;
                 let atividades = [];
-                // LOGICA DE FATIAMENTO PROFUNDO
                 clean.split("Valor do Débito por Tributo para a Atividade").slice(1).forEach(b => {
                     const impostos = b.match(/[\d.]+,\d{2}/g);
                     const descMatch = b.match(/^(.*?)\s*Receita Bruta Informada/);
@@ -264,20 +242,32 @@
             if(confirm("Confirmar exclusão?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); }
         }
         function clearHistory(type) { if(confirm("Apagar tudo?")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
+        
         function downloadOneXML(idx) {
             const r = (JSON.parse(localStorage.getItem('xml_audit_history')))[idx];
             let csv = "\ufeffEmpresa;CNPJ;Mes;Referencia;Nota;Produto;NCM;Valor;CST\n";
             r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${r.ref};${d.nota};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `RELATORIO_${r.empresa}.csv`; link.click();
         }
+        
         function exportBatchXML() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             const sel = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[parseInt(cb.dataset.idx)]);
-            sel.forEach(r => { downloadOneXML(h.indexOf(r)); });
+            sel.forEach(r => { 
+                let csv = "\ufeffEmpresa;CNPJ;Mes;Referencia;Nota;Produto;NCM;Valor;CST\n";
+                r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${r.ref};${d.nota};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
+                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `RELATORIO_${r.empresa}.csv`; link.click();
+            });
         }
         function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
         document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+        // Service Worker Registration Seguro
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado!', reg))
+                .catch(err => console.log('Erro SW:', err));
+        }
     </script>
 </body>
 </html>
