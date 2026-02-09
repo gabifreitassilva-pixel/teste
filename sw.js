@@ -1,9 +1,9 @@
-const CACHE_NAME = 'fiscal-audit-v16.3-final';
+const CACHE_NAME = 'fiscal-audit-v17.0-robot-final';
 
 const ASSETS = [
     './',
     './index.html',
-    './auditoria.html', // Novo arquivo incluído no cache
+    './auditoria.html',
     './CONVÊNIO ICMS N° 142, DE 14 DE DEZEMBRO DE 2018.html',
     './BENEFICIOS ISENCOES E REDUCAO.HTML',
     './PIS COFINS.HTML',
@@ -16,15 +16,11 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
-    event.waitUntil(caches.open(CACHE_NAME).then((cache) => {
-        return Promise.all(ASSETS.map(url => cache.add(url).catch(err => console.warn('Falha cache:', url))));
-    }));
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => Promise.all(ASSETS.map(url => cache.add(url).catch(e => console.log(e))))));
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(caches.keys().then((keys) => Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    )));
+    event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))));
     self.clients.claim();
 });
 
