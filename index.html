@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V12.2 MASTER TOTAL</title>
+    <title>FISCAL AUDIT - V12.3 MASTER DEFINITIVA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -29,7 +29,7 @@
         .legis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
         .legis-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 10px; padding: 20px; transition: 0.3s; cursor: pointer; border-left: 3px solid var(--orange-main); text-decoration: none; display: block; }
         .legis-card:hover { background: #111; transform: translateY(-3px); border-left-color: #fff; }
-        .legis-card h4 { font-size: 9px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; }
+        .legis-card h4 { font-size: 9px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; }
         .activity-item { background: #0d0d0d; border: 1px solid #1a1a1a; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid var(--orange-main); }
         .tax-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 8px; }
         .tax-unit { font-size: 9px; display: flex; flex-direction: column; }
@@ -42,7 +42,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V12.2 MASTER TOTAL</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V12.3 MASTER TOTAL</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -63,7 +63,7 @@
 
     <main class="main-container">
         <div id="extrator-panel" class="tab-content active">
-            <header class="mb-10"><h2 class="text-2xl font-black italic text-white text-orange-500">CENTRAL DE CARGA</h2></header>
+            <header class="mb-10"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">Central de Carga</h2></header>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900">
                     <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP</h4>
@@ -86,25 +86,21 @@
 
         <div id="xml-history-panel" class="tab-content">
             <header class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black text-white">Histórico XML</h2>
+                <h2 class="text-2xl font-black italic text-white">Histórico XML</h2>
                 <div class="flex gap-3">
-                    <button onclick="clearFullDB('xml')" class="bg-red-600/20 text-red-500 border border-red-600/30 px-4 py-2 rounded text-[10px] font-black uppercase">Limpar Tudo</button>
-                    <button onclick="exportBatchXML()" class="bg-blue-600 text-white px-5 py-2 rounded text-[10px] font-black uppercase">Exportar Lote</button>
+                    <button onclick="clearHistory('xml')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase">Limpar Histórico</button>
+                    <button onclick="exportBatchXML()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase">Exportar Lote por CNPJ</button>
                 </div>
             </header>
-            <div class="table-container">
-                <table><thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa</th><th>Ref</th><th>Qtd</th><th width="150">Ações</th></tr></thead><tbody id="tbody-xml"></tbody></table>
-            </div>
+            <div class="table-container"><table><thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa / CNPJ</th><th>Referência</th><th>Notas</th><th>Ações</th></tr></thead><tbody id="tbody-xml"></tbody></table></div>
         </div>
 
         <div id="pgdas-history-panel" class="tab-content">
             <header class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black text-white">Histórico PGDAS</h2>
-                <button onclick="clearFullDB('pgdas')" class="bg-red-600/20 text-red-500 border border-red-600/30 px-4 py-2 rounded text-[10px] font-black uppercase">Limpar Tudo</button>
+                <h2 class="text-2xl font-black italic text-white">Histórico PGDAS</h2>
+                <button onclick="clearHistory('pgdas')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase">Limpar Histórico</button>
             </header>
-            <div class="table-container">
-                <table><thead><tr><th width="20%">Razão Social</th><th width="10%">RBT12</th><th width="50%">Atividades / Impostos</th><th width="10%">Total DAS</th><th width="60">Excluir</th></tr></thead><tbody id="tbody-pgdas"></tbody></table>
-            </div>
+            <div class="table-container"><table><thead><tr><th width="20%">Razão Social / CNPJ</th><th width="10%">RBT12</th><th width="55%">Atividades / Detalhamento</th><th width="10%">Total DAS</th><th width="40"></th></tr></thead><tbody id="tbody-pgdas"></tbody></table></div>
         </div>
 
         <div id="leg-state" class="tab-content">
@@ -144,10 +140,10 @@
             </div>
         </div>
 
-        <div id="cross-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white">CRUZAR INFORMAÇÕES</h2></div>
-        <div id="rectify-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white">PAINEL DE RETIFICAÇÕES</h2></div>
-        <div id="save-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white">GRAVAR AUDITORIA</h2></div>
-        <div id="global-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white">HISTÓRICO GLOBAL</h2></div>
+        <div id="cross-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">CRUZAR INFORMAÇÕES</h2></div>
+        <div id="rectify-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">PAINEL DE RETIFICAÇÕES</h2></div>
+        <div id="save-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">GRAVAR AUDITORIA</h2></div>
+        <div id="global-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">HISTÓRICO GLOBAL</h2></div>
     </main>
 
     <script>
@@ -165,6 +161,7 @@
             if(id === 'pgdas-history-panel') renderPGDASHistory();
         }
 
+        // --- MOTOR XML (LOGICA V10.5 COMPLETA) ---
         let xmlBuffer = [];
         async function handleXMLFiles(files) {
             xmlBuffer = [];
@@ -174,55 +171,63 @@
                     for (let p of Object.keys(zip.files).filter(x => x.endsWith('.xml'))) xmlBuffer.push(await zip.files[p].async("text"));
                 } else { xmlBuffer.push(await f.text()); }
             }
-            document.getElementById('label-xml').innerText = `${xmlBuffer.length} Arquivos`;
+            document.getElementById('label-xml').innerText = `${xmlBuffer.length} XMLs Prontos`;
             document.getElementById('btn-run-xml').disabled = false;
         }
 
         function processarXML() {
-            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            const db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             const groups = {};
             xmlBuffer.forEach(text => {
                 const xml = new DOMParser().parseFromString(text, "text/xml");
                 const cnpj = xml.getElementsByTagName("CNPJ")[0]?.textContent;
                 const dEmi = xml.getElementsByTagName("dhEmi")[0]?.textContent || xml.getElementsByTagName("dEmi")[0]?.textContent || "";
-                if (!cnpj || !dEmi) return;
+                const nNF = xml.getElementsByTagName("nNF")[0]?.textContent || "S/N";
+                if(!cnpj || !dEmi) return;
                 const m = parseInt(dEmi.substring(5,7)), a = dEmi.substring(0,4), ref = `${MONTHS[m-1]}/${a}`, key = `${cnpj}_${m}_${a}`;
-                if (h.some(x => x.key === key)) return;
-                if (!groups[key]) groups[key] = { key, empresa: xml.getElementsByTagName("xNome")[0]?.textContent, cnpj, ref, mesSort: parseInt(a+m), qtd: 0, itens: [] };
+                if (db.some(h => h.key === key)) return;
+                if(!groups[key]) groups[key] = { key, empresa: xml.getElementsByTagName("xNome")[0]?.textContent, cnpj, ref, mesSort: parseInt(a+m), qtd: 0, itens: [] };
                 groups[key].qtd++;
                 Array.from(xml.getElementsByTagName("det")).forEach(det => {
-                    groups[key].itens.push({ prod: det.getElementsByTagName("xProd")[0]?.textContent, ncm: det.getElementsByTagName("NCM")[0]?.textContent, valor: parseFloat(det.getElementsByTagName("vProd")[0]?.textContent || 0), cst: det.getElementsByTagName("CST")[0]?.textContent || "" });
+                    groups[key].itens.push({ nota: nNF, prod: det.getElementsByTagName("xProd")[0]?.textContent, ncm: det.getElementsByTagName("NCM")[0]?.textContent, valor: det.getElementsByTagName("vProd")[0]?.textContent, cst: det.getElementsByTagName("CST")[0]?.textContent });
                 });
             });
-            Object.values(groups).forEach(g => h.push(g));
-            localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert("✅ XML Processado!"); renderXMLHistory();
+            Object.values(groups).forEach(g => db.push(g));
+            localStorage.setItem('xml_audit_history', JSON.stringify(db));
+            alert("✅ XMLs Gravados!"); renderXMLHistory();
         }
 
+        // --- MOTOR PGDAS (LOGICA V10.5 COMPLETA COM RBT12 E ATIVIDADES) ---
         let pgdasFiles = [];
-        function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs`; document.getElementById('btn-run-pgdas').disabled = false; }
+        function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs Prontos`; document.getElementById('btn-run-pgdas').disabled = false; }
         async function processarPGDAS() {
             const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
+            const parseCur = (v) => parseFloat(v.replace(/\./g,'').replace(',','.')) || 0;
             for(let file of pgdasFiles) {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 let text = ""; for(let i=1; i<=pdf.numPages; i++) text += (await (await pdf.getPage(i)).getTextContent()).items.map(it => it.str).join(" ") + " ";
                 const clean = text.replace(/\s+/g, ' ');
                 const cnpj = (clean.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || [""])[0];
                 const p = clean.match(/Período de Apuração:\s*01\/(\d{2})\/(\d{4})/);
-                if (!p || h.some(x => x.cnpj === cnpj && x.ref === `${MONTHS[parseInt(p[1])-1]}/${p[2]}`)) continue;
+                if(!p) continue;
+                const ref = `${MONTHS[parseInt(p[1])-1]}/${p[2]}`;
+                if(h.some(x => x.cnpj === cnpj && x.ref === ref)) continue;
                 let atividades = [];
+                // LOGICA DE FATIAMENTO PROFUNDO
                 clean.split("Valor do Débito por Tributo para a Atividade").slice(1).forEach(b => {
                     const impostos = b.match(/[\d.]+,\d{2}/g);
+                    const descMatch = b.match(/^(.*?)\s*Receita Bruta Informada/);
                     if(impostos && impostos.length > 8) {
-                        atividades.push({ desc: "Atividade", receita: (b.match(/Receita Bruta Informada\s*:\s*R\$\s*([\d.]+,\d{2})/) || ["","0,00"])[1], total: impostos[8], det: impostos });
+                        atividades.push({ desc: descMatch ? descMatch[1].trim() : "Atividade", receita: (b.match(/Receita Bruta Informada\s*:\s*R\$\s*([\d.]+,\d{2})/) || ["","0,00"])[1], total: impostos[8], det: impostos });
                     }
                 });
-                h.push({ razao: (clean.match(/Nome empresarial:\s*(.*?)\s*Data/) || ["","EMPRESA"])[1], cnpj, ref: `${MONTHS[parseInt(p[1])-1]}/${p[2]}`, mSort: parseInt(p[2]+p[1]), atividades, dasTotal: (clean.match(/Valor Total do DAS:\s*([\d.]+,\d{2})/) || ["","0,00"])[1] });
+                h.push({ razao: (clean.match(/Nome empresarial:\s*(.*?)\s*Data/) || ["","EMPRESA"])[1], cnpj, ref, mSort: parseInt(p[2]+p[1]), rbt12: (clean.match(/RBT12\)\s*[\d.,]+\s*[\d.,]+\s*([\d.]+,\d{2})/) || ["","0,00"])[1], atividades, dasTotal: (clean.match(/Valor Total do DAS:\s*([\d.]+,\d{2})/) || ["","0,00"])[1] });
             }
             localStorage.setItem('pgdas_pdf_audit', JSON.stringify(h));
-            alert("✅ PGDAS Processado!"); renderPGDASHistory();
+            alert("✅ PGDAS Gravados!"); renderPGDASHistory();
         }
 
+        // --- RENDERERS ---
         function renderXMLHistory() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr>
@@ -230,10 +235,10 @@
                 <td><b class="text-white uppercase text-[10px]">${it.empresa}</b><br><small class="text-zinc-500">${it.cnpj}</small></td>
                 <td class="text-orange-500 font-bold">${it.ref}</td>
                 <td class="text-white font-black">${it.qtd}</td>
-                <td class="flex items-center gap-4">
-                    <button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase hover:bg-zinc-700">Planilha</button>
-                    <i class="fas fa-trash-alt trash-icon" onclick="deleteItem('xml', ${i})" title="Excluir Período"></i>
-                </td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Vazio</td></tr>';
+                <td><div class="flex items-center gap-3">
+                    <button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase hover:bg-zinc-700">Relatório</button>
+                    <i class="fas fa-trash-alt trash-icon" onclick="deleteItem('xml', ${i})"></i>
+                </div></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Vazio</td></tr>';
         }
 
         function renderPGDASHistory() {
@@ -241,39 +246,35 @@
             document.getElementById('tbody-pgdas').innerHTML = h.map((it, i) => `<tr>
                 <td><b class="text-white uppercase text-[10px]">${it.razao}</b><br><small class="text-zinc-500">${it.cnpj} | ${it.ref}</small></td>
                 <td class="font-bold text-zinc-400">R$ ${it.rbt12}</td>
-                <td>${it.atividades.map(a => `<div class="activity-item"><div class="text-[8px] font-bold text-white uppercase">Receita: R$ ${a.receita}</div><div class="tax-grid"><div class="tax-unit"><span>PIS</span><span>${a.det[3]}</span></div><div class="tax-unit"><span>COFINS</span><span>${a.det[2]}</span></div><div class="tax-unit"><span>ICMS</span><span>${a.det[5]}</span></div><div class="tax-unit"><span>TOTAL</span><span class="text-white font-bold">${a.total}</span></div></div></div>`).join('')}</td>
+                <td>${it.atividades.map(a => `<div class="activity-item">
+                    <div class="text-[8px] font-bold text-white uppercase">${a.desc} - R$ ${a.receita}</div>
+                    <div class="tax-grid">
+                        <div class="tax-unit"><span>PIS</span><span>${a.det[3]}</span></div>
+                        <div class="tax-unit"><span>COFINS</span><span>${a.det[2]}</span></div>
+                        <div class="tax-unit"><span>ICMS</span><span>${a.det[5]}</span></div>
+                        <div class="tax-unit"><span>TOTAL</span><span class="text-white font-bold">${a.total}</span></div>
+                    </div></div>`).join('')}</td>
                 <td class="text-orange-500 font-black text-[12px]">R$ ${it.dasTotal}</td>
-                <td class="text-center"><i class="fas fa-trash-alt trash-icon" onclick="deleteItem('pgdas', ${i})" title="Excluir Período"></i></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Vazio</td></tr>';
+                <td class="text-center"><i class="fas fa-trash-alt trash-icon" onclick="deleteItem('pgdas', ${i})"></i></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Vazio</td></tr>';
         }
 
         function deleteItem(type, idx) {
             const k = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
             let d = JSON.parse(localStorage.getItem(k));
-            if(confirm("Confirmar exclusão deste período?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); }
+            if(confirm("Confirmar exclusão?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); }
         }
-
-        function clearFullDB(type) {
-            const k = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
-            if(confirm("ALERTA: Deseja apagar TODO o banco de dados?")) { localStorage.removeItem(k); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); }
-        }
-
+        function clearHistory(type) { if(confirm("Apagar tudo?")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
         function downloadOneXML(idx) {
             const r = (JSON.parse(localStorage.getItem('xml_audit_history')))[idx];
-            let csv = "\ufeffEmpresa;CNPJ;Mes;Produto;NCM;Valor;CST\n";
-            r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
+            let csv = "\ufeffEmpresa;CNPJ;Mes;Referencia;Nota;Produto;NCM;Valor;CST\n";
+            r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${r.ref};${d.nota};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
             const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `RELATORIO_${r.empresa}.csv`; link.click();
         }
-
         function exportBatchXML() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             const sel = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[parseInt(cb.dataset.idx)]);
-            sel.forEach(r => {
-                let csv = "\ufeffEmpresa;CNPJ;Mes;Produto;NCM;Valor;CST\n";
-                r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
-                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `LOTE_${r.empresa}.csv`; link.click();
-            });
+            sel.forEach(r => { downloadOneXML(h.indexOf(r)); });
         }
-
         function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
         document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
