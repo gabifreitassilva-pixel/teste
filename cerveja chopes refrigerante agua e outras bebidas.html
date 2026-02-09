@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria ST 2025-2026 | Anexo IV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f97316; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 12px 15px; border-bottom: 1px solid #1f2937; line-height: 1.5; color: #d1d5db; }
+        tr:hover { background: rgba(249, 115, 22, 0.05); }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .mantido { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .alterado { background: #1e3a8a; color: #60a5fa; border: 1px solid #3b82f6; }
+        .revogado { background: #450a0a; color: #f87171; border: 1px solid #991b1b; text-decoration: line-through; }
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+        .search-box:focus { border-color: #f97316; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic tracking-tighter">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-8">Base Bebidas Frias e Águas</p>
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg">
+            <h3 class="text-white font-bold text-xs uppercase">Anexo IV Completo</h3>
+            <p class="text-[10px] text-zinc-400 mt-1">Legislação ST - Comparativo 2025/2026.</p>
+        </div>
+    </div>
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase mb-6">ANEXO IV - CERVEJAS, REFRIGERANTES E ÁGUAS</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Busque por ITEM, CEST, NCM ou Descrição...">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ITEM</th><th>CEST</th><th>NCM/SH</th><th>DESCRIÇÃO TÉCNICA E VIGÊNCIA</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        const data = [
+            ["1.0", "REVOGADO", "-", "Revogado pelo Convênio ICMS 150/2020. <br><span class='badge revogado'>REVOGADO</span>"],
+            ["2.0", "REVOGADO", "-", "Revogado pelo Convênio ICMS 150/2020. <br><span class='badge revogado'>REVOGADO</span>"],
+            ["3.0", "03.003.00", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, em vidro descartável. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["3.1", "03.003.01", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, com sais, em vidro descartável. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["4.0", "REVOGADO", "-", "Revogado pelo Convênio ICMS 150/2020. <br><span class='badge revogado'>REVOGADO</span>"],
+            ["5.0", "03.005.00", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, em copo plástico descartável. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["5.1", "03.005.01", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, com sais, em copo plástico descartável. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["5.2", "03.005.02", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, em jarra descartável. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["5.3", "03.005.03", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, com sais, em jarra descartável. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["5.4", "03.005.04", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, em demais embalagens descartáveis. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["5.5", "03.005.05", "2201.10.00 2201.90.00", "Água mineral, gasosa ou não, ou potável, naturais, com sais, em demais embalagens descartáveis. <br><span class='badge alterado'>Alterado Conv. 095/2024 (Efeitos 01.09.2024)</span>"],
+            ["6.0", "03.006.00", "2201", "Outras águas minerais; exceto CEST 03.003, 03.005, 03.024 e 03.025. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["7.0", "03.007.00", "2202.10.00", "Água aromatizada artificialmente, exceto refrescos e refrigerantes. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["8.0", "03.008.00", "2202.99.00", "Outras águas minerais inclusive gaseificadas ou aromatizadas artificialmente. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.0", "03.010.00", "2202.10.00 2202.99.00", "Refrigerante em vidro descartável. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.1", "03.010.01", "2202.10.00 2202.99.00", "Refrigerante em embalagem pet. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.2", "03.010.02", "2202.10.00 2202.99.00", "Refrigerante em lata. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.3", "REVOGADO", "-", "Revogado pelo Convênio ICMS 074/2021. <br><span class='badge revogado'>REVOGADO</span>"],
+            ["11.0", "03.011.00", "2202.10.00 2202.99.00", "Demais refrigerantes. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["11.1", "03.011.01", "2202", "Espumantes sem álcool. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["12.0", "03.012.00", "2106.90.10", "Xarope ou extrato concentrado para refrigerante em máquina. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["12.1", "03.012.01", "2106.90.10", "Cápsula de refrigerante. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["13.0", "03.013.00", "2106.90 2202.99.00", "Bebidas energéticas em lata. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["13.1", "03.013.01", "2106.90 2202.99.00", "Bebidas energéticas em embalagem PET. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["13.2", "03.013.02", "2106.90 2202.99.00", "Bebidas energéticas em vidro. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["14.0", "REVOGADO", "-", "Revogado Conv. ICMS 150/2020. <br><span class='badge revogado'>REVOGADO</span>"],
+            ["15.0", "03.015.00", "2106.90 2202.99.00", "Bebidas hidroeletrolíticas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["16.0", "REVOGADO", "-", "Revogado Conv. ICMS 150/2020. <br><span class='badge revogado'>REVOGADO</span>"],
+            ["21.0", "03.021.00", "2203.00.00", "Cerveja em garrafa de vidro retornável. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.1", "03.021.01", "2203.00.00", "Cerveja em garrafa de vidro descartável. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.2", "03.021.02", "2203.00.00", "Cerveja em garrafa de alumínio. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.3", "03.021.03", "2203.00.00", "Cerveja em lata. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.4", "03.021.04", "2203.00.00", "Cerveja em barril. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.5", "03.021.05", "2203.00.00", "Cerveja em embalagem PET. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.6", "03.021.06", "2203.00.00", "Cerveja em outras embalagens. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.0", "03.022.00", "2202.91.00", "Cerveja sem álcool em garrafa retornável. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.1", "03.022.01", "2202.91.00", "Cerveja sem álcool em vidro descartável. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.2", "03.022.02", "2202.91.00", "Cerveja sem álcool em alumínio. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.3", "03.022.03", "2202.91.00", "Cerveja sem álcool em lata. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.4", "03.022.04", "2202.91.00", "Cerveja sem álcool em barril. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.05", "03.022.05", "2202.91.00", "Cerveja sem álcool em embalagem PET. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.06", "03.022.06", "2202.91.00", "Cerveja sem álcool em outras embalagens. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["23.0", "03.023.00", "2203.00.00", "Chope. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["24.0", "03.024.00", "2201.10.00", "Água mineral retornável (10 a 20 L). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["25.0", "03.025.00", "2201.10.00", "Água mineral retornável (>= 20 L). <br><span class='badge mantido'>Mantido 2025/26</span>"]
+        ];
+
+        function render() {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = data.map(i => `
+                <tr>
+                    <td class="font-bold text-orange-500">${i[0]}</td>
+                    <td>${i[1]}</td>
+                    <td class="font-mono text-[10px] text-zinc-300 font-bold">${i[2]}</td>
+                    <td>${i[3]}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = data.filter(row => row.join(' ').toLowerCase().includes(term));
+            const body = document.getElementById('tableBody');
+            body.innerHTML = filtered.map(i => `
+                <tr><td class="font-bold text-orange-500">${i[0]}</td><td>${i[1]}</td><td class="font-mono text-[10px] text-zinc-300 font-bold">${i[2]}</td><td>${i[3]}</td></tr>
+            `).join('');
+        });
+        render();
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria ST 2025-2026 | Anexo XI - Parte 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #f97316; color: #000; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #1f2937; line-height: 1.4; }
+        .badge { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .mantido { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+        .search-box:focus { border-color: #f97316; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold mb-8">Construção Civil P1</p>
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg">
+            <h3 class="text-white font-bold text-xs uppercase">Anexo XI - Parte 1</h3>
+            <p class="text-[10px] text-zinc-400 mt-1">Produtos Cerâmicos, Cimentos e Cal.</p>
+        </div>
+    </div>
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase mb-6">ANEXO XI - MATERIAIS DE CONSTRUÇÃO (1.0 a 31.0)</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Busque por NCM ou Descrição técnica...">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ITEM</th><th>CEST</th><th>NCM/SH</th><th>DESCRIÇÃO TÉCNICA E VIGÊNCIA</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        const data = [
+            ["1.0", "10.001.00", "2522", "Cal viva, cal apagada e cal hidráulica (exceto óxido e hidróxido de cálcio da posição 2825). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["2.0", "10.002.00", "3816.00.1 3816.00.90", "Cimentos, argamassas, concretos e composições semelhantes, refratários, exceto produtos à base de grafita. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["3.0", "10.003.00", "3824.40.00", "Aditivos preparados para cimentos, argamassas ou concretos. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["4.0", "10.004.00", "3824.50.00", "Argamassas e concretos, não refratários. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["5.0", "10.005.00", "3214.90.00", "Indutos preparados para pintura; indutos não refratários; gesso, argamassas p/ rejuntamento. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["6.0", "10.006.00", "3917", "Tubos e seus acessórios (juntas, cotovelos, flanges), de plásticos, p/ uso na construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["7.0", "10.007.00", "3918", "Revestimentos de pavimentos de plásticos, mesmo auto-adesivos, em rolos ou ladrilhos. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["8.0", "10.008.00", "3919", "Chapas, folhas, tiras e películas, auto-adesivas, de plásticos, em rolos de largura <= 20cm. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["9.0", "10.009.00", "3921", "Outras chapas, folhas, películas, tiras e lâminas, de plásticos, para uso na construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.0", "10.010.00", "3922", "Banheiras, boxes p/ chuveiros, pias, lavatórios, bidês, sanitários e seus assentos/tampas, de plástico. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["11.0", "10.011.00", "3925.10.00", "Reservatórios, cisternas, cubas e recipientes análogos, de capacidade > 300 litros, de plástico. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["12.0", "10.012.00", "3925.20.00", "Portas, janelas e seus caixilhos, alizares e limiares, de plástico. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["13.0", "10.013.00", "3925.30.00", "Postigos, estores (incluídas as venezianas) e artigos semelhantes, e suas partes, de plástico. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["14.0", "10.014.00", "3925.90", "Outras obras de plástico para construção, inclusive calhas, forros e cantoneiras. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["15.0", "10.015.00", "3926.90", "Arruelas, ralos, grelhas e outros artigos de plástico para uso na construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["16.0", "10.016.00", "4009", "Tubos de borracha vulcanizada não endurecida, p/ uso na construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["17.0", "10.017.00", "4418", "Obras de marcenaria e carpintaria p/ construção, incluídos painéis celulares, tacos p/ soalhos e telhados. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["18.0", "10.018.00", "6807", "Obras de asfalto ou de matérias semelhantes (por exemplo, betume, alcatrão). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["19.0", "10.019.00", "6808.00.00", "Painéis, chapas, ladrilhos, blocos e semelhantes, de fibras vegetais, de palha ou de aparas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["20.0", "10.020.00", "6809", "Obras de gesso ou de composições à base de gesso. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.0", "10.021.00", "6810", "Obras de cimento, de concreto ou de pedra artificial, mesmo armadas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["22.0", "10.022.00", "6811", "Obras de fibrocimento, cimento-celulose ou produtos semelhantes. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["24.0", "10.024.00", "6901.00.00", "Tijolos, placas, ladrilhos e outras peças cerâmicas de farinhas siliciosas fósseis. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["25.0", "10.025.00", "6902", "Tijolos, placas, ladrilhos e peças cerâmicas refratárias (construção). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["26.0", "10.026.00", "6904", "Tijolos para construção, tijoleiras, tapa-vigas e semelhantes, de cerâmica. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["27.0", "10.027.00", "6905", "Telhas, elementos de chaminé, condutores de fumo, ornamentos arquitetônicos, de cerâmica. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["28.0", "10.028.00", "6906.00.00", "Tubos, calhas ou algerozes e acessórios para canalizações, de cerâmica. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["30.0", "10.030.00", "6907", "Ladrilhos e placas de cerâmica, não vidrados nem esmaltados; cubos e pastilhas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["31.0", "10.031.00", "6910", "Pias, lavatórios, colunas, banheiras, bidês, sanitários, de cerâmica. <br><span class='badge mantido'>Mantido 2025/26</span>"]
+        ];
+        function render(list) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = list.map(i => `<tr><td class="font-bold text-orange-500">${i[0]}</td><td>${i[1]}</td><td class="font-mono text-zinc-300 font-bold">${i[2]}</td><td>${i[3]}</td></tr>`).join('');
+        }
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            render(data.filter(row => row.join(' ').toLowerCase().includes(term)));
+        });
+        render(data);
+    </script>
+</body>
+</html>

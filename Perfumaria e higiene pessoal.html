@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria ST 2025-2026 | Anexo XIII</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #f97316; color: #000; padding: 12px; text-align: left; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #1f2937; line-height: 1.4; }
+        .badge { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .mantido { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold mb-8">Higiene e Perfumaria</p>
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg">
+            <h3 class="text-white font-bold text-xs uppercase">Anexo XIII Completo</h3>
+            <p class="text-[10px] text-zinc-400 mt-1">Conferência Integral 2025/2026.</p>
+        </div>
+    </div>
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase mb-6">ANEXO XIII - PERFUMARIA E HIGIENE</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Filtre por Produto ou NCM...">
+        <div class="table-container">
+            <table>
+                <thead><tr><th>ITEM</th><th>CEST</th><th>NCM/SH</th><th>DESCRIÇÃO TÉCNICA E VIGÊNCIA</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        const data = [
+            ["1.0", "20.001.00", "3303.00", "Perfumes e águas-de-colônia. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["2.0", "20.002.00", "3304", "Produtos de beleza ou de maquiagem preparados e preparações para conservação ou cuidados da pele. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["3.0", "20.003.00", "3305", "Preparações capilares (shampoos, laquês, condicionadores). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["4.0", "20.004.00", "3306", "Preparações para higiene bucal ou dentária, incluídos os pós e cremes para facilitar a aderência de dentaduras. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["5.0", "20.005.00", "3307", "Preparações para barbear, desodorantes corporais, preparações para banhos e outros cosméticos. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["6.0", "20.006.00", "3401", "Sabões de toucador e preparações para lavar a pele. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["7.0", "20.007.00", "9603.2", "Escovas de dentes, incluídas as escovas para dentaduras. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["8.0", "20.008.00", "8212", "Aparelhos e lâminas de barbear. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["9.0", "20.009.00", "5601.21.90", "Hastes flexíveis (cotonetes), com pontas de algodão. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.0", "20.010.00", "9619.00.00", "Fraldas, absorventes higiênicos, tampões e artigos semelhantes. <br><span class='badge mantido'>Mantido 2025/26</span>"]
+        ];
+        function renderRows(items) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = items.map(i => `<tr><td class="font-bold text-orange-500">${i[0]}</td><td>${i[1]}</td><td class="font-mono text-zinc-300 font-bold">${i[2]}</td><td>${i[3]}</td></tr>`).join('');
+        }
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            renderRows(data.filter(row => row.join(' ').toLowerCase().includes(term)));
+        });
+        renderRows(data);
+    </script>
+</body>
+</html>

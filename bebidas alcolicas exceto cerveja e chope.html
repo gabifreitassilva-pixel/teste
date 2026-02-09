@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria ST 2025-2026 | Anexo III Completo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f97316; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 12px 15px; border-bottom: 1px solid #1f2937; line-height: 1.5; color: #d1d5db; }
+        tr:hover { background: rgba(249, 115, 22, 0.05); }
+        .status-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .st-mantida { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+        .search-box:focus { border-color: #f97316; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic tracking-tighter">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-8">Base Bebidas Alcoólicas</p>
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg">
+            <h3 class="text-white font-bold text-xs uppercase">Anexo III</h3>
+            <p class="text-[10px] text-zinc-400 mt-1">Legislação Estadual - Exceto Cerveja e Chope.</p>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase tracking-tight mb-6">ANEXO III - BEBIDAS ALCOÓLICAS</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Busque por Item, CEST, NCM ou descrição da bebida...">
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ITEM</th>
+                        <th>CEST</th>
+                        <th>NCM/SH</th>
+                        <th>DESCRIÇÃO TÉCNICA E VIGÊNCIA</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const bebidas = [
+            ["1.0", "02.001.00", "2205 / 2208.90.00", "Aperitivos, amargos, bitter e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["2.0", "02.002.00", "2208.90.00", "Batida e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["3.0", "02.003.00", "2208.90.00", "Bebida ice. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["4.0", "02.004.00", "2207.20 / 2208.40.00", "Cachaça e aguardentes. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["5.0", "02.005.00", "2205 / 2206.00.90 / 2208.90.00", "Catuaba e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["6.0", "02.006.00", "2208.20.00", "Conhaque, brandy e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["7.0", "02.007.00", "2206.00.90 / 2208.90.00", "Cooler. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["8.0", "02.008.00", "2208.50.00", "Gim (gin) e genebra. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["9.0", "02.009.00", "2205 / 2206.00.90 / 2208.90.00", "Jurubeba e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["10.0", "02.010.00", "2208.70.00", "Licores e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["11.0", "02.011.00", "2208.20.00", "Pisco. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["12.0", "02.012.00", "2208.40.00", "Rum. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["13.0", "02.013.00", "2206.00.90", "Saquê. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["14.0", "02.014.00", "2208.90.00", "Steinhaeger. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["15.0", "02.015.00", "2208.90.00", "Tequila. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["16.0", "02.016.00", "2208.30", "Uísque. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["17.0", "02.017.00", "2205", "Vermute e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["18.0", "02.018.00", "2208.60.00", "Vodka. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["19.0", "02.019.00", "2208.90.00", "Derivados de vodka. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["20.0", "02.020.00", "2208.90.00", "Arak. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["21.0", "02.021.00", "2208.20.00", "Aguardente vínica / grappa. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["22.0", "02.022.00", "2206.00.10", "Sidra e similares. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["23.0", "02.023.00", "2205 / 2206.00.90 / 2208.90.00", "Sangrias e coquetéis. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["24.0", "02.024.00", "2204", "Vinhos de uvas frescas, incluindo os vinhos enriquecidos com álcool; mostos de uvas. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"],
+            ["999.0", "02.999.00", "2205 / 2206 / 2207 / 2208", "Outras bebidas alcoólicas não especificadas nos itens anteriores. <br><span class='status-badge st-mantida'>Mantido 2025/26</span>"]
+        ];
+
+        function render(items) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = items.map(i => `
+                <tr>
+                    <td class="font-bold text-orange-500">${i[0]}</td>
+                    <td>${i[1]}</td>
+                    <td class="font-mono text-[10px] text-zinc-300 font-bold">${i[2]}</td>
+                    <td>${i[3]}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = bebidas.filter(row => row.join(' ').toLowerCase().includes(term));
+            render(filtered);
+        });
+
+        render(bebidas);
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria ST 2025-2026 | Anexo XI - Parte 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #f97316; color: #000; padding: 12px; text-align: left; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #1f2937; line-height: 1.4; }
+        .badge { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .mantido { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold mb-8">Construção Civil P2</p>
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg">
+            <h3 class="text-white font-bold text-xs uppercase">Anexo XI - Parte 2</h3>
+            <p class="text-[10px] text-zinc-400 mt-1">Vidros e Obras de Ferro/Aço.</p>
+        </div>
+    </div>
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase mb-6">ANEXO XI - MATERIAIS DE CONSTRUÇÃO (32.0 a 61.0)</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Busque por ITEM, NCM ou Descrição...">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ITEM</th><th>CEST</th><th>NCM/SH</th><th>DESCRIÇÃO TÉCNICA E VIGÊNCIA</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        const data = [
+            ["32.0", "10.032.00", "7003", "Vidro vazado ou laminado, em chapas ou folhas, c/ camada absorvente, refletora. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["33.0", "10.033.00", "7004", "Vidro estirado ou soprado, em chapas ou folhas, mesmo c/ camada absorvente. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["34.0", "10.034.00", "7005", "Vidro flotado e vidro desbastado ou polido em uma ou ambas as faces, em chapas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["35.0", "10.035.00", "7007.19.00 7007.29.00", "Vidros de segurança, consistindo em vidros temperados ou laminados. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["36.0", "10.036.00", "7008.00.00", "Vidros isolantes de paredes múltiplas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["37.0", "10.037.00", "7009", "Espelhos de vidro, mesmo emoldurados, incluídos os espelhos retrovisores. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["38.0", "10.038.00", "7016", "Blocos, tijolos, placas, ladrilhos e outros artigos de vidro prensado ou moldado. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["39.0", "10.039.00", "7213", "Fio-máquina de ferro ou aço não ligado. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["40.0", "10.040.00", "7214", "Barras de ferro ou aço não ligado, apenas forjadas, laminadas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["41.0", "10.041.00", "7217", "Fios de ferro ou aço não ligado. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["42.0", "10.042.00", "7307", "Acessórios para tubos (ex: juntas, cotovelos, flanges) de ferro ou aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["43.0", "10.043.00", "7308.30.00", "Portas e janelas, e seus caixilhos, alizares e limiares, de ferro ou aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["44.0", "10.044.00", "7308.40.00 7308.90", "Material p/ andaimes, para armações ou p/ escoramentos, de ferro ou aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["45.0", "10.045.00", "7313.00.00", "Arame farpado; arames galvanizados para cercas, de ferro ou aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["46.0", "10.046.00", "7314", "Telas metálicas, grades e redes, de fios de ferro ou aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["47.0", "10.047.00", "7317.00", "Tachas, pregos, percevejos, escápulas e artigos semelhantes de ferro/aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["48.0", "10.048.00", "7318", "Parafusos, pinos, porcas, rebites, chavetas e arruelas, de ferro ou aço. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["49.0", "10.049.00", "7411", "Tubos de cobre. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["50.0", "10.050.00", "7412", "Acessórios para tubos de cobre (ex: juntas, cotovelos, flanges). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["51.0", "10.051.00", "7604", "Barras, perfis e fios de alumínio, para uso na construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["52.0", "10.052.00", "7607", "Folhas e tiras de alumínio, de espessura <= 0,2mm, para construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["53.0", "10.053.00", "7608", "Tubos de alumínio, para uso na construção. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["54.0", "10.054.00", "7609.00.00", "Acessórios para tubos de alumínio (ex: juntas, cotovelos). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["55.0", "10.055.00", "7610", "Estruturas de alumínio e suas partes (portas, janelas, caixilhos). <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["56.0", "10.056.00", "7615.20.00", "Aparelhos sanitários e suas partes, de alumínio. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["57.0", "10.057.00", "8301", "Cadeados, fechaduras e ferrolhos, de metais comuns. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["58.0", "10.058.00", "8302", "Dobradiças, guarnições e ferragens para móveis, portas, escadas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["59.0", "10.059.00", "8307", "Tubos flexíveis de metais comuns, mesmo com acessórios. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["60.0", "10.060.00", "8311", "Fios, varetas, tubos, eletrodos e similares para soldagem ou metalização. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["61.0", "10.061.00", "8481", "Torneiras, válvulas e dispositivos semelhantes para canalizações. <br><span class='badge mantido'>Mantido 2025/26</span>"]
+        ];
+        function render(list) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = list.map(i => `<tr><td class="font-bold text-orange-500">${i[0]}</td><td>${i[1]}</td><td class="font-mono text-zinc-300 font-bold">${i[2]}</td><td>${i[3]}</td></tr>`).join('');
+        }
+        render(data);
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria Fiscal ST - Autopeças Integral</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f97316; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 12px 15px; border-bottom: 1px solid #1f2937; line-height: 1.5; color: #d1d5db; }
+        tr:hover { background: rgba(249, 115, 22, 0.05); }
+        
+        /* Badges de Vigência para Auditoria */
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .mantido { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .alterado { background: #1e3a8a; color: #60a5fa; border: 1px solid #3b82f6; }
+        .inclusao { background: #064e3b; color: #34d399; border: 1px solid #10b981; }
+        .revogado { background: #450a0a; color: #f87171; border: 1px solid #991b1b; }
+        
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+        .search-box:focus { border-color: #f97316; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic tracking-tighter">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-8">Base Autopeças Integrada</p>
+        
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg mb-4">
+            <h3 class="text-white font-bold text-xs uppercase">Guia de Auditoria</h3>
+            <div class="mt-2 space-y-2">
+                <div><span class="badge mantido">Mantido</span> <span class="text-[9px] text-zinc-400">Regra igual 2025/26</span></div>
+                <div><span class="badge alterado">Alterado</span> <span class="text-[9px] text-zinc-400">Redação muda Jan/26</span></div>
+                <div><span class="badge inclusao">Inclusão</span> <span class="text-[9px] text-zinc-400">ST apenas em 2026</span></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase tracking-tight mb-6">Tabela ST - Autopeças (Conferência 2025/2026)</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Busque por ITEM, NCM, CEST ou impacto da Reforma...">
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ITEM</th>
+                        <th>CEST</th>
+                        <th>NCM/SH</th>
+                        <th>DESCRIÇÃO TÉCNICA / VIGÊNCIA DE AUDITORIA</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const autopeças = [
+            ["1.0", "01.001.00", "3815.12.10 3815.12.90", "Catalisadores em colmeia cerâmica ou metálica. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["2.0", "01.002.00", "3917", "Tubos e seus acessórios (juntas, cotovelos, flanges) de plásticos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["3.0", "01.003.00", "3918.10.00", "Protetores de caçamba. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["4.0", "01.004.00", "3923.30.00", "Reservatórios de óleo. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["5.0", "01.005.00", "3926.30.00", "Frisos, decalques, molduras e acabamentos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["6.0", "01.006.00", "4010.3 / 5910.00.00", "Correias de transmissão de borracha vulcanizada ou têxteis. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["7.0", "01.007.00", "4016.93.00 / 4823.90.9", "Juntas, gaxetas e elementos de vedação. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["8.0", "01.008.00", "4016.10.10", "Partes de veículos automóveis, tratores e máquinas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["9.0", "01.009.00", "4016.99.90 / 5705.00.00", "Tapetes, revestimentos, batentes, buchas e coxins. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["10.0", "01.010.00", "5903.90.00", "Tecidos impregnados, revestidos, recobertos ou estratificados. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["11.0", "01.011.00", "5909.00.00", "Mangueiras e tubos semelhantes de matérias têxteis. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["12.0", "01.012.00", "6306.1", "Encerados e toldos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["13.0", "01.013.00", "6506.10.00", "Capacetes de proteção para uso em motocicletas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["14.0", "01.014.00", "6813", "Guarnições de fricção (freios, embreagens) à base de amianto ou minerais. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["15.0", "01.015.00", "7007.11.00 / 7007.21.00", "Vidros de dimensões e formatos de aplicação automotiva. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["16.0", "01.016.00", "7009.10.00", "Espelhos retrovisores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["17.0", "01.017.00", "7014.00.00", "Lentes de faróis, lanternas e outros utensílios. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["18.0", "01.018.00", "7311.00.00", "Cilindro de aço para GNV (gás natural veicular). <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["19.0", "01.019.00", "7311.00.00", "Recipientes para gases comprimidos ou liquefeitos (ferro/aço). <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["20.0", "01.020.00", "7320", "Molas e folhas de molas, de ferro ou aço. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["21.0", "01.021.00", "7325", "Obras moldadas de ferro fundido, ferro ou aço. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["22.0", "01.022.00", "7806.00", "Peso de chumbo para balanceamento de roda. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["23.0", "01.023.00", "8007.00.90", "Peso de estanho para balanceamento de roda. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["24.0", "01.024.00", "8301.20 / 8301.60", "Fechaduras e partes de fechaduras. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["25.0", "01.025.00", "8301.70", "Chaves apresentadas isoladamente. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["26.0", "01.026.00", "8302.10.00 / 8302.30.00", "Dobradiças, guarnições e ferragens de metais comuns. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["27.0", "01.027.00", "8310.00", "Triângulo de segurança. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["28.0", "01.028.00", "8407.3", "Motores de pistão alternativo para veículos do Cap. 87. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["29.0", "01.029.00", "8408.20", "Motores para propulsão de veículos automotores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["30.0", "01.030.00", "8409.9", "Partes destinadas aos motores das posições 8407 ou 8408. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["31.0", "01.031.00", "8412.2", "Motores hidráulicos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["32.0", "01.032.00", "8413.30", "Bombas para combustíveis, lubrificantes ou arrefecimento. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["33.0", "01.033.00", "8414.10.00", "Bombas de vácuo. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["34.0", "01.034.00", "8414.80.1 / 8414.80.2", "Compressores e turbocompressores de ar. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["35.0", "01.035.00", "8413.91 / 8414.90", "Partes das bombas e compressores dos itens 32, 33 e 34. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["36.0", "01.036.00", "8415.20", "Máquinas e aparelhos de ar condicionado. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["37.0", "01.037.00", "8421.23.00", "Aparelhos para filtrar óleos minerais nos motores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["38.0", "01.038.00", "8421.29.90", "Filtros a vácuo. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["39.0", "01.039.00", "8421.9", "Partes dos aparelhos para filtrar ou depurar líquidos/gases. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["40.0", "01.040.00", "8424.10.00", "Extintores, mesmo carregados. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["41.0", "01.041.00", "8421.31.00", "Filtros de entrada de ar para motores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["42.0", "01.042.00", "8421.32.00", "Depuradores por conversão catalítica de gases de escape. <br><span class='badge alterado'>REDAÇÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["43.0", "01.043.00", "8425.42.00", "Macacos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["44.0", "01.044.00", "8431.10.10", "Partes para macacos do CEST 01.043.00. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["45.0", "01.045.00", "8431.49.2", "Partes destinadas às máquinas agrícolas ou rodoviárias. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["45.1", "01.045.01", "8433.90.90", "Outras partes para máquinas agrícolas ou rodoviárias. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["46.0", "01.046.00", "8481.10.00", "Válvulas redutoras de pressão. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["47.0", "01.047.00", "8481.2", "Válvulas para transmissão óleo-hidráulicas ou pneumáticas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["48.0", "01.048.00", "8481.80.92", "Válvulas solenoides. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["49.0", "01.049.00", "8482", "Rolamentos de esferas, roletes ou agulhas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["50.0", "01.050.00", "8483", "Árvores de transmissão, manivelas, mancais e engrenagens. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["51.0", "01.051.00", "8484", "Juntas metaloplásticas; selos mecânicos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["52.0", "01.052.00", "8505.20", "Acoplamentos, embreagens e freios eletromagnéticos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["53.0", "01.053.00", "8507.10", "Acumuladores elétricos de chumbo (arranque), exceto 01.053.01. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["53.1", "01.053.01", "8507.10.10", "Acumuladores (arranque) <= 20 Ah e tensão <= 12 V. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["54.0", "01.054.00", "8511", "Aparelhos de ignição, arranque, geradores e alternadores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["55.0", "01.055.00", "8512.20 / 8512.40 / 8512.90", "Aparelhos elétricos de iluminação ou sinalização. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["56.0", "01.056.00", "8517.14.10", "Telefones móveis do tipo dos utilizados em veículos. <br><span class='badge alterado'>REDAÇÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["57.0", "01.057.00", "8518", "Alto-falantes, amplificadores e partes. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["58.0", "01.058.00", "8518.50.00", "Aparelhos elétricos de amplificação de som automotivo. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["59.0", "01.059.00", "8519.81", "Aparelhos de reprodução de som. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["60.0", "01.060.00", "8525.50.1 / 8525.60.10", "Aparelhos transmissores de radiotelefonia. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["61.0", "01.061.00", "8527.21.00", "Receptores de rádio com gravação para veículos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["62.0", "01.062.00", "8527.29.00", "Outros receptores de rádio para veículos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["62.1", "01.062.01", "8521.90.90", "Aparelhos videofônicos exclusivos para veículos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["63.0", "01.063.00", "8529.10", "Antenas. <br><span class='badge alterado'>REDAÇÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["64.0", "01.064.00", "8534.00", "Circuitos impressos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["65.0", "01.065.00", "8535.30 / 8536.50", "Interruptores, seccionadores e comutadores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["66.0", "01.066.00", "8536.10.00", "Fusíveis e corta-circuitos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["67.0", "01.067.00", "8536.20.00", "Disjuntores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["68.0", "01.068.00", "8536.4", "Relés. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["69.0", "01.069.00", "8538", "Partes destinadas aos aparelhos dos itens 65 a 68. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["70.0", "01.070.00", "8539.10", "Faróis e projetores selados. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["71.0", "01.071.00", "8539.2", "Lâmpadas e tubos de incandescência. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["72.0", "01.072.00", "8544.20.00", "Cabos coaxiais e condutores elétricos coaxiais. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["73.0", "01.073.00", "8544.30.00", "Jogos de fios para velas de ignição. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["74.0", "01.074.00", "8707", "Carroçarias para os veículos das posições 8701 a 8705. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["75.0", "01.075.00", "8708", "Partes e acessórios dos veículos das posições 8701 a 8705. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["76.0", "01.076.00", "8714.1", "Parte e acessórios de motocicletas e ciclomotores. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["77.0", "01.077.00", "8716.90.90", "Engates para reboques e semirreboques. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["78.0", "01.078.00", "9026.10", "Medidores de nível; Medidores de vazão. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["79.0", "01.079.00", "9026.20", "Aparelhos para medida ou controle da pressão. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["80.0", "01.080.00", "9029", "Contadores, indicadores de velocidade e tacômetros. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["81.0", "01.081.00", "9030.33.21", "Amperímetros. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["82.0", "01.082.00", "9031.80.40", "Computadores de bordo automotivos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["83.0", "01.083.00", "9032.89.2", "Controladores eletrônicos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["84.0", "01.084.00", "9104.00.00", "Relógios para painéis de instrumentos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["85.0", "01.085.00", "9401.20 / 9401.99", "Assentos e partes de assentos. <br><span class='badge alterado'>REDAÇÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["86.0", "01.086.00", "9613.80.00", "Acendedores automotivos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["87.0", "01.087.00", "4009", "Tubos de borracha vulcanizada com acessórios. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["88.0", "01.088.00", "4504.90 / 6812.99", "Juntas de vedação de cortiça ou amianto. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["89.0", "01.089.00", "4823.40.00", "Papel-diagrama para tacógrafo em disco. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["90.0", "01.090.00", "3919 / 8708.29", "Fitas, tiras, adesivos e refletores de segurança. <br><span class='badge inclusao'>INCLUSÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["91.0", "01.091.00", "8412.31.10", "Cilindros pneumáticos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["92.0", "01.092.00", "8413.19 / 8413.81", "Bomba elétrica de lavador de para-brisa. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["93.0", "01.093.00", "8413.60 / 8413.70", "Bomba de assistência de direção hidráulica. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["94.0", "01.094.00", "8414.59", "Motoventiladores automotivos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["95.0", "01.095.00", "8421.39.90", "Filtros de pólen do ar-condicionado. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["96.0", "01.096.00", "8501.10.19", "Máquina de vidro elétrico de porta. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["97.0", "01.097.00", "8501.31.10", "Motor de limpador de para-brisa. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["98.0", "01.098.00", "8504.50.00", "Bobinas de reatância e autoindução. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["99.0", "01.099.00", "8507.20 / 8507.30", "Baterias de chumbo e níquel-cádmio. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["100.0", "01.100.00", "8512.30.00", "Aparelhos de sinalização acústica (buzina). <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["101.0", "01.101.00", "9032.89.8", "Instrumentos para regulação de grandezas não elétricas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["102.0", "01.102.00", "9027.10.00", "Analisadores de gases ou fumaça (Sonda Lambda). <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["103.0", "01.103.00", "4008.11.00", "Perfilados de borracha vulcanizada. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["104.0", "01.104.00", "5601.22.19", "Artefatos de pasta de fibra de uso automotivo. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["105.0", "01.105.00", "5703.29.00", "Tapetes e carpetes de náilon. <br><span class='badge alterado'>REDAÇÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["106.0", "01.106.00", "5703.39.00", "Tapetes de matérias têxteis sintéticas. <br><span class='badge alterado'>REDAÇÃO: CONVÊNIO 066/22 (JAN/26)</span>"],
+            ["107.0", "01.107.00", "5911.90.00", "Forração interior de capacete. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["108.0", "01.108.00", "6903.90.99", "Outros para-brisas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["109.0", "01.109.00", "7007.29.00", "Moldura com espelho. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["110.0", "REVOGADO", "-", "Item revogado pela legislação estadual. <br><span class='badge revogado'>REVOGADO: AUDITAR ATÉ DEZ/24</span>"],
+            ["111.0", "01.111.00", "7315.11.00", "Corrente de transmissão. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["112.0", "01.112.00", "7315.12.10", "Outras correntes de transmissão. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["113.0", "01.113.00", "8418.99.00", "Condensador tubular metálico. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["114.0", "01.114.00", "8419.50", "Trocadores de calor. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["115.0", "01.115.00", "8424.90.90", "Partes de aparelhos mecânicos de pulverizar. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["116.0", "01.116.00", "8425.49.10", "Macacos manuais para veículos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["117.0", "01.117.00", "8431.41.00", "Caçambas, pás e ganchos p/ máquinas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["118.0", "01.118.00", "8501.61.00", "Geradores de CA <= 75 kva. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["119.0", "01.119.00", "8531.10.90", "Aparelhos elétricos para alarme automotivo. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["120.0", "01.120.00", "9014.10.00", "Bússolas. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["121.0", "01.121.00", "9025.19.90", "Indicadores de temperatura. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["122.0", "01.122.00", "9025.90.10", "Partes de indicadores de temperatura. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["123.0", "01.123.00", "9026.90", "Partes de aparelhos de medida ou controle. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["124.0", "01.124.00", "9032.10.10", "Termostatos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["125.0", "01.125.00", "9032.10.90", "Instrumentos e aparelhos para regulação. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["126.0", "01.126.00", "9032.20.00", "Pressostatos. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["127.0", "01.127.00", "8716.90", "Peças para reboques e semirreboques. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["128.0", "01.128.00", "7322.90.10", "Geradores de ar quente a combustível líquido. <br><span class='badge mantido'>MANTIDO 2025/26</span>"],
+            ["999.0", "01.999.00", "N/A", "Outras peças e acessórios automotores. <br><span class='badge mantido'>VIGENTE: CLÁUSULA DE ENCERRAMENTO</span>"]
+        ];
+
+        function renderRows(items) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = items.map(i => `
+                <tr>
+                    <td class="font-bold text-orange-500">${i[0]}</td>
+                    <td>${i[1]}</td>
+                    <td class="font-mono text-[10px] text-zinc-300 font-bold">${i[2]}</td>
+                    <td>${i[3]}</td>
+                </tr>
+            `).join('');
+        }
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = autopeças.filter(row => row.join(' ').toLowerCase().includes(term));
+            renderRows(filtered);
+        });
+
+        renderRows(autopeças);
+    </script>
+</body>
+</html>

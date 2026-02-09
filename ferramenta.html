@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria ST 2025-2026 | Anexo IX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .sidebar { width: 350px; height: 100vh; overflow-y: auto; background: #000; border-right: 1px solid #1f2937; position: fixed; padding: 20px; }
+        .main-content { margin-left: 350px; padding: 40px; min-height: 100vh; background: radial-gradient(circle at top right, #111, #050505); }
+        .table-container { background: rgba(10, 10, 10, 0.8); border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { background: #f97316; color: #000; padding: 12px; text-align: left; text-transform: uppercase; font-weight: 900; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #1f2937; line-height: 1.4; }
+        .badge { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-top: 4px; }
+        .mantido { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .search-box { background: #111; border: 1px solid #1f2937; color: #fff; padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none; }
+        .search-box:focus { border-color: #f97316; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1 class="text-orange-500 font-black text-2xl italic">FISCAL<span class="text-white">AUDIT</span></h1>
+        <p class="text-[10px] text-zinc-500 uppercase font-bold mb-8">Base Ferramentas</p>
+        <div class="bg-zinc-900 border-l-4 border-orange-500 p-4 rounded shadow-lg">
+            <h3 class="text-white font-bold text-xs uppercase">Anexo IX Completo</h3>
+            <p class="text-[10px] text-zinc-400 mt-1">Conferência Integral 2025/2026.</p>
+        </div>
+    </div>
+    <main class="main-content">
+        <h2 class="text-2xl font-black text-white italic uppercase mb-6">ANEXO IX - FERRAMENTAS</h2>
+        <input type="text" id="searchInput" class="search-box" placeholder="Busque por ITEM, CEST, NCM ou Descrição...">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ITEM</th><th>CEST</th><th>NCM/SH</th><th>DESCRIÇÃO TÉCNICA E VIGÊNCIA</th></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        const data = [
+            ["1.0", "08.001.00", "4016.99.90", "Ferramentas de borracha vulcanizada não endurecida. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["2.0", "08.002.00", "4417.00.10 4417.00.90", "Ferramentas, armações e cabos de ferramentas, de madeira. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["3.0", "08.003.00", "6804", "Mós e artefatos semelhantes, sem armações. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["4.0", "08.004.00", "8201", "Pás, alviões, picaretas, enxadas, sachos, machados. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["5.0", "08.005.00", "8202.20.00", "Folhas de serras de fita. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["6.0", "08.006.00", "8202.91.00", "Lâminas de serras máquinas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["7.0", "08.007.00", "8202.99.00", "Outras folhas de serras. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["8.0", "08.008.00", "8203", "Limas, grosas, alicates, tenazes, pinças, corta-tubos. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["9.0", "08.009.00", "8204", "Chaves de porcas, manuais; chaves de caixa. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["10.0", "08.010.00", "8205", "Ferramentas manuais; maçaricos; tornos de apertar. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["11.0", "08.011.00", "8205.59.00", "Ferramentas de pedreiro. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["12.0", "08.012.00", "8206.00.00", "Ferramentas de duas ou mais das posições 82.02 a 82.05. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["13.0", "08.013.00", "8207", "Ferramentas intercambiáveis para ferramentas manuais. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["14.0", "08.014.00", "8208", "Facas e lâminas cortantes, para máquinas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["15.0", "08.015.00", "8209.00.11", "Plaquetas, varetas, pontas e objetos semelhantes. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["16.0", "08.016.00", "8209.00.19", "Outros plaquetas, varetas, pontas e objetos. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["17.0", "08.017.00", "8211", "Facas de lâmina cortante ou serrilhada. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["18.0", "08.018.00", "8213.00.00", "Tesouras e suas lâminas. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["19.0", "08.019.00", "8467", "Ferramentas pneumáticas, hidráulicas com motor. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["20.0", "08.020.00", "9017.20.00", "Instrumentos de desenho, traçado ou cálculo. <br><span class='badge mantido'>Mantido 2025/26</span>"],
+            ["21.0", "08.021.00", "9017.30 9017.80", "Micrômetros, paquímetros, calibres, metros, réguas. <br><span class='badge mantido'>Mantido 2025/26</span>"]
+        ];
+        function renderRows(items) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = items.map(i => `<tr><td class="font-bold text-orange-500">${i[0]}</td><td>${i[1]}</td><td class="font-mono text-zinc-300 font-bold">${i[2]}</td><td>${i[3]}</td></tr>`).join('');
+        }
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            renderRows(data.filter(row => row.join(' ').toLowerCase().includes(term)));
+        });
+        renderRows(data);
+    </script>
+</body>
+</html>
