@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FISCAL AUDIT - PAINEL DE AUDITORIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
+        body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        header { border-bottom: 1px solid var(--border-color); background: #050505; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .audit-container { padding: 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .kpi-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; border-t: 3px solid var(--orange-main); }
+        .kpi-card h3 { font-size: 10px; font-weight: 900; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .kpi-card .value { font-size: 24px; font-weight: 900; color: #fff; }
+        
+        .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #080808; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; }
+        td { padding: 15px; font-size: 12px; border-bottom: 1px solid #111; color: #ccc; }
+        
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+        .badge-danger { background: #450a0a; color: #ef4444; border: 1px solid #ef4444; }
+        .badge-success { background: #064e3b; color: #10b981; border: 1px solid #10b981; }
+        
+        .diff-pos { color: #10b981; } /* PGDAS maior que XML (ok/venda sem nota?) */
+        .diff-neg { color: #ef4444; font-weight: bold; } /* XML maior que PGDAS (perigo!) */
+
+        .btn-back { color: #888; text-decoration: none; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .btn-back:hover { color: var(--orange-main); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="flex items-center gap-6">
+            <a href="index.html" class="btn-back"><i class="fas fa-arrow-left"></i> VOLTAR</a>
+            <h1 class="text-xl font-black italic tracking-tighter">FISCAL<span class="text-[#f97316]">AUDIT</span> | PAINEL DE CONFORMIDADE</h1>
+        </div>
+        <button onclick="executarAuditoria()" class="bg-[#f97316] text-black font-black px-6 py-2 rounded-lg text-xs uppercase hover:scale-105 transition">Atualizar Cruzamento</button>
+    </header>
+
+    <main class="audit-container">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <h3>Total XML (Vendas)</h3>
+                <div id="total-xml" class="value text-orange-500">R$ 0,00</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Total PGDAS (Declarado)</h3>
+                <div id="total-pgdas" class="value">R$ 0,00</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Divergência Total</h3>
+                <div id="total-diff" class="value">R$ 0,00</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Meses com Inconsistência</h3>
+                <div id="total-alerts" class="value">0</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Período</th>
+                        <th>Vendas no XML (A)</th>
+                        <th>Declarado PGDAS (B)</th>
+                        <th>Diferença (B - A)</th>
+                        <th>Status Compliance</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-auditoria">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Formatação BRL
+        const fmt = (v) => parseFloat(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        function executarAuditoria() {
+            // Puxa os dados dos dois bancos de dados do localStorage
+            const xmlHistory = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            const pgdasHistory = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
+            
+            const tbody = document.getElementById('tbody-auditoria');
+            tbody.innerHTML = "";
+
+            let somaXmlTotal = 0;
+            let somaPgdasTotal = 0;
+            let alertasCount = 0;
+
+            // Criar um mapa de todos os períodos encontrados em ambos
+            const todosPeriodos = new Set([
+                ...xmlHistory.map(x => x.ref),
+                ...pgdasHistory.map(p => p.ref)
+            ]);
+
+            // Ordenar períodos (aproximado por string, o ideal é converter para data)
+            Array.from(todosPeriodos).sort().forEach(periodo => {
+                // Soma XML do período
+                const dadosXml = xmlHistory.find(x => x.ref === periodo);
+                const valorXml = dadosXml ? dadosXml.itens.reduce((acc, item) => acc + parseFloat(item.ValorTotal.replace('.','').replace(',','.')), 0) : 0;
+
+                // Soma PGDAS do período (Soma de todas as receitas brutas informadas)
+                const dadosPgdas = pgdasHistory.find(p => p.ref === periodo);
+                const valorPgdas = dadosPgdas ? dadosPgdas.atividades.reduce((acc, ativ) => acc + parseFloat(ativ.rec.replace('.','').replace(',','.')), 0) : 0;
+
+                const diff = valorPgdas - valorXml;
+                const status = diff < -1 ? "CRÍTICO" : "OK"; // Tolerância de 1 real
+                if(status === "CRÍTICO") alertasCount++;
+
+                somaXmlTotal += valorXml;
+                somaPgdasTotal += valorPgdas;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-black text-white">${periodo}</td>
+                        <td>${fmt(valorXml)}</td>
+                        <td>${fmt(valorPgdas)}</td>
+                        <td class="${diff < 0 ? 'diff-neg' : 'diff-pos'}">${fmt(diff)}</td>
+                        <td>
+                            <span class="badge ${status === 'OK' ? 'badge-success' : 'badge-danger'}">${status}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Atualiza KPIs
+            document.getElementById('total-xml').innerText = fmt(somaXmlTotal);
+            document.getElementById('total-pgdas').innerText = fmt(somaPgdasTotal);
+            document.getElementById('total-diff').innerText = fmt(somaPgdasTotal - somaXmlTotal);
+            document.getElementById('total-alerts').innerText = alertasCount;
+        }
+
+        document.addEventListener('DOMContentLoaded', executarAuditoria);
+    </script>
+</body>
+</html>
