@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V10.1 MASTER PRO</title>
+    <title>FISCAL AUDIT - V10.2 MASTER PRO</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -37,7 +37,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V10.1 MASTER PRO</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V10.2 PRO Version</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -60,17 +60,17 @@
         <div id="extrator-panel" class="tab-content active">
             <header class="mb-10"><h2 class="text-2xl font-black italic text-white">Central de <span class="text-[#f97316]">Carga</span></h2></header>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900 orange-border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP (Multi-Meses)</h4>
+                <div class="bg-[#0a0a0a] p-8 rounded-xl border border-zinc-900 orange-border">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input').click()">
                         <i class="fas fa-file-zipper text-3xl text-zinc-700 mb-2"></i>
-                        <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Selecionar XML/ZIP</p>
+                        <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Carregar arquivos</p>
                         <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
                     </div>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange bg-zinc-900 text-zinc-600 mt-4" disabled>Gravar no Histórico XML</button>
+                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange bg-zinc-900 text-zinc-600 mt-4" disabled>Gravar XML no Histórico</button>
                 </div>
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900 orange-border">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Módulo PGDAS-D (PDF)</h4>
+                <div class="bg-[#0a0a0a] p-8 rounded-xl border border-zinc-900 orange-border">
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga PGDAS (PDF)</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('pgdas-input').click()">
                         <i class="fas fa-file-pdf text-3xl text-zinc-700 mb-2"></i>
                         <p id="label-pgdas" class="text-[9px] text-zinc-500 font-bold uppercase">Upload PDFs em Lote</p>
@@ -112,7 +112,7 @@
             </header>
             <div class="table-container">
                 <table>
-                    <thead><tr><th>Empresa / CNPJ / Ref</th><th>RBT12</th><th>Atividades</th><th>Total DAS</th></tr></thead>
+                    <thead><tr><th width="20%">Razão Social / CNPJ / Ref</th><th width="10%">RBT12</th><th width="60%">Atividades</th><th width="10%">Total DAS</th></tr></thead>
                     <tbody id="tbody-pgdas"></tbody>
                 </table>
             </div>
@@ -140,7 +140,7 @@
             if(tabId === 'pgdas-history-panel') renderPGDASHistory();
         }
 
-        // --- REGRAS XML (V8.5 ORIGINAL) ---
+        // --- LÓGICA XML ---
         let xmlBuffer = [];
         async function handleXMLFiles(files) {
             xmlBuffer = [];
@@ -151,7 +151,7 @@
                     for (let f of entries) xmlBuffer.push(await zip.files[f].async("text"));
                 } else { xmlBuffer.push(await file.text()); }
             }
-            document.getElementById('label-xml').innerText = `${xmlBuffer.length} arquivos carregados`;
+            document.getElementById('label-xml').innerText = `${xmlBuffer.length} XMLs prontos`;
             const btn = document.getElementById('btn-run-xml');
             btn.disabled = false; btn.className = "btn-orange";
         }
@@ -159,7 +159,7 @@
         function processarXML() {
             const history = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             const groups = {}; 
-            let duplicatas = 0;
+            let skips = 0;
 
             xmlBuffer.forEach(text => {
                 const xml = new DOMParser().parseFromString(text, "text/xml");
@@ -167,14 +167,16 @@
                 const xNome = xml.getElementsByTagName("xNome")[0]?.textContent || "EMPRESA";
                 const cnpj = xml.getElementsByTagName("CNPJ")[0]?.textContent || "000";
                 const dEmi = xml.getElementsByTagName("dEmi")[0]?.textContent || xml.getElementsByTagName("dhEmi")[0]?.textContent || "";
+                
                 if (!dEmi) return;
                 const mes = parseInt(dEmi.substring(dEmi.includes('-') ? 5 : 4, dEmi.includes('-') ? 7 : 6));
                 const ano = dEmi.substring(0, 4);
                 const ref = `${MONTHS[mes-1]}/${ano}`;
                 const key = `${cnpj}_${mes}_${ano}`;
 
-                if (history.some(h => h.key === key)) { duplicatas++; return; }
-                if (!groups[key]) groups[key] = { key, empresa: xNome, cnpj: cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"), ref, mesSort: parseInt(ano+mes.toString().padStart(2,'0')), setNotas: new Set(), itens: [] };
+                if (history.some(h => h.key === key)) { skips++; return; }
+
+                if (!groups[key]) groups[key] = { key, empresa: xNome, cnpj: cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"), ref, mesSort: parseInt(ano + mes.toString().padStart(2,'0')), setNotas: new Set(), itens: [] };
                 
                 groups[key].setNotas.add(nNF);
                 Array.from(xml.getElementsByTagName("det")).forEach(det => {
@@ -187,20 +189,20 @@
 
             Object.values(groups).forEach(g => history.push({ ...g, qtd: g.setNotas.size, setNotas: undefined }));
             localStorage.setItem('xml_audit_history', JSON.stringify(history));
-            alert(`✅ GRAVAÇÃO CONCLUÍDA!\nPeríodos novos: ${Object.keys(groups).length}\nDuplicatas ignoradas: ${duplicatas}`);
+            alert(`✅ GRAVAÇÃO XML CONCLUÍDA!\nNovos: ${Object.keys(groups).length}\nDuplicados ignorados: ${skips}`);
             renderXMLHistory();
         }
 
         function renderXMLHistory() {
             const h = (JSON.parse(localStorage.getItem('xml_audit_history')) || []).sort((a,b) => a.mesSort - b.mesSort);
-            document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr class="hover:bg-zinc-900/50"><td><input type="checkbox" class="xml-sel" data-idx="${i}"></td><td><div class="font-bold text-white uppercase">${it.empresa}</div><div class="text-[9px] text-zinc-500">${it.cnpj}</div></td><td class="font-bold text-orange-500">${it.ref}</td><td class="font-black text-white text-lg">${it.qtd}</td><td><button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase">Planilha</button></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30">VAZIO</td></tr>';
+            document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr><td><input type="checkbox" class="xml-sel" data-idx="${i}"></td><td><div class="font-bold text-white uppercase">${it.empresa}</div><div class="text-[9px] text-zinc-500">${it.cnpj}</div></td><td class="font-bold text-orange-500">${it.ref}</td><td class="font-black text-white text-lg">${it.qtd}</td><td><button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase">CSV</button></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30">VAZIO</td></tr>';
         }
 
         function exportBatchXML() {
             const h = (JSON.parse(localStorage.getItem('xml_audit_history')) || []).sort((a,b) => a.mesSort - b.mesSort);
             const sel = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[parseInt(cb.dataset.idx)]);
-            if (!sel.length) return alert("Selecione os períodos!");
-            generateCSV(sel, "LOTE_CONSOLIDADO");
+            if (!sel.length) return alert("Selecione períodos!");
+            generateCSV(sel, "CONSOLIDADO_LOTE");
         }
 
         function downloadOneXML(idx) {
@@ -216,9 +218,9 @@
 
         function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
 
-        // --- REGRAS PGDAS (V8.5 ORIGINAL) ---
+        // --- LÓGICA PGDAS (RETAURADO REGRAS V8.5) ---
         let pgdasFiles = [];
-        function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs prontos`; document.getElementById('btn-run-pgdas').disabled = false; document.getElementById('btn-run-pgdas').className = "btn-orange"; }
+        function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs`; document.getElementById('btn-run-pgdas').disabled = false; document.getElementById('btn-run-pgdas').className = "btn-orange"; }
 
         async function processarPGDAS() {
             const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
@@ -242,17 +244,20 @@
 
                 let somaTotal = 0, atividades = [];
                 t.split("Valor do Débito por Tributo para a Atividade").slice(1).forEach(b => {
-                    const impostos = b.split("Total")[1]?.match(/[\d.]+,\d{2}/g);
+                    const bloco = b.split("Totais do Estabelecimento")[0];
+                    const descMatch = bloco.match(/^(.*?)\s*Receita Bruta Informada/);
+                    const recMatch = bloco.match(/Receita Bruta Informada\s*:\s*R\$\s*([\d.]+,\d{2})/);
+                    const impostos = bloco.split("Total")[1]?.match(/[\d.]+,\d{2}/g);
                     if (impostos && impostos.length >= 9) {
                         somaTotal += parseCur(impostos[8]);
-                        atividades.push({ desc: b.match(/^(.*?)\s*Receita/)[1].trim(), receita: b.match(/R\$\s*([\d.]+,\d{2})/)[1], total: impostos[8], det: impostos });
+                        atividades.push({ desc: descMatch ? descMatch[1].trim() : "Atividade", receita: recMatch ? recMatch[1] : "0,00", total: impostos[8], det: impostos });
                     }
                 });
                 h.push({ razao, cnpj, ref, mSort: pRaw ? parseInt(pRaw[2]+pRaw[1]) : 0, rbt12: (t.match(/RBT12\)\s*[\d.,]+\s*[\d.,]+\s*([\d.]+,\d{2})/) || ["","0,00"])[1], atividades, dasTotal: somaTotal.toLocaleString('pt-BR',{minimumFractionDigits:2}) });
                 novos++;
             }
             localStorage.setItem('pgdas_pdf_audit', JSON.stringify(h));
-            alert(`✅ PGDAS CONCLUÍDO!\nNovos registros: ${novos}`); renderPGDASHistory();
+            alert(`✅ PGDAS CONCLUÍDO!\nNovos: ${novos}`); renderPGDASHistory();
         }
 
         function renderPGDASHistory() {
@@ -263,9 +268,7 @@
         function clearHistory(t) { if(confirm("Limpar?")) { localStorage.removeItem(t === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); t === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
         document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
-        }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js')); }
     </script>
 </body>
 </html>
