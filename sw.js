@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-v10.6-master';
+const CACHE_NAME = 'fiscal-audit-v10.7-master';
 
 const ASSETS = [
     './',
@@ -27,6 +27,7 @@ const ASSETS = [
     './Sorvete e Preparado para Sorvete.html',
     './Tintas, Vernizes e Produtos Químicos.html',
     './Veículos Automotores Novos.html',
+    './pis e cofins.html',
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
