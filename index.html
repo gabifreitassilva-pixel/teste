@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V12.4 MODELO OFICIAL</title>
+    <title>FISCAL AUDIT - V12.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -33,7 +33,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase">V12.4 - MODELO OFICIAL</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase">V12.7 - FINAL</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -41,6 +41,11 @@
             <div class="section-title">Consultas</div>
             <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
             <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
+            <div class="section-title">Auditoria</div>
+            <a href="auditoria.html" class="nav-link"><i class="fas fa-sync"></i> Cruzar Informações</a>
+            <div class="nav-link" onclick="showTab('rectify-panel', this)"><i class="fas fa-edit"></i> Painel Retificações</div>
+            <div class="nav-link" onclick="showTab('save-panel', this)"><i class="fas fa-save"></i> Gravar Auditoria</div>
+            <div class="nav-link" onclick="showTab('global-panel', this)"><i class="fas fa-globe"></i> Histórico Global</div>
             <div class="section-title">Legislação</div>
             <div class="nav-link" onclick="showTab('leg-state', this)"><i class="fas fa-map-marker-alt"></i> Estadual</div>
             <div class="nav-link" onclick="showTab('leg-fed', this)"><i class="fas fa-flag"></i> Federal</div>
@@ -52,7 +57,7 @@
             <h2 class="text-2xl font-black italic text-white text-orange-500 uppercase mb-8">Central de Carga</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP (Modelo MODELO.csv)</h4>
+                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP</h4>
                     <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input').click()">
                         <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Clique para selecionar arquivos</p>
                         <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
@@ -73,8 +78,8 @@
                         <tr>
                             <th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th>
                             <th>Empresa / CNPJ</th>
-                            <th>Ref</th>
-                            <th>Qtd Itens</th>
+                            <th>Referência (Mês/Ano)</th>
+                            <th>Itens Totais</th>
                             <th width="120">Ações</th>
                         </tr>
                     </thead>
@@ -85,13 +90,15 @@
     </main>
 
     <script>
-        const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+        const MONTHS_MAP = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
         let xmlBuffer = [];
 
         function showTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); el.classList.add('active');
+            const target = document.getElementById(id);
+            if(target) { target.classList.add('active'); }
+            if(el) el.classList.add('active');
             if(id === 'xml-history-panel') renderXMLHistory();
         }
 
@@ -100,7 +107,7 @@
             for (let f of files) {
                 if (f.name.endsWith('.zip')) {
                     const zip = await JSZip.loadAsync(f);
-                    for (let p of Object.keys(zip.files).filter(x => x.endsWith('.xml'))) xmlBuffer.push(await zip.files[p].async("text"));
+                    for (let p of Object.keys(zip.files).filter(x => x.toLowerCase().endsWith('.xml'))) xmlBuffer.push(await zip.files[p].async("text"));
                 } else { xmlBuffer.push(await f.text()); }
             }
             document.getElementById('label-xml').innerText = `${xmlBuffer.length} Arquivos Prontos`;
@@ -119,28 +126,34 @@
 
                 const cnpj = emit.getElementsByTagName("CNPJ")[0]?.textContent;
                 const razao = emit.getElementsByTagName("xNome")[0]?.textContent;
-                const dEmi = ide.getElementsByTagName("dhEmi")[0]?.textContent || ide.getElementsByTagName("dEmi")[0]?.textContent || "";
-                const nNF = ide.getElementsByTagName("nNF")[0]?.textContent || "S/N";
                 
-                const m = parseInt(dEmi.substring(5,7)), a = dEmi.substring(2,4);
-                const ref = `${MONTHS[m-1]}/${a}`;
-                const key = `${cnpj}_${m}_${a}`;
+                // CORREÇÃO DA TAG DE DATA: dhEmi (NFe 4.0) ou dEmi (NFe antiga)
+                const dataRaw = ide.getElementsByTagName("dhEmi")[0]?.textContent || ide.getElementsByTagName("dEmi")[0]?.textContent || "";
+                if(!dataRaw) return;
 
-                if(!groups[key]) groups[key] = { key, empresa: razao, cnpj, ref, mSort: parseInt(a+m), itens: [] };
+                const nNF = ide.getElementsByTagName("nNF")[0]?.textContent || "0";
+                
+                // Extração do Mês e Ano (AAAA-MM-DD...)
+                const anoCurto = dataRaw.substring(2,4);
+                const mesIdx = parseInt(dataRaw.substring(5,7)) - 1;
+                const ref = `${MONTHS_MAP[mesIdx]}/${anoCurto}`;
+                
+                const key = `${cnpj}_${ref}`;
+
+                if(!groups[key]) groups[key] = { key, empresa: razao, cnpj: cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"), cnpjRaw: cnpj, ref, itens: [] };
 
                 Array.from(xml.getElementsByTagName("det")).forEach(det => {
                     const prod = det.getElementsByTagName("prod")[0];
                     const imposto = det.getElementsByTagName("imposto")[0];
                     
-                    // Mapeamento idêntico ao MODELO.csv
                     groups[key].itens.push({
                         Empresa: razao,
-                        CNPJ: cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"),
+                        CNPJ: groups[key].cnpj,
                         Mes: ref,
                         Nota: nNF.padStart(6, '0'),
                         Produto: prod.getElementsByTagName("xProd")[0]?.textContent,
                         NCM: prod.getElementsByTagName("NCM")[0]?.textContent,
-                        Credito: "0.00", // Campo conforme modelo
+                        Credito: "0.00",
                         CFOP: prod.getElementsByTagName("CFOP")[0]?.textContent,
                         Unidade: prod.getElementsByTagName("uCom")[0]?.textContent,
                         Qtd: parseFloat(prod.getElementsByTagName("qCom")[0]?.textContent || 0).toFixed(3),
@@ -152,9 +165,14 @@
                 });
             });
 
-            Object.values(groups).forEach(g => { if(!h.find(x => x.key === g.key)) h.push(g); });
+            Object.values(groups).forEach(g => { 
+                const existing = h.find(x => x.key === g.key);
+                if(!existing) h.push(g);
+                else { existing.itens = [...existing.itens, ...g.itens]; } 
+            });
+
             localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert("✅ Dados extraídos conforme modelo oficial!");
+            alert("✅ Dados processados e agrupados por mês!");
             renderXMLHistory();
         }
 
@@ -164,7 +182,7 @@
                 <tr>
                     <td><input type="checkbox" class="xml-sel" data-idx="${i}"></td>
                     <td><b class="text-white uppercase">${it.empresa}</b><br><small class="text-zinc-500">${it.cnpj}</small></td>
-                    <td class="text-orange-500 font-bold">${it.ref}</td>
+                    <td class="text-orange-500 font-black uppercase">${it.ref}</td>
                     <td class="text-white font-black">${it.itens.length}</td>
                     <td>
                         <div class="flex items-center gap-4">
@@ -177,20 +195,19 @@
 
         function downloadCSV(idx) {
             const r = (JSON.parse(localStorage.getItem('xml_audit_history')))[idx];
-            // Cabeçalho idêntico ao MODELO.csv
             let csv = "Empresa;CNPJ;Mes;Nota;Produto;NCM;Credito;CFOP;Unidade;Qtd;Unitario;CST_PIS;CST_COFINS;CST_ICMS\r\n";
             r.itens.forEach(i => {
                 csv += `${i.Empresa};${i.CNPJ};${i.Mes};${i.Nota};${i.Produto};${i.NCM};${i.Credito};${i.CFOP};${i.Unidade};${i.Qtd};${i.Unitario};${i.CST_PIS};${i.CST_COFINS};${i.CST_ICMS}\r\n`;
             });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-            link.download = `MODELO_${r.empresa}_${r.ref}.csv`;
+            link.download = `RELATORIO_${r.empresa}_${r.ref.replace('/','-')}.csv`;
             link.click();
         }
 
         function deleteItem(idx) {
             let d = JSON.parse(localStorage.getItem('xml_audit_history'));
-            if(confirm("Excluir período?")) { d.splice(idx, 1); localStorage.setItem('xml_audit_history', JSON.stringify(d)); renderXMLHistory(); }
+            if(confirm("Excluir este período?")) { d.splice(idx, 1); localStorage.setItem('xml_audit_history', JSON.stringify(d)); renderXMLHistory(); }
         }
         function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
     </script>
