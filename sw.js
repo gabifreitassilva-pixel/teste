@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-v9.1-pro';
+const CACHE_NAME = 'fiscal-audit-v10.0-pro';
 
 const ASSETS = [
     './',
