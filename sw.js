@@ -1,6 +1,5 @@
-const CACHE_NAME = 'fiscal-audit-v12.2-master-total';
+const CACHE_NAME = 'fiscal-audit-v12.3-master';
 
-// Lista completa e atualizada de todos os anexos e dependências
 const ASSETS = [
     './',
     './index.html',
@@ -29,7 +28,6 @@ const ASSETS = [
     './Tintas, Vernizes e Produtos Químicos.html',
     './Veículos Automotores Novos.html',
     './pis e cofins.html',
-    // Bibliotecas Externas para funcionamento offline
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
@@ -37,33 +35,18 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// Instalação: Salva todos os arquivos no cache
 self.addEventListener('install', (event) => {
     self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('Cache V12.0 Instalado com Sucesso');
-            return cache.addAll(ASSETS);
-        })
-    );
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 
-// Ativação: Limpa caches de versões antigas para evitar bugs de botões que não aparecem
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-            );
-        })
-    );
+    event.waitUntil(caches.keys().then((keys) => Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    )));
     self.clients.claim();
 });
 
-// Busca: Serve os arquivos do cache se estiver offline
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
-    );
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
-
