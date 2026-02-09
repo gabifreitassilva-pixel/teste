@@ -1,135 +1,10 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V12.3 MASTER DEFINITIVA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
-        body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--bg-dark); border-right: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
-        .nav-link { padding: 10px 25px; font-size: 10px; font-weight: 700; color: #888; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; text-transform: uppercase; border-left: 3px solid transparent; }
-        .nav-link:hover, .nav-link.active { color: var(--orange-main); background: #080808; border-left-color: var(--orange-main); }
-        .section-title { padding: 20px 25px 8px; font-size: 9px; font-weight: 900; color: #444; text-transform: uppercase; letter-spacing: 2px; }
-        .main-container { flex: 1; background: #050505; overflow-y: auto; }
-        .tab-content { display: none; padding: 40px; }
-        .tab-content.active { display: block; }
-        .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #080808; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        td { padding: 12px 15px; font-size: 11px; border-bottom: 1px solid #111; color: #ccc; vertical-align: middle; }
-        .btn-orange { background: var(--orange-main); color: #000 !important; font-weight: 900; border-radius: 8px; padding: 12px; text-transform: uppercase; font-size: 11px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; border: none; }
-        .trash-icon { color: #dc2626 !important; cursor: pointer; font-size: 16px; transition: 0.2s; padding: 8px; }
-        .trash-icon:hover { color: #ff4d4d !important; transform: scale(1.2); }
-        .legis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
-        .legis-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 10px; padding: 20px; transition: 0.3s; cursor: pointer; border-left: 3px solid var(--orange-main); text-decoration: none; display: block; }
-        .legis-card:hover { background: #111; transform: translateY(-3px); border-left-color: #fff; }
-        .legis-card h4 { font-size: 9px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; }
-        .activity-item { background: #0d0d0d; border: 1px solid #1a1a1a; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid var(--orange-main); }
-        .tax-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 8px; }
-        .tax-unit { font-size: 9px; display: flex; flex-direction: column; }
-        .tax-unit span:first-child { color: #555; font-weight: 800; font-size: 8px; }
-        .tax-unit span:last-child { color: #f97316; font-weight: 600; }
-    </style>
-</head>
-<body>
-
-    <aside class="sidebar">
-        <div class="p-8 border-b border-zinc-900 mb-2 text-center">
-            <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V12.3 MASTER TOTAL</p>
-        </div>
-        <nav>
-            <div class="section-title">Extração</div>
-            <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-upload"></i> Módulo de Carga</div>
-            <div class="section-title">Consultas</div>
-            <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
-            <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
-            <div class="section-title">Auditoria</div>
-            <div class="nav-link" onclick="showTab('cross-panel', this)"><i class="fas fa-sync"></i> Cruzar Informações</div>
-            <div class="nav-link" onclick="showTab('rectify-panel', this)"><i class="fas fa-edit"></i> Painel Retificações</div>
-            <div class="nav-link" onclick="showTab('save-panel', this)"><i class="fas fa-save"></i> Gravar Auditoria</div>
-            <div class="nav-link" onclick="showTab('global-panel', this)"><i class="fas fa-globe"></i> Histórico Global</div>
-            <div class="section-title">Legislação</div>
-            <div class="nav-link" onclick="showTab('leg-state', this)"><i class="fas fa-map-marker-alt"></i> Estadual</div>
-            <div class="nav-link" onclick="showTab('leg-fed', this)"><i class="fas fa-flag"></i> Federal</div>
-        </nav>
-    </aside>
-
-    <main class="main-container">
-        <div id="extrator-panel" class="tab-content active">
-            <header class="mb-10"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">Central de Carga</h2></header>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP</h4>
-                    <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input').click()">
-                        <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Carregar arquivos</p>
-                        <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
-                    </div>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange mt-4" disabled>Gravar no Histórico</button>
-                </div>
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga PGDAS (PDF)</h4>
-                    <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('pgdas-input').click()">
-                        <p id="label-pgdas" class="text-[9px] text-zinc-500 font-bold uppercase">Upload PDFs em Lote</p>
-                        <input type="file" id="pgdas-input" multiple accept=".pdf" class="hidden" onchange="handlePGDASFiles(this.files)">
-                    </div>
-                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-orange mt-4" disabled>Gravar PGDAS</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="xml-history-panel" class="tab-content">
-            <header class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black italic text-white">Histórico XML</h2>
-                <div class="flex gap-3">
-                    <button onclick="clearHistory('xml')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase">Limpar Histórico</button>
-                    <button onclick="exportBatchXML()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase">Exportar Lote por CNPJ</button>
-                </div>
-            </header>
-            <div class="table-container"><table><thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa / CNPJ</th><th>Referência</th><th>Notas</th><th>Ações</th></tr></thead><tbody id="tbody-xml"></tbody></table></div>
-        </div>
-
-        <div id="pgdas-history-panel" class="tab-content">
-            <header class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black italic text-white">Histórico PGDAS</h2>
-                <button onclick="clearHistory('pgdas')" class="bg-red-900/30 text-red-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase">Limpar Histórico</button>
-            </header>
-            <div class="table-container"><table><thead><tr><th width="20%">Razão Social / CNPJ</th><th width="10%">RBT12</th><th width="55%">Atividades / Detalhamento</th><th width="10%">Total DAS</th><th width="40"></th></tr></thead><tbody id="tbody-pgdas"></tbody></table></div>
-        </div>
-
-        <div id="leg-state" class="tab-content">
-            <header class="mb-10"><h2 class="text-2xl font-black italic text-white text-blue-400">Legislação Estadual (SP)</h2></header>
-            <div class="legis-grid">
-                <a href="base reduzida.html" target="_blank" class="legis-card"><h4>Base Reduzida</h4><p>Anexo II SP</p></a>
-                <a href="Artigos de papelaria.html" target="_blank" class="legis-card"><h4>Papelaria e Papel</h4><p>Anexo XVI</p></a>
-                <a href="auto pecas.html" target="_blank" class="legis-card"><h4>Autopeças</h4><p>Anexo XIV</p></a>
-                </div>
-        </div>
-
-        <div id="leg-fed" class="tab-content">
-            <header class="mb-10"><h2 class="text-2xl font-black italic text-white text-green-400">Legislação Federal</h2></header>
-            <div class="legis-grid">
-                <a href="pis e cofins.html" target="_blank" class="legis-card" style="border-left-color: #4ade80;"><h4>Tabela PIS/COFINS</h4><p>Monofásicos e Alíquota Zero</p></a>
-            </div>
-        </div>
-
-        <div id="cross-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">CRUZAR INFORMAÇÕES</h2></div>
-        <div id="rectify-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">PAINEL DE RETIFICAÇÕES</h2></div>
-        <div id="save-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">GRAVAR AUDITORIA</h2></div>
-        <div id="global-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-orange-500 uppercase">HISTÓRICO GLOBAL</h2></div>
-    </main>
-
-    <script>
+<script>
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        
         const MONTHS = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
 
+        // --- SISTEMA DE TABS ---
         function showTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
             document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
@@ -140,43 +15,148 @@
             if(id === 'pgdas-history-panel') renderPGDASHistory();
         }
 
-        // --- MOTOR XML ---
+        // --- MOTOR XML (CORRIGIDO E TURBINADO) ---
         let xmlBuffer = [];
+
         async function handleXMLFiles(files) {
             xmlBuffer = [];
+            const label = document.getElementById('label-xml');
+            label.innerText = "Lendo arquivos...";
+            
             for (let f of files) {
-                if (f.name.endsWith('.zip')) {
-                    const zip = await JSZip.loadAsync(f);
-                    for (let p of Object.keys(zip.files).filter(x => x.endsWith('.xml'))) xmlBuffer.push(await zip.files[p].async("text"));
-                } else { xmlBuffer.push(await f.text()); }
+                if (f.name.toLowerCase().endsWith('.zip')) {
+                    try {
+                        const zip = await JSZip.loadAsync(f);
+                        const xmlFiles = Object.keys(zip.files).filter(x => x.toLowerCase().endsWith('.xml'));
+                        for (let p of xmlFiles) {
+                            xmlBuffer.push(await zip.files[p].async("text"));
+                        }
+                    } catch(e) { console.error("Erro no ZIP", e); }
+                } else if (f.name.toLowerCase().endsWith('.xml')) {
+                    xmlBuffer.push(await f.text());
+                }
             }
-            document.getElementById('label-xml').innerText = `${xmlBuffer.length} XMLs Prontos`;
+            label.innerText = `${xmlBuffer.length} XMLs Carregados (Clique em Gravar)`;
             document.getElementById('btn-run-xml').disabled = false;
         }
 
+        // Função auxiliar para pegar valor de tag com segurança
+        const getTag = (el, tag) => el.getElementsByTagName(tag)[0]?.textContent || "";
+        
+        // Função para pegar CST/CSOSN específico dentro de um grupo (PIS, COFINS, etc)
+        const getTaxCST = (det, groupTag, fieldTags) => {
+            const group = det.getElementsByTagName(groupTag)[0];
+            if (!group) return "";
+            for (let tag of fieldTags) {
+                const val = group.getElementsByTagName(tag)[0]?.textContent;
+                if (val) return val;
+            }
+            return "";
+        };
+
         function processarXML() {
+            if (xmlBuffer.length === 0) return alert("Nenhum arquivo carregado.");
+            
             const db = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const groups = {};
+            // Mapa temporário para agrupar antes de salvar
+            const groups = {}; 
+
             xmlBuffer.forEach(text => {
-                const xml = new DOMParser().parseFromString(text, "text/xml");
-                const cnpj = xml.getElementsByTagName("CNPJ")[0]?.textContent;
-                const dEmi = xml.getElementsByTagName("dhEmi")[0]?.textContent || xml.getElementsByTagName("dEmi")[0]?.textContent || "";
-                const nNF = xml.getElementsByTagName("nNF")[0]?.textContent || "S/N";
-                if(!cnpj || !dEmi) return;
-                const m = parseInt(dEmi.substring(5,7)), a = dEmi.substring(0,4), ref = `${MONTHS[m-1]}/${a}`, key = `${cnpj}_${m}_${a}`;
-                if (db.some(h => h.key === key)) return;
-                if(!groups[key]) groups[key] = { key, empresa: xml.getElementsByTagName("xNome")[0]?.textContent, cnpj, ref, mesSort: parseInt(a+m), qtd: 0, itens: [] };
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, "text/xml");
+                
+                // 1. Identificação da Nota
+                const ide = xml.getElementsByTagName("ide")[0];
+                const emit = xml.getElementsByTagName("emit")[0];
+                
+                if (!ide || !emit) return; // XML inválido
+
+                const cnpj = getTag(emit, "CNPJ");
+                const xNome = getTag(emit, "xNome");
+                const nNF = getTag(ide, "nNF");
+                
+                // 2. Tratamento da Data (dhEmi ou dEmi)
+                let rawDate = getTag(ide, "dhEmi") || getTag(ide, "dEmi");
+                if (!rawDate) return;
+                
+                // Converte string ISO para objeto Date (ex: 2026-02-09T...)
+                const dateObj = new Date(rawDate);
+                if (isNaN(dateObj.getTime())) return; // Data inválida
+
+                const mesIndex = dateObj.getMonth(); // 0 a 11
+                const ano = dateObj.getFullYear();
+                
+                // Formato exigido: FEVEREIRO/2026
+                const refPorExtenso = `${MONTHS[mesIndex]}/${ano}`;
+                
+                // Chave única para agrupamento: CNPJ + ANO + MÊS
+                const key = `${cnpj}_${ano}_${mesIndex}`;
+
+                // Cria o grupo se não existir
+                if (!groups[key]) {
+                    groups[key] = {
+                        key: key,
+                        empresa: xNome,
+                        cnpj: cnpj,
+                        ref: refPorExtenso, // Exibição
+                        mesSort: parseInt(`${ano}${mesIndex.toString().padStart(2,'0')}`), // Ordenação
+                        qtd: 0,
+                        itens: []
+                    };
+                }
+
+                // Incrementa contador de notas
                 groups[key].qtd++;
-                Array.from(xml.getElementsByTagName("det")).forEach(det => {
-                    groups[key].itens.push({ nota: nNF, prod: det.getElementsByTagName("xProd")[0]?.textContent, ncm: det.getElementsByTagName("NCM")[0]?.textContent, valor: det.getElementsByTagName("vProd")[0]?.textContent, cst: det.getElementsByTagName("CST")[0]?.textContent });
+
+                // 3. Extração dos Itens (Produtos)
+                const dets = xml.getElementsByTagName("det");
+                Array.from(dets).forEach(det => {
+                    const prod = det.getElementsByTagName("prod")[0];
+                    if (!prod) return;
+
+                    groups[key].itens.push({
+                        nomeEmitente: xNome,
+                        cnpjEmitente: cnpj,
+                        mesAno: refPorExtenso,
+                        nNF: nNF,
+                        ncm: getTag(prod, "NCM"),
+                        xProd: getTag(prod, "xProd"),
+                        vUnCom: getTag(prod, "vUnCom"), // Valor Unitário
+                        vProd: getTag(prod, "vProd"),   // Valor Total
+                        
+                        // Extração Específica de Impostos
+                        cstPis: getTaxCST(det, "PIS", ["CST"]),
+                        cstCofins: getTaxCST(det, "COFINS", ["CST"]),
+                        cstIpi: getTaxCST(det, "IPI", ["CST"]),
+                        // ICMS pode ser CST ou CSOSN
+                        icmsCstCsosn: getTaxCST(det, "ICMS", ["CST", "CSOSN", "orig"]) // Tenta achar qualquer um
+                    });
                 });
             });
-            Object.values(groups).forEach(g => db.push(g));
+
+            // Mesclar com o banco de dados existente
+            // Se já existe o grupo, substituímos ou somamos? Aqui vou adicionar novos grupos ou atualizar existentes.
+            Object.values(groups).forEach(newGroup => {
+                const existingIndex = db.findIndex(h => h.key === newGroup.key);
+                if (existingIndex >= 0) {
+                    // Se já existe, atualiza (substitui para evitar duplicidade de itens da mesma carga)
+                    db[existingIndex] = newGroup;
+                } else {
+                    db.push(newGroup);
+                }
+            });
+
             localStorage.setItem('xml_audit_history', JSON.stringify(db));
-            alert("✅ XMLs Gravados!"); renderXMLHistory();
+            alert(`✅ Processamento Concluído!\n${Object.keys(groups).length} Referências processadas.`);
+            renderXMLHistory();
+            
+            // Limpa buffer para liberar memória
+            xmlBuffer = [];
+            document.getElementById('label-xml').innerText = "Carregar arquivos";
+            document.getElementById('btn-run-xml').disabled = true;
         }
 
-        // --- MOTOR PGDAS ---
+        // --- MOTOR PGDAS (Mantido igual, se quiser alterar avise) ---
         let pgdasFiles = [];
         function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs Prontos`; document.getElementById('btn-run-pgdas').disabled = false; }
         
@@ -205,18 +185,21 @@
             alert("✅ PGDAS Gravados!"); renderPGDASHistory();
         }
 
-        // --- RENDERERS ---
+        // --- RENDERIZADORES ---
         function renderXMLHistory() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            // Ordenar por data (mais recente primeiro)
+            h.sort((a, b) => b.mesSort - a.mesSort);
+
             document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr>
                 <td><input type="checkbox" class="xml-sel" data-idx="${i}"></td>
                 <td><b class="text-white uppercase text-[10px]">${it.empresa}</b><br><small class="text-zinc-500">${it.cnpj}</small></td>
-                <td class="text-orange-500 font-bold">${it.ref}</td>
-                <td class="text-white font-black">${it.qtd}</td>
+                <td class="text-orange-500 font-bold uppercase">${it.ref}</td>
+                <td class="text-white font-black text-center">${it.qtd}</td>
                 <td><div class="flex items-center gap-3">
-                    <button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase hover:bg-zinc-700">Relatório</button>
+                    <button onclick="downloadOneXML(${i})" class="bg-zinc-800 text-white px-3 py-1 rounded text-[9px] uppercase hover:bg-zinc-700"><i class="fas fa-download mr-1"></i> CSV</button>
                     <i class="fas fa-trash-alt trash-icon" onclick="deleteItem('xml', ${i})"></i>
-                </div></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Vazio</td></tr>';
+                </div></td></tr>`).join('') || '<tr><td colspan="5" class="text-center py-20 opacity-30 italic">Nenhum histórico encontrado</td></tr>';
         }
 
         function renderPGDASHistory() {
@@ -239,35 +222,89 @@
         function deleteItem(type, idx) {
             const k = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
             let d = JSON.parse(localStorage.getItem(k));
-            if(confirm("Confirmar exclusão?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); }
+            // Como ordenamos na visualização, precisamos achar o item correto no array original
+            // Simplificação: vamos re-buscar e deletar pelo Key ou Index direto se não tiver ordenação complexa
+            // Para garantir, vamos usar filter no XML
+            if (type === 'xml') {
+                // Como renderizamos ordenado, o idx clicado não é o idx do localStorage.
+                // Vamos refazer a lógica simples: deletar e renderizar. 
+                // Nota: Ideal seria usar ID único, mas vamos deletar do array ordenado e salvar.
+                d.sort((a, b) => b.mesSort - a.mesSort); // Aplica mesma ordenação
+                if(confirm(`Excluir ${d[idx].ref}?`)) {
+                    d.splice(idx, 1);
+                    localStorage.setItem(k, JSON.stringify(d));
+                    renderXMLHistory();
+                }
+            } else {
+                if(confirm("Confirmar exclusão?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); renderPGDASHistory(); }
+            }
         }
-        function clearHistory(type) { if(confirm("Apagar tudo?")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
+
+        function clearHistory(type) { if(confirm("Apagar TODO o histórico? Esta ação é irreversível.")) { localStorage.removeItem(type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit'); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); } }
         
+        // --- GERADOR DE CSV DETALHADO ---
+        function generateCSV(data) {
+            // Cabeçalho ajustado conforme solicitação
+            let csv = "\ufeffEmpresa;CNPJ Emitente;Mês/Ano;Nota;NCM;Descrição Produto;Vl. Unit;Vl. Total;CST PIS;CST COFINS;CST/CSOSN ICMS;CST IPI\n";
+            
+            data.forEach(d => {
+                // Tratamento para evitar que ponto e vírgula no nome do produto quebre o CSV
+                const descSegura = d.xProd.replace(/;/g, " ");
+                const valorUnit = d.vUnCom.replace(".", ",");
+                const valorTotal = d.vProd.replace(".", ",");
+
+                csv += `${d.nomeEmitente};${d.cnpjEmitente};${d.mesAno};${d.nNF};${d.ncm};${descSegura};${valorUnit};${valorTotal};${d.cstPis};${d.cstCofins};${d.icmsCstCsosn};${d.cstIpi}\n`;
+            });
+            return csv;
+        }
+
         function downloadOneXML(idx) {
-            const r = (JSON.parse(localStorage.getItem('xml_audit_history')))[idx];
-            let csv = "\ufeffEmpresa;CNPJ;Mes;Referencia;Nota;Produto;NCM;Valor;CST\n";
-            r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${r.ref};${d.nota};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `RELATORIO_${r.empresa}.csv`; link.click();
+            let d = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            d.sort((a, b) => b.mesSort - a.mesSort);
+            const registro = d[idx];
+            
+            const csvContent = generateCSV(registro.itens);
+            
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `AUDIT_${registro.empresa.replace(/\s+/g,'_')}_${registro.ref.replace('/','-')}.csv`;
+            link.click();
         }
         
         function exportBatchXML() {
-            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const sel = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[parseInt(cb.dataset.idx)]);
-            sel.forEach(r => { 
-                let csv = "\ufeffEmpresa;CNPJ;Mes;Referencia;Nota;Produto;NCM;Valor;CST\n";
-                r.itens.forEach(d => { csv += `${r.empresa};${r.cnpj};${r.ref};${r.ref};${d.nota};${d.prod};${d.ncm};${d.valor};${d.cst}\n`; });
-                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `RELATORIO_${r.empresa}.csv`; link.click();
-            });
-        }
-        function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
-        document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
+            // Pega todos os selecionados
+            const checkboxes = document.querySelectorAll('.xml-sel:checked');
+            if(checkboxes.length === 0) return alert("Selecione pelo menos um item da lista.");
 
-        // Service Worker Registration Seguro
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrado!', reg))
-                .catch(err => console.log('Erro SW:', err));
+            let d = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            d.sort((a, b) => b.mesSort - a.mesSort);
+
+            // Junta os itens de todos os selecionados em um único CSVzão ou baixa vários?
+            // Vamos baixar um CSV consolidado com tudo que foi selecionado
+            let allItems = [];
+            checkboxes.forEach(cb => {
+                const idx = parseInt(cb.dataset.idx);
+                if(d[idx]) allItems = allItems.concat(d[idx].itens);
+            });
+
+            const csvContent = generateCSV(allItems);
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `AUDITORIA_CONSOLIDADA_${new Date().getTime()}.csv`;
+            link.click();
         }
+
+        function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
+        
+        document.addEventListener('DOMContentLoaded', () => { 
+            renderXMLHistory(); 
+            renderPGDASHistory(); 
+            
+            // Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW ok'))
+                    .catch(err => console.log('SW erro', err));
+            }
+        });
     </script>
-</body>
-</html>
