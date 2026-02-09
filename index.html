@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V10.8 MASTER</title>
+    <title>FISCAL AUDIT - V10.9 MASTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -12,25 +12,18 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
         body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar */
         .sidebar { width: 260px; background: var(--bg-dark); border-right: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
         .nav-link { padding: 10px 25px; font-size: 10px; font-weight: 700; color: #888; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; text-transform: uppercase; border-left: 3px solid transparent; }
         .nav-link:hover, .nav-link.active { color: var(--orange-main); background: #080808; border-left-color: var(--orange-main); }
         .section-title { padding: 20px 25px 8px; font-size: 9px; font-weight: 900; color: #444; text-transform: uppercase; letter-spacing: 2px; }
-        
-        /* Containers */
-        .main-container { flex: 1; background: #050505; overflow-y: auto; }
-        .tab-content { display: none; padding: 40px; }
-        .tab-content.active { display: block; }
-        
-        /* Legislação Cards */
+        .main-container { flex: 1; background: #050505; overflow-y: auto; position: relative; }
+        .tab-content { display: none; padding: 40px; width: 100%; height: 100%; }
+        .tab-content.active { display: block !important; }
         .legis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
         .legis-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 10px; padding: 20px; transition: 0.3s; cursor: pointer; border-left: 3px solid var(--orange-main); text-decoration: none; display: block; }
         .legis-card:hover { background: #111; transform: translateY(-3px); border-left-color: #fff; }
-        .legis-card h4 { font-size: 9px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; }
+        .legis-card h4 { font-size: 9px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; }
         .legis-card p { font-size: 8px; color: #555; font-weight: 700; text-transform: uppercase; }
-        .btn-orange { background: var(--orange-main); color: #000; font-weight: 900; border-radius: 8px; padding: 12px; text-transform: uppercase; font-size: 11px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
@@ -38,7 +31,7 @@
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V10.8 MASTER</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">V10.9 MASTER</p>
         </div>
         <nav>
             <div class="section-title">Extração</div>
@@ -59,55 +52,16 @@
 
     <main class="main-container">
         <div id="extrator-panel" class="tab-content active">
-            <header class="mb-10"><h2 class="text-2xl font-black italic text-white">Central de <span class="text-[#f97316]">Carga</span></h2></header>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-orange-600/30">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga XML / ZIP</h4>
-                    <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('xml-input').click()">
-                        <p id="label-xml" class="text-[9px] text-zinc-500 font-bold uppercase">Carregar arquivos</p>
-                        <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
-                    </div>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange mt-4" disabled>Gravar XML</button>
+             <header class="mb-10"><h2 class="text-2xl font-black italic text-white">Central de <span class="text-[#f97316]">Carga</span></h2></header>
+             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 </div>
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-orange-600/30">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Carga PGDAS (PDF)</h4>
-                    <div class="border-2 border-dashed border-zinc-900 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900/30" onclick="document.getElementById('pgdas-input').click()">
-                        <p id="label-pgdas" class="text-[9px] text-zinc-500 font-bold uppercase">Upload PDFs</p>
-                        <input type="file" id="pgdas-input" multiple accept=".pdf" class="hidden" onchange="handlePGDASFiles(this.files)">
-                    </div>
-                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-orange mt-4" disabled>Gravar PGDAS</button>
-                </div>
-            </div>
         </div>
 
         <div id="leg-state" class="tab-content">
             <header class="mb-10"><h2 class="text-2xl font-black italic text-white">Legislação <span class="text-blue-400">Estadual (SP)</span></h2></header>
             <div class="legis-grid">
                 <a href="base reduzida.html" target="_blank" class="legis-card"><h4>Base Reduzida</h4><p>Anexo II SP</p></a>
-                <a href="Artigos de papelaria.html" target="_blank" class="legis-card"><h4>Papelaria e Papel</h4><p>Anexo XIX / XVI</p></a>
-                <a href="auto pecas.html" target="_blank" class="legis-card"><h4>Autopeças</h4><p>Anexo XIV</p></a>
-                <a href="bebidas alcolicas exceto cerveja e chope.html" target="_blank" class="legis-card"><h4>Bebidas Alcoólicas</h4><p>Anexo III</p></a>
-                <a href="Bicicletas.html" target="_blank" class="legis-card"><h4>Bicicletas</h4><p>Anexo XXIII-A</p></a>
-                <a href="Brinquedos e artigos de esporte.html" target="_blank" class="legis-card"><h4>Brinquedos e Esporte</h4><p>Anexo XVII</p></a>
-                <a href="cerveja chopes refrigerante agua e outras bebidas.html" target="_blank" class="legis-card"><h4>Bebidas Frias e Águas</h4><p>Anexo IV</p></a>
-                <a href="cimentos.html" target="_blank" class="legis-card"><h4>Cimento</h4><p>Anexo VI</p></a>
-                <a href="Eletronicos e eletrodomesticosl.html" target="_blank" class="legis-card"><h4>Eletrônicos</h4><p>Anexo XV</p></a>
-                <a href="energia eletrica.html" target="_blank" class="legis-card"><h4>Energia Elétrica</h4><p>Anexo VIII</p></a>
-                <a href="ferramenta.html" target="_blank" class="legis-card"><h4>Ferramentas</h4><p>Anexo XXIV</p></a>
-                <a href="Instrumentos Musicais.html" target="_blank" class="legis-card"><h4>Instrumentos Musicais</h4><p>Anexo XXII-A</p></a>
-                <a href="lampadas reatores e starters.html" target="_blank" class="legis-card"><h4>Lâmpadas e Reatores</h4><p>Anexo X</p></a>
-                <a href="materiais de contrucao e congeneres.html" target="_blank" class="legis-card"><h4>Materiais de Construção (P1)</h4><p>Anexo XI</p></a>
-                <a href="materiais de contrucao e congeneres vidros e metais.html" target="_blank" class="legis-card"><h4>Materiais de Construção (P2)</h4><p>Anexo XI</p></a>
-                <a href="Materiais eletricos.html" target="_blank" class="legis-card"><h4>Materiais Elétricos</h4><p>Anexo XVIII</p></a>
-                <a href="Perfumaria e higiene pessoal.html" target="_blank" class="legis-card"><h4>Perfumaria e Higiene</h4><p>Anexo XIII</p></a>
-                <a href="Pneumáticos e Câmaras de Ar.html" target="_blank" class="legis-card"><h4>Pneumáticos e Câmaras</h4><p>Anexo XVI</p></a>
-                <a href="produto de limpezal.html" target="_blank" class="legis-card"><h4>Produtos de Limpeza</h4><p>Anexo XXI</p></a>
-                <a href="Produtos alimenticios.html" target="_blank" class="legis-card"><h4>Indústria Alimentícia</h4><p>Anexo XII</p></a>
-                <a href="Ração Animal.html" target="_blank" class="legis-card"><h4>Ração Animal</h4><p>Anexo XXII</p></a>
-                <a href="Sorvete e Preparado para Sorvete.html" target="_blank" class="legis-card"><h4>Sorvetes</h4><p>Anexo XXVI</p></a>
-                <a href="Tintas, Vernizes e Produtos Químicos.html" target="_blank" class="legis-card"><h4>Tintas e Químicos</h4><p>Anexo XXIII</p></a>
-                <a href="Veículos Automotores Novos.html" target="_blank" class="legis-card"><h4>Veículos Novos</h4><p>Anexo XXV/XXVI</p></a>
-            </div>
+                </div>
         </div>
 
         <div id="leg-fed" class="tab-content">
@@ -120,22 +74,42 @@
             </div>
         </div>
 
-        <div id="xml-history-panel" class="tab-content"> <h2 class="text-2xl font-black italic text-white">Histórico XML</h2> </div>
-        <div id="pgdas-history-panel" class="tab-content"> <h2 class="text-2xl font-black italic text-white">Histórico PGDAS</h2> </div>
-        <div id="cross-panel" class="tab-content"> <h2 class="text-2xl font-black italic text-white text-[#f97316]">CRUZAR INFORMAÇÕES</h2> </div>
-        <div id="rectify-panel" class="tab-content"> <h2 class="text-2xl font-black italic text-[#f97316]">PAINEL DE RETIFICAÇÕES</h2> </div>
-        <div id="save-panel" class="tab-content"> <h2 class="text-2xl font-black italic text-[#f97316]">GRAVAR AUDITORIA</h2> </div>
-        <div id="global-panel" class="tab-content"> <h2 class="text-2xl font-black italic text-[#f97316]">HISTÓRICO GLOBAL</h2> </div>
+        <div id="cross-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white text-[#f97316]">CRUZAR INFORMAÇÕES</h2></div>
+        <div id="rectify-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">PAINEL DE RETIFICAÇÕES</h2></div>
+        <div id="save-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">GRAVAR AUDITORIA</h2></div>
+        <div id="global-panel" class="tab-content"><h2 class="text-2xl font-black italic text-[#f97316]">HISTÓRICO GLOBAL</h2></div>
+        <div id="xml-history-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white">Histórico XML</h2></div>
+        <div id="pgdas-history-panel" class="tab-content"><h2 class="text-2xl font-black italic text-white">Histórico PGDAS</h2></div>
     </main>
 
     <script>
         function showTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active'); el.classList.add('active');
+            // Remove active de todos os conteúdos e links
+            const contents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < contents.length; i++) {
+                contents[i].classList.remove('active');
+                contents[i].style.display = 'none'; // Garante que fiquem escondidos
+            }
+            
+            const links = document.getElementsByClassName('nav-link');
+            for (let i = 0; i < links.length; i++) {
+                links[i].classList.remove('active');
+            }
+
+            // Ativa o conteúdo selecionado
+            const target = document.getElementById(tabId);
+            if (target) {
+                target.classList.add('active');
+                target.style.display = 'block'; // Força a exibição
+            }
+            
+            if (el) el.classList.add('active');
         }
-        // Funções de processamento originais V10.2 mantidas internamente
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+        // Script de Service Worker preservado
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
     </script>
 </body>
 </html>
