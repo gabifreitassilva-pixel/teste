@@ -1,9 +1,9 @@
-const CACHE_NAME = 'fiscal-audit-v12.9-final';
+const CACHE_NAME = 'fiscal-audit-v13.0-master';
 
 const ASSETS = [
     './',
     './index.html',
-   './auditar.html',
+    './auditar.html',
     './base reduzida.html',
     './Artigos de papelaria.html',
     './auto pecas.html',
@@ -51,7 +51,3 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
-
-
-
-
