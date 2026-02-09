@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AUDITORIA ICMS | BENEFÍCIOS FISCAIS (DARK/ORANGE)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        /* Tema: Black & Orange (High Contrast) */
+        body { background: #050505; color: #e5e5e5; font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        /* Layout */
+        .sidebar { width: 320px; height: 100vh; background: #000; border-right: 1px solid #27272a; position: fixed; padding: 25px; z-index: 20; display: flex; flex-direction: column; }
+        .main-content { margin-left: 320px; height: 100vh; display: flex; flex-direction: column; background: radial-gradient(circle at top right, #18181b, #050505); }
+        
+        /* Cabeçalho e Tabela */
+        .header-area { padding: 30px 40px; border-bottom: 1px solid #3f3f46; background: rgba(0, 0, 0, 0.9); }
+        .table-wrapper { flex: 1; overflow-y: auto; padding: 0; scroll-behavior: smooth; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; }
+        thead { position: sticky; top: 0; z-index: 10; }
+        
+        /* Colunas - Estilo Laranja */
+        th { 
+            background: #ea580c; /* Laranja 600 */
+            color: #000; 
+            padding: 12px 15px; 
+            text-align: left; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            border-right: 1px solid #9a3412;
+            border-bottom: 4px solid #000;
+        }
+        
+        td { 
+            padding: 10px 15px; 
+            border-bottom: 1px solid #27272a; 
+            border-right: 1px solid #18181b;
+            line-height: 1.4; 
+            vertical-align: middle; 
+            color: #d4d4d8;
+        }
+        
+        /* Zebrado e Hover */
+        tbody tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.03); }
+        tbody tr:hover { background-color: #27272a; transition: 0.15s ease; cursor: crosshair; }
+        tbody tr:hover td { color: #fff; }
+
+        /* Badges de Benefício (Adaptados para o tema) */
+        .badge { font-size: 9px; padding: 4px 8px; border-radius: 4px; font-weight: 800; text-transform: uppercase; display: inline-block; width: 100px; text-align: center; }
+        
+        /* Isenção: Verde escuro neon para constraste no preto */
+        .bg-isencao { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+        
+        /* Redução: Laranja Escuro (Tema) ou Azul Profundo */
+        .bg-reducao { background: #431407; color: #fb923c; border: 1px solid #ea580c; }
+        
+        /* Tags Técnicas */
+        .tag-cst { font-family: 'JetBrains Mono', monospace; font-size: 10px; background: #000; padding: 2px 6px; border-radius: 4px; color: #fbbf24; border: 1px solid #3f3f46; }
+        .tag-ncm { font-family: 'JetBrains Mono', monospace; font-weight: bold; color: #fff; letter-spacing: 1px; }
+
+        /* Input de Busca */
+        .search-box { 
+            background: #09090b; border: 1px solid #3f3f46; color: #fff; padding: 14px; 
+            border-radius: 0; border-left: 4px solid #ea580c; width: 100%; outline: none; font-size: 14px; margin-top: 15px;
+            transition: 0.3s;
+        }
+        .search-box:focus { border-color: #f97316; background: #000; }
+
+        /* Scrollbar Laranja */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ea580c; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div>
+            <h1 class="text-orange-600 font-black text-3xl italic tracking-tighter mb-1">FISCAL<span class="text-white">BENEFIT</span></h1>
+            <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-8">Base de Benefícios Estaduais</p>
+            
+            <div class="bg-zinc-900 border-l-4 border-orange-600 p-4 rounded shadow-lg mb-6">
+                <h3 class="text-white font-bold text-xs uppercase mb-2">Tipos de Benefício</h3>
+                <ul class="space-y-3">
+                    <li class="flex items-center gap-2">
+                        <span class="badge bg-isencao">ISENÇÃO</span>
+                        <div class="text-[9px] text-zinc-400 leading-tight">
+                            <strong>CST 40</strong><br>Sem débito de ICMS na saída.
+                        </div>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="badge bg-reducao">REDUÇÃO BC</span>
+                        <div class="text-[9px] text-zinc-400 leading-tight">
+                            <strong>CST 20</strong><br>Carga reduzida (ex: 7%, 12%).
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="p-4 border border-zinc-800 rounded bg-black">
+                <p class="text-[10px] text-orange-500 mb-1 font-bold uppercase">Estatísticas da Base</p>
+                <p id="totalRows" class="text-3xl font-mono text-white font-bold tracking-tighter">0</p>
+                <p class="text-[9px] text-zinc-600 mt-1">Produtos Mapeados</p>
+            </div>
+        </div>
+        <div class="mt-auto text-[9px] text-zinc-600 font-mono">
+            Fonte: RICMS/SP (Anexos I e II)<br>
+            Tema: Dark/Orange v2.0
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="header-area">
+            <div class="flex justify-between items-end">
+                <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter">TABELA DE PRODUTOS COM BENEFÍCIO FISCAL</h2>
+            </div>
+            <input type="text" id="searchInput" class="search-box" placeholder="DIGITE PARA FILTRAR (EX: ARROZ, 1006, ISENÇÃO)...">
+        </div>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="110">BENEFÍCIO</th>
+                        <th width="70">CST</th>
+                        <th width="110">NCM/SH</th>
+                        <th>DESCRIÇÃO TÉCNICA</th>
+                        <th width="180">REGRA / CARGA</th>
+                        <th width="200">FUNDAMENTO LEGAL</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // CONSTANTES
+        const ISENCAO = "ISENÇÃO";
+        const REDUCAO = "REDUÇÃO BC";
+
+        // BASE DE DADOS COMPLETA (Anexos I e II)
+        const database = [
+            // ==========================================================
+            // GRUPO 1: CESTA BÁSICA E ALIMENTOS (Redução de Base)
+            // ==========================================================
+            [REDUCAO, "20", "1006", "Arroz (polido, parboilizado, agulhinha)", "Carga Efetiva 7%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "0713", "Feijão (feijãozinho, preto, carioca)", "Carga Efetiva 7%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1905.90.90", "Pão francês ou de sal (até 1kg)", "Carga Efetiva 7%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "2501", "Sal de cozinha (Cloreto de sódio)", "Carga Efetiva 7%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1601 / 1602", "Linguiça, Mortadela, Salsicha (Exceto em lata)", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1902", "Massas alimentícias não cozidas, sem recheio (Macarrão)", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1507.90.11", "Óleo de soja refinado", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1701", "Açúcar cristal ou refinado (saco papel/plástico até 5kg)", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1101.00.10", "Farinha de trigo (embalagem até 5kg)", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "1102.20", "Farinha de milho (Fubá)", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "2007", "Geleias e doces de frutas", "Carga Efetiva 12%", "Art. 39, Anexo II (Prods. Alimentícios)"],
+            [REDUCAO, "20", "0901", "Café torrado e moído", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "0201 / 0202", "Carne bovina fresca, resfriada ou congelada", "Carga Efetiva 12% (Varejo)", "Art. 74, Anexo II (Carne)"],
+            [REDUCAO, "20", "0203", "Carne suína fresca, resfriada ou congelada", "Carga Efetiva 12% (Varejo)", "Art. 74, Anexo II (Carne)"],
+            [REDUCAO, "20", "0207", "Carne de aves (Frango) fresca, resfriada ou congelada", "Carga Efetiva 12% (Varejo)", "Art. 74, Anexo II (Carne)"],
+            [REDUCAO, "20", "1602.50.00", "Jerked beef (Carne Bovina Salgada)", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "0302", "Peixes frescos ou refrigerados (Exceto crustáceos/moluscos)", "Carga Efetiva 7% (Cesta Básica)", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "0406.10.10", "Queijo Mussarela", "Carga Efetiva 12%", "Art. 51, Anexo II (Queijos)"],
+            [REDUCAO, "20", "0406.10.90", "Queijo Minas Frescal e Ricota", "Carga Efetiva 12%", "Art. 51, Anexo II (Queijos)"],
+            [REDUCAO, "20", "0406.90.20", "Queijo Prato", "Carga Efetiva 12%", "Art. 51, Anexo II (Queijos)"],
+            [REDUCAO, "20", "1517.10.00", "Margarina vegetal", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "2002", "Extrato e polpa de tomate", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+            [REDUCAO, "20", "0703.20.90", "Alho", "Carga Efetiva 12%", "Art. 3º, Anexo II (Cesta Básica)"],
+
+            // ==========================================================
+            // GRUPO 2: HORTIFRUTIGRANJEIROS (Isenção)
+            // ==========================================================
+            [ISENCAO, "40", "0701", "Batatas frescas (In natura)", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0702", "Tomates frescos (In natura)", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0703", "Cebolas e Alhos (In natura)", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0704", "Couve, repolho, couve-flor, brócolis", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0705", "Alface e chicória", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0706", "Cenouras, nabos, beterrabas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0707", "Pepinos", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0708", "Legumes de vagem (Ervilha, Feijão Verde)", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0709", "Outros legumes (Pimentão, Abóbora, Berinjela, Chuchu)", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0803", "Bananas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0804", "Abacates, mangas, goiabas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0805", "Laranjas, limões, tangerinas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0806", "Uvas frescas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0807", "Melões, melancias, mamões", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0808", "Maçãs e peras", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0809", "Pêssegos, ameixas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0810", "Morangos, framboesas", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0407", "Ovos (frescos, não processados)", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+            [ISENCAO, "40", "0714", "Mandioca (aipim/macaxeira) fresca", "Isento (Op. Interna)", "Art. 36, Anexo I (Hortifrutis)"],
+
+            // ==========================================================
+            // GRUPO 3: INSUMOS AGROPECUÁRIOS (Isenção Interna)
+            // ==========================================================
+            [ISENCAO, "40", "3101", "Adubos (fertilizantes) de origem animal/vegetal", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "3102", "Adubos minerais nitrogenados", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "3103", "Adubos minerais fosfatados", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "3104", "Adubos minerais potássicos", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "3105", "Adubos compostos (NPK)", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "3808", "Defensivos agrícolas (Inseticidas/Herbicidas)", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "1209", "Sementes certificadas para semeadura", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "2309", "Rações para animais (Aves/Gado) - Exceto PET", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "1005", "Milho em grão (destinado a produtor/cooperativa)", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "1201", "Soja em grão (destinado a produtor/cooperativa)", "Isento (Op. Interna)", "Art. 41, Anexo I (Insumos Agro)"],
+            [ISENCAO, "40", "0102", "Gado Bovino (Venda entre produtores no estado)", "Isento (Op. Interna)", "Art. 102, Anexo I (Gado)"],
+
+            // ==========================================================
+            // GRUPO 4: MÁQUINAS E EQUIPAMENTOS (Convênio 52/91)
+            // ==========================================================
+            [REDUCAO, "20", "8429", "Bulldozers, niveladores, plainas (Máquinas Terraplenagem)", "Carga 5.14% ou 8.8%", "Art. 12, Anexo II (Máq. Industriais)"],
+            [REDUCAO, "20", "8432", "Máquinas de uso agrícola (Grades, Semeadores)", "Carga 5.14% ou 8.8%", "Art. 12, Anexo II (Máq. Agrícolas)"],
+            [REDUCAO, "20", "8433", "Máquinas de colheita (Ceifeiras, Colheitadeiras)", "Carga 5.14% ou 8.8%", "Art. 12, Anexo II (Máq. Agrícolas)"],
+            [REDUCAO, "20", "8701", "Tratores Agrícolas", "Carga 5.14% ou 8.8%", "Art. 12, Anexo II (Máq. Agrícolas)"],
+            [REDUCAO, "20", "8414", "Compressores de ar industriais", "Carga 5.14% ou 8.8%", "Art. 12, Anexo II (Máq. Industriais)"],
+            [REDUCAO, "20", "8427", "Empilhadeiras", "Carga 5.14% ou 8.8%", "Art. 12, Anexo II (Máq. Industriais)"],
+
+            // ==========================================================
+            // GRUPO 5: VEÍCULOS USADOS
+            // ==========================================================
+            [REDUCAO, "20", "8703", "Automóveis de passageiros (USADOS)", "Redução 90% a 95%", "Art. 11, Anexo II (Veículos Usados)"],
+            [REDUCAO, "20", "8704", "Caminhões e utilitários (USADOS)", "Redução 90% a 95%", "Art. 11, Anexo II (Veículos Usados)"],
+            [REDUCAO, "20", "8711", "Motocicletas (USADAS)", "Redução 90% a 95%", "Art. 11, Anexo II (Veículos Usados)"],
+
+            // ==========================================================
+            // GRUPO 6: MEDICAMENTOS E SAÚDE
+            // ==========================================================
+            [ISENCAO, "40", "3003", "Medicamentos para tratamento de HIV (AIDS)", "Isento", "Art. 94, Anexo I (Medicamentos)"],
+            [ISENCAO, "40", "3003", "Medicamentos para tratamento de Câncer (Oncológicos)", "Isento", "Art. 154, Anexo I (Medicamentos)"],
+            [ISENCAO, "40", "3004", "Medicamentos fornecidos pelo SUS (Órgãos Públicos)", "Isento", "Art. 94, Anexo I (Órgãos Públicos)"],
+            [ISENCAO, "40", "4014.10", "Preservativos", "Isento", "Art. 67, Anexo I (Preservativos)"],
+            [ISENCAO, "40", "8713", "Cadeira de rodas", "Isento", "Art. 19, Anexo I (Deficientes)"],
+            [ISENCAO, "40", "9021", "Próteses e órteses (Implantáveis)", "Isento", "Art. 126, Anexo I (Próteses)"],
+            [REDUCAO, "20", "3003", "Medicamentos Genéricos (Lista Neutra)", "Carga 12%", "Art. 77, Anexo II (Medicamentos)"],
+
+            // ==========================================================
+            // GRUPO 7: MATERIAIS DE CONSTRUÇÃO (Carga 12% SP)
+            // ==========================================================
+            [REDUCAO, "20", "2523", "Cimento", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "6904", "Tijolos e blocos cerâmicos", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "6905", "Telhas cerâmicas", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "2522", "Cal e Argamassas", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "7214", "Vergalhões de aço", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "3208 / 3209", "Tintas e Vernizes", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "6907", "Pisos e Revestimentos Cerâmicos", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "6910", "Louças sanitárias (Pias e Vasos)", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "8481", "Torneiras e Válvulas", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "3917", "Tubos e conexões de PVC", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"],
+            [REDUCAO, "20", "8301", "Fechaduras e dobradiças", "Carga Efetiva 12%", "Art. 33, Anexo II (Mat. Construção)"]
+        ];
+
+        // RENDERIZAÇÃO
+        function getBadge(type) {
+            if (type === ISENCAO) return `<span class="badge bg-isencao">${type}</span>`;
+            return `<span class="badge bg-reducao">${type}</span>`;
+        }
+
+        function renderTable(items) {
+            const tbody = document.getElementById('tableBody');
+            document.getElementById('totalRows').innerText = items.length.toLocaleString('pt-BR');
+
+            tbody.innerHTML = items.map(item => `
+                <tr>
+                    <td>${getBadge(item[0])}</td>
+                    <td class="text-center"><span class="tag-cst">${item[1]}</span></td>
+                    <td><span class="tag-ncm">${item[2]}</span></td>
+                    <td class="font-bold text-white text-[11px]">${item[3]}</td>
+                    <td class="text-[10px] text-orange-400 font-mono tracking-tight">${item[4]}</td>
+                    <td class="text-[9px] text-zinc-500 italic border-l border-zinc-800 pl-3">${item[5]}</td>
+                </tr>
+            `).join('');
+        }
+
+        // BUSCA
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = database.filter(row => 
+                row.some(val => String(val).toLowerCase().includes(term))
+            );
+            renderTable(filtered);
+        });
+
+        // INIT
+        renderTable(database);
+
+    </script>
+</body>
+</html>
