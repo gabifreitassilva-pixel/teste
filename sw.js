@@ -1,6 +1,6 @@
-const CACHE_NAME = 'fiscal-audit-suite-v17-final';
+const CACHE_NAME = 'fiscal-audit-suite-v18-master';
 
-// Lista exata dos arquivos que compõem a aplicação + Arquivos de Lei fornecidos
+// Lista exata dos arquivos que compõem a aplicação + Arquivos de Lei
 const ASSETS = [
     './',
     './index.html',
@@ -9,7 +9,7 @@ const ASSETS = [
     './BENEFICIOS ISENCOES E REDUCAO.HTML',
     './CONVÊNIO ICMS N° 142, DE 14 DE DEZEMBRO DE 2018.html',
     './PIS COFINS.HTML',
-    // Bibliotecas Externas (Essenciais para o funcionamento offline)
+    // Bibliotecas Externas (Essenciais para funcionamento offline e performance)
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
@@ -17,22 +17,20 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
+// INSTALAÇÃO: Cacheia os arquivos estáticos
 self.addEventListener('install', (event) => {
-    // Força o SW a assumir o controle imediatamente
-    self.skipWaiting();
-    
+    self.skipWaiting(); // Força o SW a ativar imediatamente
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[Service Worker] Caching Assets v17...');
-            // Usa Promise.allSettled para não travar se um arquivo externo falhar
-            return Promise.allSettled(ASSETS.map(url => cache.add(url)))
-                .then(() => console.log('[Service Worker] Assets Cached'));
+            console.log('[Service Worker] Caching Assets v18...');
+            // Usa Promise.allSettled para garantir que o app instale mesmo se um link externo falhar
+            return Promise.allSettled(ASSETS.map(url => cache.add(url)));
         })
     );
 });
 
+// ATIVAÇÃO: Limpa caches antigos (v16, v17...) para garantir que o usuário veja a nova versão
 self.addEventListener('activate', (event) => {
-    // Limpa caches antigos (v14, v15, v16...) para liberar espaço e garantir atualização
     event.waitUntil(
         caches.keys().then((keys) => Promise.all(
             keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
@@ -41,14 +39,12 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
+// FETCH: Estratégia Cache First (Prioriza velocidade e offline)
 self.addEventListener('fetch', (event) => {
-    // Estratégia: Cache First (Tenta o cache, se falhar vai para rede)
-    // Isso garante que o app funcione rápido e offline
     event.respondWith(
         caches.match(event.request).then((response) => {
             return response || fetch(event.request).catch(() => {
-                // Se estiver offline e não tiver no cache, não faz nada (ou poderia retornar uma página de erro)
-                // console.log('Offline: ', event.request.url);
+                // Se falhar (offline e sem cache), não retorna nada (ou poderia retornar página de erro)
             });
         })
     );
