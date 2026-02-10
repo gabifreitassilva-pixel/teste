@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-suite-v18-master-v2';
+const CACHE_NAME = 'fiscal-audit-suite-v18-master-v3';
 
 // Lista exata dos arquivos que compõem a aplicação + Arquivos de Lei
 const ASSETS = [
@@ -22,7 +22,7 @@ self.addEventListener('install', (event) => {
     self.skipWaiting(); // Força o SW a ativar imediatamente
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[Service Worker] Caching Assets v18.2...');
+            console.log('[Service Worker] Caching Assets v18.3...');
             return Promise.allSettled(ASSETS.map(url => cache.add(url)));
         })
     );
@@ -43,7 +43,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
             return response || fetch(event.request).catch(() => {
-                // Falha silenciosa ou fallback se necessário
+                // Falha silenciosa
             });
         })
     );
