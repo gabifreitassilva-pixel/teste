@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-suite-v15.0-integrated';
+const CACHE_NAME = 'fiscal-audit-suite-v15.1-integrated';
 
 // Lista exata dos arquivos que compõem a aplicação + Arquivos de Lei fornecidos
 const ASSETS = [
@@ -49,3 +49,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
