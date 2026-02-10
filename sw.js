@@ -1,12 +1,12 @@
-const CACHE_NAME = 'fiscal-audit-v16.3-final';
+const CACHE_NAME = 'fiscal-audit-v14.2-final-fix';
 
 const ASSETS = [
     './',
     './index.html',
-    './auditoria.html', // Novo arquivo incluído no cache
-    './CONVÊNIO ICMS N° 142, DE 14 DE DEZEMBRO DE 2018.html',
-    './BENEFICIOS ISENCOES E REDUCAO.HTML',
-    './PIS COFINS.HTML',
+    './auditoria.html',
+    './base reduzida.html',
+    './auto pecas.html',
+    './pis e cofins.html',
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
@@ -17,7 +17,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(caches.open(CACHE_NAME).then((cache) => {
-        return Promise.all(ASSETS.map(url => cache.add(url).catch(err => console.warn('Falha cache:', url))));
+        return Promise.all(ASSETS.map(url => cache.add(url).catch(err => console.warn('Cache miss:', url))));
     }));
 });
 
@@ -31,3 +31,4 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
+
