@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-suite-v18-master-v3';
+const CACHE_NAME = 'fiscal-audit-suite-v18-master-v4';
 
 // Lista exata dos arquivos que compõem a aplicação + Arquivos de Lei
 const ASSETS = [
@@ -17,18 +17,18 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// INSTALAÇÃO: Cacheia os arquivos estáticos
+// INSTALAÇÃO
 self.addEventListener('install', (event) => {
-    self.skipWaiting(); // Força o SW a ativar imediatamente
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[Service Worker] Caching Assets v18.3...');
+            console.log('[Service Worker] Caching Assets v18.4...');
             return Promise.allSettled(ASSETS.map(url => cache.add(url)));
         })
     );
 });
 
-// ATIVAÇÃO: Limpa caches antigos
+// ATIVAÇÃO
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => Promise.all(
@@ -38,13 +38,11 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// FETCH: Estratégia Cache First
+// FETCH
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
-            return response || fetch(event.request).catch(() => {
-                // Falha silenciosa
-            });
+            return response || fetch(event.request).catch(() => {});
         })
     );
 });
