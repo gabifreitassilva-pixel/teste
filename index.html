@@ -3,325 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCAL AUDIT - V17.1 FINAL</title>
+    <title>FISCAL AUDIT - V17 INTELLIGENT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
         body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
         .sidebar { width: 260px; background: var(--bg-dark); border-right: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
-        .nav-link { padding: 10px 25px; font-size: 10px; font-weight: 700; color: #888; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; text-transform: uppercase; border-left: 3px solid transparent; }
-        .nav-link:hover, .nav-link.active { color: var(--orange-main); border-left-color: var(--orange-main); }
+        .nav-link { padding: 12px 25px; font-size: 11px; font-weight: 700; color: #888; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; text-transform: uppercase; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { color: var(--orange-main); border-left-color: var(--orange-main); background: #111; }
         .section-title { padding: 20px 25px 8px; font-size: 9px; font-weight: 900; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* Main */
         .main-container { flex: 1; background: #050505; overflow-y: auto; padding: 40px; }
-        .tab-content { display: none; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
-        .table-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #080808; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; }
-        td { padding: 12px 15px; font-size: 11px; border-bottom: 1px solid #111; color: #ccc; vertical-align: top; }
-        .btn-orange { background: var(--orange-main); color: #000 !important; font-weight: 900; border-radius: 8px; padding: 10px; text-transform: uppercase; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; width: 100%; }
-        .trash-icon { color: #dc2626 !important; cursor: pointer; }
-        .activity-item { background: #0d0d0d; border: 1px solid #1a1a1a; padding: 15px; margin-bottom: 12px; border-radius: 8px; border-left: 4px solid var(--orange-main); }
-        .tax-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 10px; border-top: 1px solid #222; padding-top: 8px; }
-        .tax-unit { font-size: 7px; display: flex; flex-direction: column; }
-        .tax-unit span:first-child { color: #666; font-weight: 800; text-transform: uppercase; }
-        .tax-total { color: var(--orange-main) !important; font-weight: 900; }
-        .desc-receita { font-size: 9px; font-weight: 700; color: #ccc; margin-top: 5px; margin-bottom: 10px; padding: 8px; background: #151515; border-radius: 4px; border: 1px dashed #333; line-height: 1.4; }
-        .legis-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        .legis-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 10px; padding: 25px; transition: 0.3s; cursor: pointer; border-left: 4px solid var(--orange-main); position: relative; height: 120px; display: flex; flex-direction: column; justify-content: center; }
-        .legis-card:hover { background: #111; transform: translateY(-5px); border-left-color: #fff; }
-        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 50; display: none; justify-content: center; align-items: center; }
-        #modal-content { background: #0a0a0a; width: 95%; height: 95%; border: 1px solid #333; border-radius: 12px; display: flex; flex-direction: column; }
-        #modal-iframe { width: 100%; height: 100%; border: none; }
+        
+        /* Tabelas */
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #111; color: var(--orange-main); padding: 10px; text-align: left; text-transform: uppercase; font-size: 10px; border-bottom: 2px solid #333; }
+        td { padding: 10px; border-bottom: 1px solid #222; color: #ccc; }
+        tr:hover { background: #111; cursor: pointer; }
+
+        /* Badges */
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        .bg-st { background: #450a0a; color: #fca5a5; border: 1px solid #b91c1c; }
+        .bg-mono { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+        .bg-ok { background: #172554; color: #60a5fa; border: 1px solid #1e40af; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <div class="p-8 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
-            <p class="text-[8px] text-zinc-600 font-bold uppercase">V17.1 FINAL</p>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase">V17 INTELLIGENT</p>
         </div>
         <nav>
-            <div class="section-title">Extração</div>
-            <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-upload"></i> Módulo de Carga</div>
-            <div class="section-title">Consultas</div>
-            <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
-            <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
-            <div class="section-title">Auditoria Inteligente</div>
-            <a href="auditoria.html" class="nav-link"><i class="fas fa-robot"></i> Auditoria & Correção</a>
-            <div class="section-title">Legislação</div>
-            <div class="nav-link" onclick="showTab('leg-state', this)"><i class="fas fa-map-marker-alt"></i> Estadual</div>
-            <div class="nav-link" onclick="showTab('leg-fed', this)"><i class="fas fa-flag"></i> Federal</div>
+            <div class="section-title">Dados</div>
+            <div class="nav-link active" onclick="app.showTab('panel-carga', this)"><i class="fas fa-upload"></i> Importar Arquivos</div>
+            <div class="nav-link" onclick="app.showTab('panel-xml', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
+            <div class="nav-link" onclick="app.showTab('panel-pgdas', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
+            
+            <div class="section-title">Inteligência</div>
+            <div class="nav-link" onclick="app.runAudit()"><i class="fas fa-brain"></i> Auditoria Inteligente</div>
+            <div class="nav-link" onclick="app.showTab('panel-regras', this)"><i class="fas fa-cog"></i> Minhas Regras</div>
         </nav>
+        <div class="mt-auto p-4 text-[9px] text-zinc-600 text-center">
+            Base Legal: 2026/SP<br>Memória: LocalStorage
+        </div>
     </aside>
 
     <main class="main-container">
-        <div id="extrator-panel" class="tab-content active">
-             <h2 class="text-2xl font-black italic text-white text-orange-500 uppercase mb-8">Central de Carga</h2>
+        
+        <div id="panel-carga" class="tab-content active">
+             <h2 class="text-3xl font-black italic text-white mb-2">CENTRAL DE CARGA</h2>
+             <p class="text-zinc-500 mb-8 text-sm">Importe seus arquivos XML/ZIP e PDFs do PGDAS para alimentar o sistema.</p>
+             
              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Notas Fiscais (XML / ZIP)</h4>
-                    <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
-                    <button onclick="document.getElementById('xml-input').click()" class="btn-orange">Selecionar XMLs</button>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange mt-4 bg-white text-black" disabled>Gravar no Histórico</button>
+                <div class="bg-[#0a0a0a] p-8 rounded-xl border border-zinc-900 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"><i class="fas fa-file-code text-9xl text-orange-600"></i></div>
+                    <h4 class="text-xs font-black uppercase text-[#f97316] mb-4 tracking-widest">Notas Fiscais</h4>
+                    <p class="text-zinc-400 text-xs mb-6 h-10">Suporta arquivos .XML individuais ou arquivos .ZIP compactados contendo múltiplos XMLs.</p>
+                    
+                    <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="app.handleXML(this.files)">
+                    <button onclick="document.getElementById('xml-input').click()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 text-xs font-bold uppercase transition">1. Selecionar Arquivos</button>
+                    <div id="xml-status" class="mt-4 text-xs text-zinc-500 italic">Aguardando...</div>
                 </div>
-                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-zinc-900">
-                    <h4 class="text-[10px] font-black uppercase text-[#f97316] mb-4">Extratos PGDAS (PDF)</h4>
-                    <input type="file" id="pgdas-input" multiple accept=".pdf" class="hidden" onchange="handlePGDASFiles(this.files)">
-                    <button onclick="document.getElementById('pgdas-input').click()" class="btn-orange">Selecionar PDFs</button>
-                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-orange mt-4 bg-white text-black" disabled>Extrair Atividades</button>
+
+                <div class="bg-[#0a0a0a] p-8 rounded-xl border border-zinc-900 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition"><i class="fas fa-file-pdf text-9xl text-orange-600"></i></div>
+                    <h4 class="text-xs font-black uppercase text-[#f97316] mb-4 tracking-widest">Extrato PGDAS</h4>
+                    <p class="text-zinc-400 text-xs mb-6 h-10">Leitura automática de PDFs padrão do Simples Nacional para extração de declarados.</p>
+                    
+                    <input type="file" id="pgdas-input" multiple accept=".pdf" class="hidden" onchange="app.handlePGDAS(this.files)">
+                    <button onclick="document.getElementById('pgdas-input').click()" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700 text-xs font-bold uppercase transition">1. Selecionar PDF</button>
+                    <div id="pgdas-status" class="mt-4 text-xs text-zinc-500 italic">Aguardando...</div>
                 </div>
              </div>
         </div>
 
-        <div id="xml-history-panel" class="tab-content">
-            <header class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black italic text-white">Histórico XML</h2>
-                <button onclick="exportBatchByCNPJ()" class="btn-orange w-auto px-6"><i class="fas fa-file-export"></i> Exportar Lote</button>
-            </header>
-            <div class="table-container"><table><thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa / CNPJ</th><th>Competência</th><th>Itens</th><th width="120">Ações</th></tr></thead><tbody id="tbody-xml"></tbody></table></div>
-        </div>
-
-        <div id="pgdas-history-panel" class="tab-content">
-            <h2 class="text-2xl font-black italic text-white mb-6">Histórico PGDAS Detalhado</h2>
-            <div class="table-container"><table><thead><tr><th width="20%">Empresa</th><th width="12%">Referência</th><th width="58%">Atividades / Tributos</th><th width="10%">Total DAS</th></tr></thead><tbody id="tbody-pgdas"></tbody></table></div>
-        </div>
-
-        <div id="leg-state" class="tab-content">
-            <header class="mb-8"><h2 class="text-2xl font-black text-blue-400 uppercase">Legislação Estadual (SP)</h2></header>
-            <div class="legis-grid">
-                <div class="legis-card" style="border-left-color: #ef4444;" onclick="openModal('CONVÊNIO ICMS N° 142, DE 14 DE DEZEMBRO DE 2018.html', 'Convênio ICMS 142/18')">
-                    <h4>Convênio ICMS 142/18</h4><p>Base ST Geral.</p><i class="fas fa-gavel"></i>
-                </div>
-                <div class="legis-card" style="border-left-color: #3b82f6;" onclick="openModal('BENEFICIOS ISENCOES E REDUCAO.HTML', 'Benefícios ICMS')">
-                    <h4>Isenções e Reduções</h4><p>Tabela de benefícios.</p><i class="fas fa-percent"></i>
-                </div>
+        <div id="panel-xml" class="tab-content">
+            <div class="flex justify-between items-end mb-6">
+                <h2 class="text-2xl font-black italic text-white">HISTÓRICO XML (ITENS)</h2>
+                <button onclick="app.clearData('xml')" class="text-[10px] text-red-500 hover:text-red-400 uppercase font-bold">Limpar Tudo</button>
+            </div>
+            <div class="bg-[#0a0a0a] rounded-lg border border-zinc-900 overflow-hidden">
+                <table class="w-full">
+                    <thead><tr><th>Data</th><th>Chave/ID</th><th>NCM</th><th>Descrição</th><th>Valor</th></tr></thead>
+                    <tbody id="tbody-xml"></tbody>
+                </table>
             </div>
         </div>
 
-        <div id="leg-fed" class="tab-content">
-            <header class="mb-8"><h2 class="text-2xl font-black text-green-400 uppercase">Legislação Federal</h2></header>
-            <div class="legis-grid">
-                <div class="legis-card" style="border-left-color: #10b981;" onclick="openModal('PIS COFINS.HTML', 'Lei Federal PIS/COFINS')">
-                    <h4>PIS e COFINS Monofásica</h4><p>Produtos monofásicos.</p><i class="fas fa-flag"></i>
-                </div>
+        <div id="panel-pgdas" class="tab-content">
+            <div class="flex justify-between items-end mb-6">
+                <h2 class="text-2xl font-black italic text-white">HISTÓRICO PGDAS (DECLARADO)</h2>
+                <button onclick="app.clearData('pgdas')" class="text-[10px] text-red-500 hover:text-red-400 uppercase font-bold">Limpar Tudo</button>
+            </div>
+            <div class="bg-[#0a0a0a] rounded-lg border border-zinc-900 overflow-hidden">
+                <table class="w-full">
+                    <thead><tr><th>Competência</th><th>Receita Bruta</th><th>Atividades</th></tr></thead>
+                    <tbody id="tbody-pgdas"></tbody>
+                </table>
             </div>
         </div>
+
+        <div id="panel-audit" class="tab-content">
+            <h2 class="text-2xl font-black italic text-orange-500 mb-6 uppercase">Resultado da Auditoria</h2>
+            
+            <div class="grid grid-cols-3 gap-4 mb-8">
+                <div class="bg-zinc-900 p-4 rounded border-l-4 border-blue-500">
+                    <span class="text-[10px] uppercase text-zinc-400">Total XML (Real)</span>
+                    <h3 class="text-2xl font-mono font-bold text-white" id="audit-total-xml">R$ 0,00</h3>
+                </div>
+                <div class="bg-zinc-900 p-4 rounded border-l-4 border-green-500">
+                    <span class="text-[10px] uppercase text-zinc-400">Total PGDAS (Declarado)</span>
+                    <h3 class="text-2xl font-mono font-bold text-white" id="audit-total-pgdas">R$ 0,00</h3>
+                </div>
+                <div class="bg-zinc-900 p-4 rounded border-l-4 border-red-500">
+                    <span class="text-[10px] uppercase text-zinc-400">Divergência</span>
+                    <h3 class="text-2xl font-mono font-bold text-white" id="audit-diff">R$ 0,00</h3>
+                </div>
+            </div>
+
+            <h3 class="text-sm font-bold text-white uppercase mb-4 border-b border-zinc-800 pb-2">Análise Item a Item (Sugestão de Correção)</h3>
+            <p class="text-[10px] text-zinc-400 mb-4">Clique em um item para definir uma regra personalizada.</p>
+            
+            <div class="bg-[#0a0a0a] rounded-lg border border-zinc-900 overflow-hidden max-h-[500px] overflow-y-auto">
+                <table class="w-full">
+                    <thead class="sticky top-0 z-10">
+                        <tr>
+                            <th>NCM</th>
+                            <th>Produto</th>
+                            <th>CFOP (Nota)</th>
+                            <th>CST (Nota)</th>
+                            <th>Sugestão do Sistema</th>
+                            <th>Base Legal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-audit"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="panel-regras" class="tab-content">
+            <h2 class="text-2xl font-black italic text-white mb-6">MINHAS REGRAS (MEMÓRIA)</h2>
+            <div class="bg-[#0a0a0a] rounded-lg border border-zinc-900 overflow-hidden">
+                <table class="w-full">
+                    <thead><tr><th>NCM</th><th>Regra Definida</th><th>Ação</th></tr></thead>
+                    <tbody id="tbody-regras"></tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
 
-    <div id="modal-overlay">
-        <div id="modal-content">
-            <div class="p-4 border-b border-zinc-800 flex justify-between bg-zinc-900">
-                <h3 id="modal-title" class="font-bold text-orange-500"></h3>
-                <button onclick="closeModal()" class="text-white text-xl">&times;</button>
+    <div id="modal-correction" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center">
+        <div class="bg-zinc-900 border border-zinc-700 p-6 rounded-lg w-[400px]">
+            <h3 class="text-orange-500 font-bold uppercase mb-4">Definir Regra para NCM</h3>
+            <p id="modal-ncm-display" class="text-white text-xl font-mono font-bold mb-2">---</p>
+            <p id="modal-desc-display" class="text-zinc-400 text-xs mb-6">---</p>
+            
+            <label class="block text-[10px] uppercase text-zinc-500 mb-1">Classificação Correta</label>
+            <select id="modal-select-type" class="w-full bg-black border border-zinc-700 text-white p-2 rounded mb-6 text-sm">
+                <option value="TRIBUTADO">Tributado Integral</option>
+                <option value="ST">Substituição Tributária (ICMS)</option>
+                <option value="MONOFASICO">Monofásico (PIS/COFINS)</option>
+                <option value="ISENTO">Isento / Alíquota Zero</option>
+            </select>
+            
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('modal-correction').classList.add('hidden')" class="flex-1 bg-zinc-800 text-white py-2 rounded text-xs uppercase font-bold">Cancelar</button>
+                <button onclick="app.saveRule()" class="flex-1 bg-orange-600 text-black py-2 rounded text-xs uppercase font-bold hover:bg-orange-500">Salvar Regra</button>
             </div>
-            <iframe id="modal-iframe"></iframe>
         </div>
     </div>
 
-    <script>
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-        const MONTHS_FULL = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        const formatCNPJ = (v) => v.replace(/\D/g, '').replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
-        let xmlBuffer = [];
-        let pgdasFiles = [];
-
-        function showTab(id, el) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-            document.getElementById(id).classList.add('active'); 
-            if(el) el.classList.add('active');
-            if(id === 'xml-history-panel') renderXMLHistory();
-            if(id === 'pgdas-history-panel') renderPGDASHistory();
-        }
-
-        function openModal(url, title) { document.getElementById('modal-overlay').style.display = 'flex'; document.getElementById('modal-title').innerText = title; document.getElementById('modal-iframe').src = url; }
-        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; document.getElementById('modal-iframe').src = ""; }
-        document.addEventListener('keydown', (e) => { if (e.key === "Escape") closeModal(); });
-
-        // === MOTOR DE CARGA XML ===
-        async function handleXMLFiles(files) {
-            xmlBuffer = [];
-            const loadFile = async (f) => {
-                if (f.name.endsWith('.zip')) {
-                    const zip = await JSZip.loadAsync(f);
-                    const promises = Object.keys(zip.files).filter(p => p.toLowerCase().endsWith('.xml')).map(p => zip.files[p].async("text"));
-                    return Promise.all(promises);
-                }
-                return [await f.text()];
-            };
-            const results = await Promise.all(Array.from(files).map(loadFile));
-            xmlBuffer = results.flat();
-            document.getElementById('label-xml').innerText = `${xmlBuffer.length} XMLs Encontrados`;
-            document.getElementById('btn-run-xml').disabled = false;
-        }
-
-        function processarXML() {
-            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const groups = {};
-            let countDuplicados = 0;
-
-            xmlBuffer.forEach(text => {
-                const xml = new DOMParser().parseFromString(text, "text/xml");
-                const emit = xml.getElementsByTagName("emit")[0];
-                const ide = xml.getElementsByTagName("ide")[0];
-                if(!emit || !ide) return;
-
-                const cnpjRaw = emit.getElementsByTagName("CNPJ")[0]?.textContent;
-                const dEmi = ide.getElementsByTagName("dEmi")[0]?.textContent || ide.getElementsByTagName("dhEmi")[0]?.textContent || ide.getElementsByTagName("dEmiCFe")[0]?.textContent || "";
-                if(dEmi.length < 8) return;
-
-                const nDoc = ide.getElementsByTagName("nCFe")[0]?.textContent || ide.getElementsByTagName("nNF")[0]?.textContent || "S/N";
-                const ref = `${MONTHS_FULL[parseInt(dEmi.substring(4,6))-1]}/${dEmi.substring(0,4)}`;
-                const key = `${cnpjRaw}_${dEmi.substring(0,6)}`;
-
-                // Trava de duplicidade
-                if (h.some(x => x.key === key && x.itens.some(i => i.Nota === nDoc))) { countDuplicados++; return; }
-
-                if(!groups[key]) groups[key] = { key, empresa: emit.getElementsByTagName("xNome")[0]?.textContent, cnpj: formatCNPJ(cnpjRaw), cnpjRaw: cnpjRaw, ref: ref, itens: [] };
-                
-                Array.from(xml.getElementsByTagName("det")).forEach(det => {
-                    const prod = det.getElementsByTagName("prod")[0];
-                    const imp = det.getElementsByTagName("imposto")[0];
-                    groups[key].itens.push({
-                        Empresa: groups[key].empresa, CNPJ: groups[key].cnpj, MesAno: ref,
-                        Data: `${dEmi.substring(6,8)}/${dEmi.substring(4,6)}/${dEmi.substring(0,4)}`,
-                        Nota: nDoc, Produto: prod.getElementsByTagName("xProd")[0]?.textContent,
-                        NCM: prod.getElementsByTagName("NCM")[0]?.textContent, CFOP: prod.getElementsByTagName("CFOP")[0]?.textContent,
-                        Un: prod.getElementsByTagName("uCom")[0]?.textContent, Qtd: parseFloat(prod.getElementsByTagName("qCom")[0]?.textContent || 0).toFixed(4).replace('.',','),
-                        Unitario: parseFloat(prod.getElementsByTagName("vUnCom")[0]?.textContent || 0).toFixed(2).replace('.',','),
-                        ValorTotal: parseFloat(prod.getElementsByTagName("vProd")[0]?.textContent || 0).toFixed(2).replace('.',','),
-                        CSOSN: imp.getElementsByTagName("ICMS")[0]?.querySelector("CSOSN, CST")?.textContent || "---",
-                        CST_PIS: imp.getElementsByTagName("PIS")[0]?.querySelector("CST")?.textContent || "---",
-                        CST_COFINS: imp.getElementsByTagName("COFINS")[0]?.querySelector("CST")?.textContent || "---"
-                    });
-                });
-            });
-
-            Object.values(groups).forEach(g => {
-                const idx = h.findIndex(x => x.key === g.key);
-                if(idx === -1) h.push(g);
-                else { g.itens.forEach(novoItem => { if(!h[idx].itens.some(i => i.Nota === novoItem.Nota)) h[idx].itens.push(novoItem); }); }
-            });
-
-            localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert(`✅ XMLs Processados!\n(${countDuplicados} repetidos ignorados)`);
-            renderXMLHistory();
-        }
-
-        // === MOTOR DE CARGA PGDAS (PDF) ===
-        function handlePGDASFiles(f) { pgdasFiles = Array.from(f); document.getElementById('label-pgdas').innerText = `${f.length} PDFs`; document.getElementById('btn-run-pgdas').disabled = false; }
-
-        async function processarPGDAS() {
-            const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
-            let processados = 0;
-            for(let file of pgdasFiles) {
-                const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                let text = ""; for(let i=1; i<=pdf.numPages; i++) text += (await (await pdf.getPage(i)).getTextContent()).items.map(it => it.str).join(" ") + " ";
-                const t = text.replace(/\s+/g, ' ');
-                const cnpjRaw = (t.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || [""])[0];
-                const p = t.match(/Período de Apuração:\s*01\/(\d{2})\/(\d{4})/);
-                if(!p) continue;
-                const ref = `${MONTHS_FULL[parseInt(p[1])-1]}/${p[2]}`;
-                if(h.some(x => x.cnpj === cnpjRaw && x.ref === ref)) continue;
-
-                let atividades = [];
-                const blocos = t.split("Valor do Débito por Tributo para a Atividade");
-                for(let i=1; i<blocos.length; i++) {
-                    const bloco = blocos[i];
-                    const fimDescricao = bloco.indexOf("Receita Bruta Informada");
-                    if (fimDescricao === -1) continue;
-                    let desc = bloco.substring(0, fimDescricao).trim().replace(/^[\s:\(R\$\)]+/, '').trim();
-                    const receitaMatch = bloco.match(/Receita Bruta Informada.*?:.*?([\d\.]+,[\d]{2})/);
-                    const receitaValor = receitaMatch ? receitaMatch[1] : "0,00";
-                    const vals = bloco.substring(fimDescricao).match(/[\d\.]+,[\d]{2}/g);
-                    
-                    if (vals && vals.length >= 10) {
-                        atividades.push({
-                            desc: desc,
-                            rec: receitaValor,
-                            ir: vals[1], csll: vals[2], cofins: vals[3],
-                            pis: vals[4], cpp: vals[5], icms: vals[6],
-                            ipi: vals[7], iss: vals[8], total: vals[9]
-                        });
-                    }
-                }
-                h.push({ razao: (t.match(/Nome empresarial:\s*(.*?)\s*Data/) || ["","EMPRESA"])[1], cnpj: cnpjRaw, ref, atividades, totalDas: (t.match(/Valor Total do DAS:\s*([\d.]+,\d{2})/) || ["","0,00"])[1] });
-                processados++;
-            }
-            localStorage.setItem('pgdas_pdf_audit', JSON.stringify(h));
-            alert(`✅ ${processados} PGDAS Processados!`); renderPGDASHistory();
-        }
-
-        // === RENDERS ===
-        function renderXMLHistory() {
-            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            document.getElementById('tbody-xml').innerHTML = h.map((it, i) => `<tr>
-                <td><input type="checkbox" class="xml-sel" data-idx="${i}"></td>
-                <td><b class="text-white uppercase text-[10px]">${it.empresa}</b><br><small>${it.cnpj}</small></td>
-                <td class="text-orange-500 font-black uppercase">${it.ref}</td>
-                <td>${it.itens.length}</td>
-                <td><div class="flex gap-4"><i class="fas fa-file-csv text-blue-400 cursor-pointer" onclick="downloadCSV(${i})"></i><i class="fas fa-trash-alt trash-icon" onclick="deleteItem('xml', ${i})"></i></div></td>
-            </tr>`).join('');
-        }
-
-        function renderPGDASHistory() {
-            const h = JSON.parse(localStorage.getItem('pgdas_pdf_audit')) || [];
-            document.getElementById('tbody-pgdas').innerHTML = h.map((it, i) => `<tr>
-                <td><b class="text-white uppercase text-[10px]">${it.razao}</b><br><small>${it.cnpj}</small></td>
-                <td class="text-orange-500 font-bold uppercase">${it.ref}</td>
-                <td>${it.atividades.map(a => `
-                    <div class="activity-item">
-                        <div class="desc-receita">${a.desc}</div>
-                        <div class="text-[9px] font-bold text-zinc-400 mb-2">Receita Ref: <span class="text-green-400">R$ ${a.rec}</span></div>
-                        <div class="tax-grid">
-                            <div class="tax-unit"><span>ICMS</span><span>${a.icms}</span></div>
-                            <div class="tax-unit"><span>PIS</span><span>${a.pis}</span></div>
-                            <div class="tax-unit"><span>COFINS</span><span>${a.cofins}</span></div>
-                            <div class="tax-unit"><span class="tax-total">TOTAL</span><span class="tax-total">${a.total}</span></div>
-                        </div>
-                    </div>`).join('')}</td>
-                <td class="font-black text-orange-500">R$ ${it.totalDas}</td>
-                <td><i class="fas fa-trash-alt trash-icon" onclick="deleteItem('pgdas', ${i})"></i></td>
-            </tr>`).join('');
-        }
-
-        function downloadCSV(idx) {
-            const r = (JSON.parse(localStorage.getItem('xml_audit_history')))[idx];
-            let csv = "Empresa;CNPJ;Mês/Ano;Data;Nota;Produto;NCM;CFOP;Un;Qtd;Unitário;ValorTotal;CSOSN;CST_PIS;CST_COFINS\r\n";
-            r.itens.forEach(i => { csv += `${i.Empresa};${i.CNPJ};${i.MesAno};${i.Data};${i.Nota};${i.Produto};${i.NCM};${i.CFOP};${i.Un};${i.Qtd};${i.Unitario};${i.ValorTotal};${i.CSOSN};${i.CST_PIS};${i.CST_COFINS}\r\n`; });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }));
-            link.download = `DETALHADO_${r.empresa}_${r.ref.replace('/','_')}.csv`; link.click();
-        }
-
-        function exportBatchByCNPJ() {
-            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const selectedIdx = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => parseInt(cb.dataset.idx));
-            if(!selectedIdx.length) return alert("Selecione os itens!");
-            const cos = {};
-            selectedIdx.forEach(idx => { const item = h[idx]; if(!cos[item.cnpjRaw]) cos[item.cnpjRaw] = { name: item.empresa, data: [] }; cos[item.cnpjRaw].data = [...cos[item.cnpjRaw].data, ...item.itens]; });
-            Object.keys(cos).forEach(cnpj => {
-                let csv = "Empresa;CNPJ;Mês/Ano;Data;Nota;Produto;NCM;CFOP;Un;Qtd;Unitário;ValorTotal;CSOSN;CST_PIS;CST_COFINS\r\n";
-                cos[cnpj].data.forEach(i => { csv += `${i.Empresa};${i.CNPJ};${i.MesAno};${i.Data};${i.Nota};${i.Produto};${i.NCM};${i.CFOP};${i.Un};${i.Qtd};${i.Unitario};${i.ValorTotal};${i.CSOSN};${i.CST_PIS};${i.CST_COFINS}\r\n`; });
-                const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }));
-                link.download = `LOTE_CNPJ_${cnpj}.csv`; link.click();
-            });
-        }
-
-        function deleteItem(type, idx) {
-            const k = type === 'xml' ? 'xml_audit_history' : 'pgdas_pdf_audit';
-            let d = JSON.parse(localStorage.getItem(k));
-            if(confirm("Excluir?")) { d.splice(idx, 1); localStorage.setItem(k, JSON.stringify(d)); type === 'xml' ? renderXMLHistory() : renderPGDASHistory(); }
-        }
-
-        function toggleChecks(m) { document.querySelectorAll('.xml-sel').forEach(cb => cb.checked = m.checked); }
-        document.addEventListener('DOMContentLoaded', () => { renderXMLHistory(); renderPGDASHistory(); });
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
