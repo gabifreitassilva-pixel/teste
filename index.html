@@ -125,7 +125,7 @@
             </div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th width="40">#</th><th>Empresa</th><th>Período</th><th>Qtd Notas</th><th>Ações</th></tr></thead>
+                    <thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa / CNPJ</th><th>Período (Mês/Ano)</th><th>Itens</th><th>Ações</th></tr></thead>
                     <tbody id="tbody-xml"></tbody>
                 </table>
             </div>
@@ -242,10 +242,13 @@
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         
+        // --- CONSTANTES ---
+        const MONTHS_FULL = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+
         // --- VARIÁVEIS GLOBAIS ---
         let xmlBuffer = [];
         let pgdasFiles = [];
-        let currentAuditResults = []; // Armazena resultados temporários da auditoria
+        let currentAuditResults = []; 
 
         // --- NAVEGAÇÃO ---
         function showTab(id, el) {
@@ -289,53 +292,96 @@
                 const ide = xml.getElementsByTagName("ide")[0];
                 if(!emit || !ide) return;
 
-                const cnpj = emit.getElementsByTagName("CNPJ")[0]?.textContent;
+                const cnpjRaw = emit.getElementsByTagName("CNPJ")[0]?.textContent;
                 const nome = emit.getElementsByTagName("xNome")[0]?.textContent;
-                // Tenta pegar data de emissão de vários campos possíveis
+                
+                // Extração e Tratamento da Data
                 const dEmiFull = ide.getElementsByTagName("dhEmi")[0]?.textContent || ide.getElementsByTagName("dEmi")[0]?.textContent || "";
                 if(!dEmiFull) return;
                 
-                const dataLimpa = dEmiFull.split('T')[0]; // YYYY-MM-DD
-                const [ano, mes, dia] = dataLimpa.split('-');
-                const ref = `${mes}/${ano}`;
-                const key = `${cnpj}_${ano}${mes}`;
+                // Formato padrão ISO YYYY-MM-DD
+                const dataLimpa = dEmiFull.substring(0, 10); // Pega apenas os 10 primeiros caracteres (YYYY-MM-DD)
+                const [ano, mesStr, dia] = dataLimpa.split('-');
+                
+                // Corrigindo o índice do mês (Array começa em 0)
+                const mesIdx = parseInt(mesStr) - 1;
+                
+                // Cria a referência legível (ex: NOVEMBRO/2023)
+                const ref = `${MONTHS_FULL[mesIdx]}/${ano}`;
+                
+                // Chave de agrupamento interna
+                const key = `${cnpjRaw}_${ano}${mesStr}`;
 
                 if(!groups[key]) {
                     groups[key] = {
                         key, 
                         empresa: nome, 
-                        cnpj, 
-                        ref, 
+                        cnpj: cnpjRaw.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5"),
+                        cnpjRaw: cnpjRaw,
+                        ref: ref, 
                         itens: []
                     };
                 }
 
+                const nNota = ide.getElementsByTagName("nNF")[0]?.textContent || ide.getElementsByTagName("nCFe")[0]?.textContent || "S/N";
                 const dets = xml.getElementsByTagName("det");
+                
                 for(let i=0; i<dets.length; i++) {
                     const prod = dets[i].getElementsByTagName("prod")[0];
                     const imp = dets[i].getElementsByTagName("imposto")[0];
                     
-                    // Captura CST/CSOSN de PIS/COFINS e ICMS
-                    let cstPis = imp.getElementsByTagName("PIS")[0]?.querySelector("CST")?.textContent || "01";
-                    let ncm = prod.getElementsByTagName("NCM")[0]?.textContent;
-                    let vProd = parseFloat(prod.getElementsByTagName("vProd")[0]?.textContent || 0);
-                    let xProd = prod.getElementsByTagName("xProd")[0]?.textContent;
+                    // Extração de Tags Fiscais Detalhadas
+                    const ncm = prod.getElementsByTagName("NCM")[0]?.textContent || "";
+                    const cfop = prod.getElementsByTagName("CFOP")[0]?.textContent || "";
+                    const uCom = prod.getElementsByTagName("uCom")[0]?.textContent || "";
+                    const qCom = prod.getElementsByTagName("qCom")[0]?.textContent || "0";
+                    const vUnCom = prod.getElementsByTagName("vUnCom")[0]?.textContent || "0.00";
+                    const vProd = parseFloat(prod.getElementsByTagName("vProd")[0]?.textContent || 0);
+                    const xProd = prod.getElementsByTagName("xProd")[0]?.textContent;
 
+                    // Extração de CST/CSOSN
+                    let csosn = imp.getElementsByTagName("ICMS")[0]?.querySelector("CSOSN")?.textContent || "";
+                    let cstIcms = imp.getElementsByTagName("ICMS")[0]?.querySelector("CST")?.textContent || "";
+                    let cstPis = imp.getElementsByTagName("PIS")[0]?.querySelector("CST")?.textContent || "";
+                    let cstCofins = imp.getElementsByTagName("COFINS")[0]?.querySelector("CST")?.textContent || "";
+
+                    // Salva o item com todas as tags
                     groups[key].itens.push({
+                        Empresa: nome,
+                        CNPJ: groups[key].cnpj,
+                        Nota: nNota,
+                        MesAno: ref,
+                        Data: `${dia}/${mesStr}/${ano}`,
                         ncm, 
                         desc: xProd, 
+                        cfop,
+                        un: uCom,
+                        qtd: qCom,
+                        vUnit: vUnCom,
                         valor: vProd, 
-                        cst_atual: cstPis,
-                        data: `${dia}/${mes}/${ano}`
+                        csosn: csosn || cstIcms,
+                        cst_pis: cstPis,
+                        cst_cofins: cstCofins,
+                        cst_atual: cstPis // Usado pelo auditor
                     });
                 }
             });
 
-            // Salva no localStorage
-            Object.values(groups).forEach(g => h.push(g));
+            // Evita duplicidade de lote (simples)
+            Object.values(groups).forEach(g => {
+                // Verifica se já existe um lote com essa chave
+                const existe = h.find(existente => existente.key === g.key);
+                if(!existe) {
+                    h.push(g);
+                } else {
+                    // Se quiser mesclar, logica iria aqui. Por enquanto, ignoramos duplicados de lote
+                    console.log(`Lote ${g.ref} já existe.`);
+                }
+            });
+
             localStorage.setItem('xml_audit_history', JSON.stringify(h));
             
-            alert("XMLs Processados e Salvos no Histórico!");
+            alert("XMLs Processados! Agrupamento por Mês corrigido.");
             document.getElementById('label-xml').innerText = "Selecionar Arquivos";
             document.getElementById('btn-run-xml').disabled = true;
             renderXMLHistory();
@@ -346,13 +392,62 @@
             const tbody = document.getElementById('tbody-xml');
             tbody.innerHTML = h.map((item, idx) => `
                 <tr>
-                    <td>${idx+1}</td>
-                    <td><div class="font-bold text-white">${item.empresa}</div><div class="text-[9px] text-zinc-500">${item.cnpj}</div></td>
-                    <td><span class="badge badge-warn">${item.ref}</span></td>
-                    <td>${item.itens.length}</td>
-                    <td><i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('xml', ${idx})"></i></td>
+                    <td class="text-center"><input type="checkbox" class="xml-sel" data-idx="${idx}"></td>
+                    <td><div class="font-bold text-white text-[11px]">${item.empresa}</div><div class="text-[9px] text-zinc-500">${item.cnpj}</div></td>
+                    <td><span class="badge badge-warn text-[10px]">${item.ref}</span></td>
+                    <td class="text-[11px]">${item.itens.length} produtos</td>
+                    <td>
+                        <div class="flex gap-3">
+                            <i class="fas fa-file-csv text-blue-500 cursor-pointer" onclick="downloadCSV(${idx})" title="Baixar CSV"></i>
+                            <i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('xml', ${idx})" title="Excluir"></i>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
+        }
+
+        function toggleChecks(source) {
+            document.querySelectorAll('.xml-sel').forEach(c => c.checked = source.checked);
+        }
+
+        // --- EXPORTAÇÃO CSV COMPLETA ---
+        function downloadCSV(idx) {
+            const item = JSON.parse(localStorage.getItem('xml_audit_history'))[idx];
+            generateAndDownloadCSV([item]);
+        }
+
+        function exportBatchByCNPJ() {
+            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            const selectedIdx = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => parseInt(cb.dataset.idx));
+            
+            if(!selectedIdx.length) return alert("Selecione pelo menos um lote na tabela!");
+            
+            const selectedItems = selectedIdx.map(i => h[i]);
+            generateAndDownloadCSV(selectedItems);
+        }
+
+        function generateAndDownloadCSV(items) {
+            let csvContent = "Empresa;CNPJ;Nota;Data;Mes/Ano;Produto;NCM;CFOP;Un;Qtd;Vl.Unit;Vl.Total;CSOSN/CST_ICMS;CST_PIS;CST_COFINS\r\n";
+            
+            items.forEach(lote => {
+                lote.itens.forEach(i => {
+                    // Tratamento para evitar quebra do CSV com ponto e vírgula na descrição
+                    const descLimpa = i.desc.replace(/;/g, " ");
+                    const vUnit = parseFloat(i.vUnit).toFixed(2).replace('.',',');
+                    const vTot = i.valor.toFixed(2).replace('.',',');
+                    
+                    csvContent += `${i.Empresa};${i.CNPJ};${i.Nota};${i.Data};${i.MesAno};${descLimpa};${i.ncm};${i.cfop};${i.un};${i.qtd.replace('.',',')};${vUnit};${vTot};${i.csosn};${i.cst_pis};${i.cst_cofins}\r\n`;
+                });
+            });
+
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `RELATORIO_AUDITORIA_${new Date().getTime()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // --- CARGA PGDAS ---
@@ -363,8 +458,6 @@
         }
 
         async function processarPGDAS() {
-            // Simplificado para demonstração - extrai texto bruto
-            // Em produção, usaria a lógica de regex completa do exemplo anterior
             const h = JSON.parse(localStorage.getItem('pgdas_history')) || [];
             
             for(let file of pgdasFiles) {
@@ -376,15 +469,23 @@
                     fullText += content.items.map(item => item.str).join(" ");
                 }
                 
-                // Extração básica de metadados
                 const cnpj = (fullText.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/) || ["CNPJ Não encontrado"])[0];
-                const ref = (fullText.match(/(\d{2}\/\d{4})/) || ["??/????"])[0];
+                const refRaw = (fullText.match(/(\d{2}\/\d{4})/) || ["??/????"])[0];
                 
+                // Formatar referencia igual ao XML se possível
+                let refFormatada = refRaw;
+                if(refRaw.includes('/')) {
+                     const [mes, ano] = refRaw.split('/');
+                     if(MONTHS_FULL[parseInt(mes)-1]) {
+                         refFormatada = `${MONTHS_FULL[parseInt(mes)-1]}/${ano}`;
+                     }
+                }
+
                 h.push({
                     empresa: "EMPRESA DO PGDAS (PDF)",
                     cnpj: cnpj,
-                    ref: ref,
-                    receita: "R$ Detectado no PDF",
+                    ref: refFormatada,
+                    receita: "R$ Detectado",
                     tributos: "Detalhes extraídos"
                 });
             }
@@ -424,16 +525,14 @@
             const data = JSON.parse(localStorage.getItem('xml_audit_history'))[idx];
             document.getElementById('audit-results').classList.remove('hidden');
 
-            // Lógica de Auditoria Simulada (Baseada nas listas do PIS/COFINS e Convênio)
-            // Aqui você conectaria com um banco de dados real de NCMs
-            const ncmMonofasicos = ['2710', '3003', '3004', '3303', '3304', '3305', '3307', '8703', '8704', '4011']; // Prefixos exemplo
-            const ncmZero = ['0201', '0202', '1006', '1101']; // Exemplo Cesta Básica
+            const ncmMonofasicos = ['2710', '3003', '3004', '3303', '3304', '3305', '3307', '8703', '8704', '4011']; 
+            const ncmZero = ['0201', '0202', '1006', '1101']; 
 
             let divergencias = [];
             let potencial = 0;
 
             data.itens.forEach(item => {
-                const ncmPrefix = item.ncm.substring(0, 4);
+                const ncmPrefix = item.ncm ? item.ncm.substring(0, 4) : "0000";
                 let sugestao = "";
                 let baseLegal = "";
                 let isError = false;
@@ -463,12 +562,10 @@
                 }
             });
 
-            // Atualiza Stats
             document.getElementById('stat-total-prod').innerText = data.itens.length;
             document.getElementById('stat-divergencias').innerText = divergencias.length;
             document.getElementById('stat-potencial').innerText = `R$ ${potencial.toFixed(2)}`;
 
-            // Popula Tabela de Retificação
             currentAuditResults = {
                 empresa: data.empresa,
                 ref: data.ref,
@@ -492,74 +589,8 @@
                     <td><span class="badge badge-danger">ERRO</span></td>
                     <td><div class="font-bold text-white text-[10px]">${i.desc}</div><div class="text-[9px] text-orange-500 font-mono">NCM: ${i.ncm}</div></td>
                     <td>R$ ${i.valor.toFixed(2)}</td>
-                    <td class="text-red-400 font-bold">${i.cst_atual}</td>
+                    <td class="text-red-400 font-bold">${i.cst_atual || "ND"}</td>
                     <td class="text-green-400 font-bold">${i.sugestao}</td>
                     <td class="text-[9px] italic text-zinc-400">${i.baseLegal}</td>
                 </tr>
-            `).join('');
-        }
-
-        // --- GESTÃO / SALVAR ---
-        function saveConsultation() {
-            if(!currentAuditResults || !currentAuditResults.itens) return alert("Execute uma auditoria primeiro!");
-            
-            const globalH = JSON.parse(localStorage.getItem('global_audit_history')) || [];
-            
-            globalH.push({
-                data: currentAuditResults.dataAudit,
-                empresa: currentAuditResults.empresa,
-                ref: currentAuditResults.ref,
-                qtdErros: currentAuditResults.itens.length,
-                valorRec: currentAuditResults.totalPotencial,
-                status: "Concluído"
-            });
-
-            localStorage.setItem('global_audit_history', JSON.stringify(globalH));
-            alert("Consultoria Gravada no Histórico Global com Sucesso!");
-            currentAuditResults = null; // Limpa
-            document.getElementById('tbody-retificacao').innerHTML = '';
-            document.getElementById('audit-results').classList.add('hidden');
-            showTab('global-history-panel', document.querySelectorAll('.nav-link')[6]); // Vai para histórico
-        }
-
-        function renderGlobalHistory() {
-            const h = JSON.parse(localStorage.getItem('global_audit_history')) || [];
-            const tbody = document.getElementById('tbody-global');
-            tbody.innerHTML = h.map(i => `
-                <tr>
-                    <td>${i.data}</td>
-                    <td class="font-bold text-white">${i.empresa}</td>
-                    <td><span class="badge badge-warn">${i.ref}</span></td>
-                    <td class="text-center font-bold">${i.qtdErros}</td>
-                    <td class="text-green-400 font-mono font-bold">R$ ${i.valorRec.toFixed(2)}</td>
-                    <td><span class="badge badge-success">${i.status}</span></td>
-                </tr>
-            `).join('');
-        }
-
-        // --- UTILS ---
-        function deleteHistory(type, idx) {
-            const key = type === 'xml' ? 'xml_audit_history' : 'pgdas_history';
-            const h = JSON.parse(localStorage.getItem(key));
-            if(confirm("Deseja realmente excluir este registro?")) {
-                h.splice(idx, 1);
-                localStorage.setItem(key, JSON.stringify(h));
-                if(type === 'xml') renderXMLHistory();
-                else renderPGDASHistory();
-            }
-        }
-        
-        function exportBatchByCNPJ() {
-            alert("Funcionalidade de exportação em lote iniciada...");
-            // Implementação CSV similar ao código anterior
-        }
-
-        // Init
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
-        }
-        // Inicia na aba de Extratores
-        renderXMLHistory();
-    </script>
-</body>
-</html>
+            `).join
