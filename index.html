@@ -226,7 +226,7 @@
             if(id === 'global-history-panel') renderGlobalHistory();
         }
 
-        // --- XML PROCESSING (MELHORADO COM TAGS COMPLETAS) ---
+        // --- XML PROCESSING (TAGS COMPLETAS) ---
         async function handleXMLFiles(files) {
             xmlBuffer = [];
             const loadFile = async (f) => {
@@ -250,7 +250,6 @@
         function extractDateCorrectly(ide) {
             let dEmi = extractTag(ide, "dEmi");
             let dhEmi = extractTag(ide, "dhEmi");
-
             if (dEmi && dEmi.length === 8) {
                 return `${dEmi.substring(0,4)}-${dEmi.substring(4,6)}-${dEmi.substring(6,8)}`;
             }
@@ -302,9 +301,7 @@
                     const imp = dets[i].getElementsByTagName("imposto")[0];
                     if(!prod) continue;
 
-                    // Extração de Impostos Detalhada
                     let csosn = "", cstPis = "", cstCofins = "", orig = "";
-                    
                     const icms = imp.getElementsByTagName("ICMS")[0];
                     if(icms) {
                         orig = icms.innerHTML.match(/<Orig>(.*?)<\/Orig>/)?.[1] || "";
@@ -329,7 +326,6 @@
                         Nota: nNota,
                         Data: `${dia}/${mes}/${ano}`,
                         MesAno: ref,
-                        // Tags completas solicitadas
                         cProd: extractTag(prod, "cProd"),
                         cEAN: extractTag(prod, "cEAN"),
                         Prod: extractTag(prod, "xProd"),
@@ -341,7 +337,6 @@
                         vTot: parseFloat(extractTag(prod, "vProd") || 0),
                         indRegra: extractTag(prod, "indRegra"),
                         vItem12741: vItem12741,
-                        // Impostos Detalhados
                         Orig: orig,
                         csosn: csosn, 
                         cstPis: cstPis, 
@@ -358,7 +353,7 @@
             });
 
             localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert("XMLs Processados! Dados detalhados extraídos.");
+            alert("XMLs Processados!");
             document.getElementById('label-xml').innerText = "Selecionar Arquivos";
             document.getElementById('btn-run-xml').disabled = true;
             renderXMLHistory();
@@ -383,7 +378,6 @@
         }
 
         function generateAndDownloadCSV(items) {
-            // Relatório Melhorado com tags completas
             let csv = "Empresa;CNPJ;Nota;Data;Mes/Ano;Cod.Prod;EAN;Produto;NCM;CFOP;Un;Qtd;Vl.Unit;Vl.Total;Vl.Aprox.Trib;Origem;CSOSN/ICMS;CST_PIS;CST_COFINS;Ind.Regra\r\n";
             items.forEach(lote => {
                 lote.itens.forEach(i => {
@@ -400,7 +394,7 @@
             link.click();
         }
 
-        // --- PGDAS PROCESSING (MELHORADO COM ATIVIDADES COMPLETAS) ---
+        // --- PGDAS PROCESSING (CORRIGIDO PARA LER O PDF DE FORMA FLUIDA) ---
         async function handlePGDASFiles(files) {
             pgdasFiles = Array.from(files);
             document.getElementById('label-pgdas').innerText = `${files.length} PDFs`;
@@ -420,79 +414,86 @@
                     fullText += content.items.map(item => item.str).join(" ") + " ";
                 }
                 
+                // Normalização agressiva: espaços únicos e sem quebras estranhas
                 fullText = fullText.replace(/\s+/g, ' ');
 
                 // 1. Identificação
-                // Busca CNPJ Matriz que está próximo ao texto "CNPJ Matriz:"
-                const cnpj = (fullText.match(/CNPJ Matriz:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || fullText.match(/CNPJ Matriz:.*?(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || ["", "CNPJ N/A"])[1];
-                
-                // Busca Nome Empresarial
+                const cnpj = (fullText.match(/CNPJ Matriz:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || ["", "CNPJ N/A"])[1];
                 const razao = (fullText.match(/Nome empresarial:\s*(.*?)\s*Data/) || ["", "EMPRESA DESCONHECIDA"])[1];
 
-                // 2. Data Extenso
-                const periodoRaw = (fullText.match(/Período de Apuração:\s*(\d{2}\/\d{2}\/\d{4})\s*a\s*(\d{2}\/\d{2}\/\d{4})/) || ["","",""])[1];
+                // 2. Data Extenso (Corrige o formato 01/11/2025 a 30/11/2025)
+                const periodoMatch = fullText.match(/Período de Apuração:\s*(\d{2}\/\d{2}\/\d{4})\s*a\s*(\d{2}\/\d{2}\/\d{4})/);
                 let refExtenso = "PERÍODO DESC.";
-                if(periodoRaw) {
-                    const [d, m, a] = periodoRaw.split('/');
+                if(periodoMatch) {
+                    const dataFinal = periodoMatch[2]; // Pega a segunda data (30/11/2025)
+                    const [d, m, a] = dataFinal.split('/');
                     const mesNome = MONTHS_FULL[parseInt(m)-1];
                     refExtenso = `${mesNome} ${a}`;
                 }
 
-                // 3. RBT12
-                // Busca RBT12 no texto
-                const rbt12Match = fullText.match(/Receita bruta acumulada nos doze meses anteriores ao PA \(RBT12\)\s*([\d\.,]+)/);
+                // 3. RBT12 (Busca RBT12 e o primeiro valor monetário depois dele)
+                // Procura "RBT12" seguido por qualquer coisa até achar um número no formato 0.000,00
+                const rbt12Match = fullText.match(/RBT12.*?([\d\.]+,[\d]{2})/);
                 const rbt12 = rbt12Match ? rbt12Match[1] : "0,00";
 
-                // 4. Atividades e Impostos Detalhados (Loop por "Valor do Débito por Tributo para a Atividade")
+                // 4. Atividades e Impostos (Algoritmo de varredura)
                 const atividades = [];
+                // Quebra pelos blocos de atividade
                 const parts = fullText.split("Valor do Débito por Tributo para a Atividade");
                 
-                // Pula a parte 0 (antes da primeira atividade)
                 for(let i=1; i<parts.length; i++) {
                     const part = parts[i];
                     
-                    // Descrição (está logo no início da parte até "Receita Bruta Informada")
+                    // Descrição: Tudo antes de "Receita Bruta Informada"
                     const descMatch = part.split("Receita Bruta Informada")[0];
                     let desc = descMatch.replace(/^\s*\(R\$\)\s*:\s*/, '').trim();
-                    // Remove lixo do início se houver
+                    // Remove caracteres não alfanuméricos do início
                     desc = desc.replace(/^[^a-zA-Z]*/, ''); 
 
                     // Receita Bruta
-                    const recMatch = part.match(/Receita Bruta Informada:\s*R\$\s*([\d\.,]+)/);
+                    const recMatch = part.match(/Receita Bruta Informada.*?([\d\.]+,[\d]{2})/);
                     const receita = recMatch ? recMatch[1] : "0,00";
 
-                    // Tabela de Impostos (Busca a sequencia de 8 ou 9 valores)
-                    // Padrão: IRPJ CSLL COFINS PIS CPP ICMS IPI ISS (Total)
-                    // Busca sequencia de numeros com virgula
-                    const taxRegex = /((?:[\d\.]+,[\d]{2}\s+){8}[\d\.]+,[\d]{2})/;
-                    const tableMatch = part.match(taxRegex);
+                    // Impostos: Pega todos os valores monetários que aparecem DEPOIS da Receita Bruta
+                    // Corta o texto a partir da receita bruta para evitar pegar a receita novamente ou números anteriores
+                    const afterReceita = part.substring(part.indexOf("Receita Bruta Informada") + 25);
                     
-                    let taxValues = ["0,00","0,00","0,00","0,00","0,00","0,00","0,00","0,00","0,00"];
+                    // Busca todos os números formato 0,00 ou 1.000,00
+                    const allNumbers = afterReceita.match(/([\d\.]+,[\d]{2})/g) || [];
                     
-                    if(tableMatch) {
-                        // Limpa espaços e cria array
-                        taxValues = tableMatch[1].trim().split(/\s+/);
+                    // Assume que os primeiros 9 números após a receita são os impostos + total
+                    // Ordem Padrão: IRPJ, CSLL, COFINS, PIS, CPP, ICMS, IPI, ISS, Total
+                    // Se não tiver 9 numeros, preenche com zero
+                    let taxValues = [];
+                    if(allNumbers.length >= 9) {
+                        taxValues = allNumbers.slice(0, 9);
+                    } else {
+                        taxValues = ["0,00","0,00","0,00","0,00","0,00","0,00","0,00","0,00","0,00"];
                     }
 
                     atividades.push({
                         desc: desc,
                         receita: receita,
-                        taxes: taxValues // Array com IRPJ, CSLL, COFINS, PIS, CPP, ICMS, IPI, ISS, Total
+                        taxes: taxValues 
                     });
                 }
 
-                h.push({
-                    empresa: razao,
-                    cnpj: cnpj,
-                    ref: refExtenso, // Ex: Novembro 2025
-                    rbt12: rbt12,
-                    atividades: atividades
-                });
-                processados++;
+                if(atividades.length > 0) {
+                     h.push({
+                        empresa: razao,
+                        cnpj: cnpj,
+                        ref: refExtenso,
+                        rbt12: rbt12,
+                        atividades: atividades
+                    });
+                    processados++;
+                }
             }
 
             localStorage.setItem('pgdas_history', JSON.stringify(h));
-            alert(`${processados} PGDAS Processados!`);
+            if(processados === 0) alert("Atenção: Nenhum dado extraído. Verifique se o PDF é um PGDAS válido.");
+            else alert(`${processados} PGDAS Processados com sucesso!`);
+            
             renderPGDASHistory();
         }
 
@@ -542,7 +543,7 @@
                             <table class="tax-table">
                                 <thead>
                                     <tr>
-                                        <th>IRPJ</th><th>CSLL</th><th>COFINS</th><th>PIS/PASEP</th><th>CPP</th><th>ICMS</th><th>IPI</th><th>ISS</th><th>TOTAL</th>
+                                        <th>IRPJ</th><th>CSLL</th><th>COFINS</th><th>PIS</th><th>CPP</th><th>ICMS</th><th>IPI</th><th>ISS</th><th>TOTAL</th>
                                     </tr>
                                 </thead>
                                 <tbody>
