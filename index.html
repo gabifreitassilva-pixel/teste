@@ -12,20 +12,52 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
         body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
         .sidebar { width: 280px; background: var(--bg-dark); border-right: 1px solid var(--border-color); flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto; }
+        .nav-group { margin-bottom: 10px; }
         .section-title { padding: 15px 25px 5px; font-size: 9px; font-weight: 900; color: #555; text-transform: uppercase; letter-spacing: 1.5px; }
         .nav-link { padding: 10px 25px; font-size: 11px; font-weight: 600; color: #888; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; border-left: 3px solid transparent; }
         .nav-link:hover, .nav-link.active { color: var(--orange-main); background: rgba(249, 115, 22, 0.05); border-left-color: var(--orange-main); }
+        .nav-link i { width: 15px; text-align: center; }
+        
+        /* Main Content */
         .main-container { flex: 1; background: #050505; overflow-y: auto; padding: 30px; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
         .tab-content.active { display: block; }
-        .card-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .btn-orange { background: var(--orange-main); color: #000 !important; font-weight: 800; border-radius: 6px; padding: 10px 20px; text-transform: uppercase; font-size: 11px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; }
-        .table-container { border: 1px solid var(--border-color); border-radius: 8px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th { background: #111; color: var(--orange-main); font-size: 11px; text-transform: uppercase; padding: 15px; text-align: left; font-weight: 900; border-bottom: 2px solid #222; }
-        td { padding: 15px; font-size: 11px; border-bottom: 1px solid #1a1a1a; color: #ccc; vertical-align: top; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Componentes UI */
+        .card-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .btn-orange { background: var(--orange-main); color: #000 !important; font-weight: 800; border-radius: 6px; padding: 10px 20px; text-transform: uppercase; font-size: 11px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-orange:hover { filter: brightness(1.1); }
+        .btn-orange:disabled { background: #333; color: #555 !important; cursor: not-allowed; }
+        .btn-red { background: #dc2626; color: #fff !important; font-weight: 800; border-radius: 6px; padding: 10px 20px; text-transform: uppercase; font-size: 11px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-red:hover { background: #b91c1c; }
+
+        /* Tabelas */
+        .table-container { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #111; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 12px; text-align: left; font-weight: 800; border-bottom: 2px solid #222; }
+        td { padding: 10px 12px; font-size: 11px; border-bottom: 1px solid #1a1a1a; color: #ccc; }
+        tr:hover td { background: #0f0f0f; color: #fff; }
+
+        /* Modal PGDAS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: #09090b; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; border: 1px solid #333; border-radius: 12px; padding: 25px; }
+        
+        .pgdas-block { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 15px; }
+        .pgdas-title { color: #f97316; font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+        .pgdas-rec { color: #fff; font-size: 11px; margin-bottom: 10px; font-weight: bold; }
+        
+        .tax-table { width: 100%; font-size: 10px; text-align: center; border: 1px solid #333; }
+        .tax-table th { background: #18181b; color: #888; padding: 5px; border: 1px solid #333; }
+        .tax-table td { background: #000; color: #fff; padding: 5px; border: 1px solid #333; font-family: monospace; }
+        
+        /* Badges */
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+        .badge-warn { background: #422006; color: #fdba74; border: 1px solid #c2410c; }
+        .badge-success { background: #064e3b; color: #34d399; border: 1px solid #059669; }
     </style>
 </head>
 <body>
@@ -33,13 +65,35 @@
     <aside class="sidebar">
         <div class="p-6 border-b border-zinc-900 mb-2 text-center">
             <h1 class="text-2xl font-black italic tracking-tighter text-white">FISCAL<span class="text-[#f97316]">AUDIT</span></h1>
+            <p class="text-[8px] text-zinc-600 font-bold uppercase tracking-[0.3em]">Auditoria Integrada</p>
         </div>
+        
         <nav class="flex-1">
-            <div class="section-title">Extração</div>
-            <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-upload"></i> Módulo de Carga</div>
-            <div class="section-title">Consultas</div>
-            <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
-            <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
+            <div class="nav-group">
+                <div class="section-title">Extração</div>
+                <div class="nav-link active" onclick="showTab('extrator-panel', this)"><i class="fas fa-upload"></i> Módulo de Carga</div>
+            </div>
+            <div class="nav-group">
+                <div class="section-title">Consultas</div>
+                <div class="nav-link" onclick="showTab('xml-history-panel', this)"><i class="fas fa-file-code"></i> Histórico XML</div>
+                <div class="nav-link" onclick="showTab('pgdas-history-panel', this)"><i class="fas fa-file-invoice-dollar"></i> Histórico PGDAS</div>
+            </div>
+            <div class="nav-group">
+                <div class="section-title">Auditoria</div>
+                <div class="nav-link" onclick="showTab('auditor-panel', this)"><i class="fas fa-robot"></i> Auditor Inteligente</div>
+                <div class="nav-link" onclick="showTab('retificacao-panel', this)"><i class="fas fa-exclamation-triangle"></i> Painel de Retificações</div>
+            </div>
+            <div class="nav-group">
+                <div class="section-title">Gestão</div>
+                <div class="nav-link" onclick="showTab('global-history-panel', this)"><i class="fas fa-history"></i> Histórico Global</div>
+                <div class="nav-link" onclick="showTab('consultoria-panel', this)"><i class="fas fa-save"></i> Gravar Consultoria</div>
+            </div>
+            <div class="nav-group">
+                <div class="section-title">Legislação</div>
+                <a href="BENEFICIOS ISENCOES E REDUCAO.HTML" target="_blank" class="nav-link"><i class="fas fa-book-open"></i> Benefícios ICMS (SP)</a>
+                <a href="CONVÊNIO ICMS N° 142, DE 14 DE DEZEMBRO DE 2018.html" target="_blank" class="nav-link"><i class="fas fa-gavel"></i> Convênio 142/18 (ST)</a>
+                <a href="PIS COFINS.HTML" target="_blank" class="nav-link"><i class="fas fa-balance-scale"></i> PIS/COFINS (Federal)</a>
+            </div>
         </nav>
     </aside>
 
@@ -54,7 +108,15 @@
                         <p id="label-xml" class="text-[10px] text-zinc-500 font-bold uppercase">Selecionar Arquivos</p>
                         <input type="file" id="xml-input" multiple accept=".xml,.zip" class="hidden" onchange="handleXMLFiles(this.files)">
                     </div>
-                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange mt-4 w-full justify-center" disabled>Processar Notas (Tags Totais)</button>
+                    <button id="btn-run-xml" onclick="processarXML()" class="btn-orange mt-4 w-full justify-center" disabled>Processar Notas</button>
+                </div>
+                <div class="card-panel">
+                    <h4 class="text-xs font-black uppercase text-[#f97316] mb-4">Upload PGDAS (PDF)</h4>
+                    <div class="border-2 border-dashed border-zinc-800 rounded-xl p-8 text-center cursor-pointer hover:bg-zinc-900" onclick="document.getElementById('pgdas-input').click()">
+                        <p id="label-pgdas" class="text-[10px] text-zinc-500 font-bold uppercase">Selecionar Arquivos</p>
+                        <input type="file" id="pgdas-input" multiple accept=".pdf" class="hidden" onchange="handlePGDASFiles(this.files)">
+                    </div>
+                    <button id="btn-run-pgdas" onclick="processarPGDAS()" class="btn-orange mt-4 w-full justify-center" disabled>Extrair Dados</button>
                 </div>
             </div>
         </div>
@@ -62,23 +124,96 @@
         <div id="xml-history-panel" class="tab-content">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-black italic text-white">Histórico XML</h2>
-                <button onclick="exportBatchByCNPJ()" class="btn-orange"><i class="fas fa-file-excel"></i> Exportar Excel (Todas as Tags)</button>
+                <div class="flex gap-2">
+                    <button onclick="clearHistory('xml')" class="btn-red"><i class="fas fa-trash-alt"></i> Limpar Tudo</button>
+                    <button onclick="exportBatchByCNPJ()" class="btn-orange"><i class="fas fa-file-excel"></i> Exportar Excel (Detalhado)</button>
+                </div>
             </div>
             <div class="table-container">
                 <table>
-                    <thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa / CNPJ</th><th>Competência</th><th>Itens Extraídos</th><th>Ações</th></tr></thead>
+                    <thead><tr><th width="40"><input type="checkbox" onclick="toggleChecks(this)"></th><th>Empresa / CNPJ</th><th>Competência</th><th>Arquivos/Itens</th><th>Ações</th></tr></thead>
                     <tbody id="tbody-xml"></tbody>
                 </table>
             </div>
         </div>
 
+        <div id="pgdas-history-panel" class="tab-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black italic text-white">Extratos PGDAS</h2>
+                <button onclick="clearHistory('pgdas')" class="btn-red"><i class="fas fa-trash-alt"></i> Limpar Tudo</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Empresa</th><th>Competência</th><th>Resumo</th><th>Total DAS</th><th>Ações</th></tr></thead>
+                    <tbody id="tbody-pgdas"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="auditor-panel" class="tab-content">
+            <h2 class="text-2xl font-black italic text-orange-500 mb-2">AUDITOR INTELIGENTE</h2>
+            <div class="card-panel">
+                <label class="text-[10px] uppercase font-bold text-zinc-400">Selecione:</label>
+                <div class="flex gap-4 mt-2">
+                    <select id="audit-selector" class="bg-black border border-zinc-800 text-white text-xs p-3 rounded w-full outline-none focus:border-orange-500"></select>
+                    <button onclick="runAudit()" class="btn-orange whitespace-nowrap">Executar</button>
+                </div>
+            </div>
+            <div id="audit-results" class="hidden"><p class="text-white mt-4">Auditoria realizada. Verifique o Painel de Retificações.</p></div>
+        </div>
+
+        <div id="retificacao-panel" class="tab-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black italic text-red-500">PAINEL DE RETIFICAÇÕES</h2>
+                <button onclick="saveConsultation()" class="btn-orange">Salvar</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Status</th><th>Produto/NCM</th><th>Valor</th><th>CST Atual</th><th>Sugestão</th></tr></thead>
+                    <tbody id="tbody-retificacao"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="global-history-panel" class="tab-content">
+            <h2 class="text-2xl font-black italic text-white">Histórico Global</h2>
+            <div class="table-container">
+                <table><thead><tr><th>Data</th><th>Empresa</th><th>Ref</th><th>Recuperação</th><th>Status</th></tr></thead><tbody id="tbody-global"></tbody></table>
+            </div>
+        </div>
+
+        <div id="consultoria-panel" class="tab-content">
+            <div class="max-w-xl mx-auto text-center mt-20">
+                <i class="fas fa-file-signature text-6xl text-zinc-800 mb-6"></i>
+                <h2 class="text-2xl font-bold text-white mb-2">Finalizar</h2>
+                <button onclick="saveConsultation()" class="btn-orange w-full justify-center py-4 text-sm">Confirmar</button>
+            </div>
+        </div>
+
     </main>
+
+    <div id="modal-pgdas" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
+                <h3 class="text-xl font-black text-white italic">DETALHAMENTO PGDAS</h3>
+                <button onclick="document.getElementById('modal-pgdas').style.display='none'" class="text-red-500 font-black text-xl">X</button>
+            </div>
+            <div id="modal-pgdas-body"></div>
+        </div>
+    </div>
 
     <script>
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
         const MONTHS_FULL = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
 
+        // Utils
+        const formatMoney = (v) => parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const formatCNPJ = (v) => v.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+
         let xmlBuffer = [];
+        let pgdasFiles = [];
+        let currentAuditResults = [];
 
         function showTab(id, el) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -86,8 +221,12 @@
             document.getElementById(id).classList.add('active');
             if(el) el.classList.add('active');
             if(id === 'xml-history-panel') renderXMLHistory();
+            if(id === 'pgdas-history-panel') renderPGDASHistory();
+            if(id === 'auditor-panel') populateAuditSelect();
+            if(id === 'global-history-panel') renderGlobalHistory();
         }
 
+        // --- XML PROCESSING (CORRIGIDO PARA CFe SAT) ---
         async function handleXMLFiles(files) {
             xmlBuffer = [];
             const loadFile = async (f) => {
@@ -100,53 +239,125 @@
             };
             const results = await Promise.all(Array.from(files).map(loadFile));
             xmlBuffer = results.flat();
-            document.getElementById('label-xml').innerText = `${xmlBuffer.length} Arquivos Carregados`;
+            document.getElementById('label-xml').innerText = `${xmlBuffer.length} Arquivos`;
             document.getElementById('btn-run-xml').disabled = false;
         }
 
-        // --- MOTOR DE EXTRAÇÃO RECURSIVA PARA TODAS AS TAGS ---
-        function xmlToObj(node) {
-            const obj = {};
-            Array.from(node.children).forEach(child => {
-                if (child.children.length > 0) {
-                    obj[child.tagName] = xmlToObj(child);
-                } else {
-                    obj[child.tagName] = child.textContent;
-                }
-            });
-            return obj;
+        function extractTag(parent, tagName) {
+            return parent.getElementsByTagName(tagName)[0]?.textContent || "";
+        }
+
+        function extractDateCorrectly(ide) {
+            // CFe (SAT) usa dEmi no formato AAAAMMDD
+            // NFe usa dhEmi no formato AAAA-MM-DD...
+            let dEmi = extractTag(ide, "dEmi");
+            let dhEmi = extractTag(ide, "dhEmi");
+
+            if (dEmi && dEmi.length === 8) {
+                // Formato CFe: 20230629 -> 2023-06-29
+                return `${dEmi.substring(0,4)}-${dEmi.substring(4,6)}-${dEmi.substring(6,8)}`;
+            }
+            if (dhEmi) {
+                // Formato NFe: 2023-06-29T...
+                return dhEmi.substring(0, 10);
+            }
+            return null;
         }
 
         function processarXML() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            const groups = {};
             const parser = new DOMParser();
 
             xmlBuffer.forEach(text => {
                 const xml = parser.parseFromString(text, "text/xml");
+                // Tenta achar 'ide' e 'emit' seja em NFe ou CFe
                 const ide = xml.getElementsByTagName("ide")[0];
                 const emit = xml.getElementsByTagName("emit")[0];
+                
                 if(!ide || !emit) return;
 
-                const dEmi = ide.getElementsByTagName("dEmi")[0]?.textContent;
-                const ref = dEmi ? `${MONTHS_FULL[parseInt(dEmi.substring(4,6))-1]}/${dEmi.substring(0,4)}` : "N/A";
-                const cnpjRaw = emit.getElementsByTagName("CNPJ")[0]?.textContent;
-                const key = `${cnpjRaw}_${ref}`;
+                const dataIso = extractDateCorrectly(ide);
+                if(!dataIso) return; // Se não achou data, ignora
 
-                let group = h.find(x => x.key === key);
-                if(!group) {
-                    group = { key, empresa: emit.getElementsByTagName("xNome")[0]?.textContent, cnpj: cnpjRaw, ref, itens: [] };
-                    h.push(group);
+                const cnpjRaw = extractTag(emit, "CNPJ");
+                const nome = extractTag(emit, "xNome");
+                const [ano, mes, dia] = dataIso.split('-');
+                
+                const mesIdx = parseInt(mes) - 1;
+                const ref = `${MONTHS_FULL[mesIdx]}/${ano}`;
+                const key = `${cnpjRaw}_${ano}${mes}`; // Chave de agrupamento MÊS
+
+                if(!groups[key]) {
+                    groups[key] = {
+                        key, 
+                        empresa: nome, 
+                        cnpjRaw, 
+                        cnpj: formatCNPJ(cnpjRaw), 
+                        ref, 
+                        itens: []
+                    };
                 }
 
+                const nNota = extractTag(ide, "nNF") || extractTag(ide, "nCFe") || "S/N";
                 const dets = xml.getElementsByTagName("det");
-                for(let det of dets) {
-                    // Captura recursiva de todas as tags dentro do item
-                    group.itens.push(xmlToObj(det));
+
+                for(let i=0; i<dets.length; i++) {
+                    const prod = dets[i].getElementsByTagName("prod")[0];
+                    const imp = dets[i].getElementsByTagName("imposto")[0];
+                    if(!prod) continue;
+
+                    // Extração de Impostos (Deep Search para pegar qualquer tag de imposto)
+                    let csosn = "", cstPis = "", cstCofins = "";
+                    
+                    // Varre filhso de ICMS para achar CSOSN ou CST
+                    const icms = imp.getElementsByTagName("ICMS")[0];
+                    if(icms) {
+                        if(icms.textContent.includes("CSOSN")) {
+                            // Regex hack para pegar valor rápido independente da estrutura
+                            csosn = icms.innerHTML.match(/<CSOSN>(.*?)<\/CSOSN>/)?.[1] || "";
+                        } else if (icms.textContent.includes("CST")) {
+                            csosn = icms.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+                        }
+                    }
+
+                    const pis = imp.getElementsByTagName("PIS")[0];
+                    if(pis) cstPis = pis.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+
+                    const cofins = imp.getElementsByTagName("COFINS")[0];
+                    if(cofins) cstCofins = cofins.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+
+                    groups[key].itens.push({
+                        Empresa: nome,
+                        CNPJ: formatCNPJ(cnpjRaw),
+                        Nota: nNota,
+                        Data: `${dia}/${mes}/${ano}`,
+                        MesAno: ref,
+                        Prod: extractTag(prod, "xProd"),
+                        NCM: extractTag(prod, "NCM"),
+                        CFOP: extractTag(prod, "CFOP"),
+                        Un: extractTag(prod, "uCom"),
+                        Qtd: extractTag(prod, "qCom"),
+                        vUn: extractTag(prod, "vUnCom"),
+                        vTot: parseFloat(extractTag(prod, "vProd") || 0),
+                        csosn: csosn, 
+                        cstPis: cstPis, 
+                        cstCofins: cstCofins,
+                        cst_atual: cstPis
+                    });
                 }
             });
 
+            Object.values(groups).forEach(g => {
+                const idx = h.findIndex(x => x.key === g.key);
+                if(idx >= 0) h[idx] = g; // Atualiza se existir
+                else h.push(g);
+            });
+
             localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert("XMLs processados com sucesso!");
+            alert("XMLs Processados! Agrupamento mensal corrigido.");
+            document.getElementById('label-xml').innerText = "Selecionar Arquivos";
+            document.getElementById('btn-run-xml').disabled = true;
             renderXMLHistory();
         }
 
@@ -155,59 +366,254 @@
             document.getElementById('tbody-xml').innerHTML = h.map((item, idx) => `
                 <tr>
                     <td class="text-center"><input type="checkbox" class="xml-sel" data-idx="${idx}"></td>
-                    <td><b>${item.empresa}</b><br><small>${item.cnpj}</small></td>
-                    <td>${item.ref}</td>
-                    <td>${item.itens.length} tags mapeadas</td>
-                    <td><i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteItem(${idx})"></i></td>
+                    <td><div class="font-bold text-white text-[11px]">${item.empresa}</div><div class="text-[9px] text-zinc-500">${item.cnpj}</div></td>
+                    <td><span class="badge badge-warn text-[10px]">${item.ref}</span></td>
+                    <td class="text-[11px]">${item.itens.length} notas/produtos</td>
+                    <td>
+                        <div class="flex gap-3">
+                            <i class="fas fa-file-excel text-green-500 cursor-pointer" onclick="downloadCSV(${idx})" title="Baixar Relatório"></i>
+                            <i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('xml', ${idx})"></i>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
         }
 
-        // --- RELATÓRIO EXCEL DINÂMICO (TODAS AS TAGS) ---
-        function flattenObject(obj, prefix = '') {
-            let entries = {};
-            for (let key in obj) {
-                if (typeof obj[key] === 'object' && obj[key] !== null) {
-                    Object.assign(entries, flattenObject(obj[key], prefix + key + '_'));
-                } else {
-                    entries[prefix + key] = obj[key];
-                }
-            }
-            return entries;
+        function downloadCSV(idx) {
+            const item = JSON.parse(localStorage.getItem('xml_audit_history'))[idx];
+            generateAndDownloadCSV([item]);
         }
 
         function exportBatchByCNPJ() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
-            const selected = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => h[cb.dataset.idx]);
-            if(!selected.length) return alert("Selecione ao menos um item!");
+            const selectedIdx = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => parseInt(cb.dataset.idx));
+            if(!selectedIdx.length) return alert("Selecione os itens!");
+            generateAndDownloadCSV(selectedIdx.map(i => h[i]));
+        }
 
-            let allRows = [];
-            selected.forEach(lote => {
-                lote.itens.forEach(item => {
-                    allRows.push({ Empresa: lote.empresa, CNPJ: lote.cnpj, Referencia: lote.ref, ...flattenObject(item) });
+        function generateAndDownloadCSV(items) {
+            let csv = "Empresa;CNPJ;Nota;Data;Mes/Ano;Produto;NCM;CFOP;Un;Qtd;Vl.Unit;Vl.Total;CSOSN/ICMS;CST_PIS;CST_COFINS\r\n";
+            items.forEach(lote => {
+                lote.itens.forEach(i => {
+                    const vUn = parseFloat(i.vUn).toFixed(2).replace('.',',');
+                    const vTot = i.vTot.toFixed(2).replace('.',',');
+                    const qtd = parseFloat(i.Qtd).toFixed(2).replace('.',',');
+                    const descSafe = i.Prod.replace(/;/g, " ");
+                    csv += `${i.Empresa};${i.CNPJ};${i.Nota};${i.Data};${i.MesAno};${descSafe};${i.NCM};${i.CFOP};${i.Un};${qtd};${vUn};${vTot};${i.csosn};${i.cstPis};${i.cstCofins}\r\n`;
                 });
             });
-
-            const headers = Array.from(new Set(allRows.flatMap(r => Object.keys(r))));
-            let csv = "\ufeff" + headers.join(";") + "\n";
-            allRows.forEach(row => {
-                csv += headers.map(h => `"${(row[h] || '').toString().replace(/"/g, '""')}"`).join(";") + "\n";
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `RELATORIO_TOTAL_TAGS_${Date.now()}.csv`;
+            link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `RELATORIO_DETALHADO_${Date.now()}.csv`;
             link.click();
         }
 
-        function toggleChecks(s) { document.querySelectorAll('.xml-sel').forEach(c => c.checked = s.checked); }
-        function deleteItem(idx) { 
-            let h = JSON.parse(localStorage.getItem('xml_audit_history'));
-            h.splice(idx,1); 
-            localStorage.setItem('xml_audit_history', JSON.stringify(h)); 
-            renderXMLHistory(); 
+        // --- PGDAS PROCESSING (REGRAS DO PDF) ---
+        async function handlePGDASFiles(files) {
+            pgdasFiles = Array.from(files);
+            document.getElementById('label-pgdas').innerText = `${files.length} PDFs`;
+            document.getElementById('btn-run-pgdas').disabled = false;
         }
+
+        async function processarPGDAS() {
+            const h = JSON.parse(localStorage.getItem('pgdas_history')) || [];
+            let processados = 0;
+            
+            for(let file of pgdasFiles) {
+                const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                let fullText = "";
+                for(let i=1; i<=pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    // Junta com espaço único para facilitar regex
+                    fullText += content.items.map(item => item.str).join(" ") + " ";
+                }
+                
+                // Limpeza de espaços extras
+                fullText = fullText.replace(/\s+/g, ' ');
+
+                // Extração Cabeçalho
+                const cnpj = (fullText.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/) || ["CNPJ N/A"])[0];
+                const razao = (fullText.match(/Nome empresarial:\s*(.*?)\s*Data/) || ["", "EMPRESA DESCONHECIDA"])[1];
+                const periodoRaw = (fullText.match(/Período de Apuração:\s*(\d{2}\/\d{2}\/\d{4})/) || ["",""])[1];
+                
+                let refExtenso = "??/????";
+                if(periodoRaw) {
+                    const [d, m, a] = periodoRaw.split('/');
+                    if(MONTHS_FULL[parseInt(m)-1]) refExtenso = `${MONTHS_FULL[parseInt(m)-1]}/${a}`;
+                }
+
+                const totalDas = (fullText.match(/Valor Total do DAS: R\$ ([\d\.,]+)/) || ["", "0,00"])[1];
+
+                // Extração de Atividades (Loop)
+                const atividades = [];
+                // Quebra o texto onde começam as atividades
+                const parts = fullText.split("Valor do Débito por Tributo para a Atividade");
+                
+                for(let i=1; i<parts.length; i++) {
+                    const part = parts[i];
+                    
+                    // Descrição: Está antes de "Receita Bruta Informada"
+                    const descMatch = part.split("Receita Bruta Informada")[0];
+                    // Remove " (R$) :" do inicio se houver
+                    let desc = descMatch.replace(/^\s*\(R\$\)\s*:\s*/, '').trim();
+
+                    const recMatch = part.match(/Receita Bruta Informada.*?:.*?([\d\.,]+)/);
+                    const receita = recMatch ? recMatch[1] : "0,00";
+
+                    // Impostos: Busca a sequência de 9 valores monetários após a receita
+                    // IRPJ CSLL COFINS PIS CPP ICMS IPI ISS Total
+                    const vals = part.match(/([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)\s+([\d\.,]+)/);
+                    
+                    if(vals) {
+                        atividades.push({
+                            desc: desc,
+                            receita: receita,
+                            taxes: [vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8], vals[9]]
+                        });
+                    }
+                }
+
+                h.push({
+                    empresa: razao,
+                    cnpj: cnpj,
+                    ref: refExtenso,
+                    totalDas: totalDas,
+                    atividades: atividades
+                });
+                processados++;
+            }
+
+            localStorage.setItem('pgdas_history', JSON.stringify(h));
+            alert(`${processados} PGDAS Processados!`);
+            renderPGDASHistory();
+        }
+
+        function renderPGDASHistory() {
+            const h = JSON.parse(localStorage.getItem('pgdas_history')) || [];
+            document.getElementById('tbody-pgdas').innerHTML = h.map((item, idx) => `
+                <tr>
+                    <td><div class="font-bold text-white text-[11px]">${item.empresa}</div><div class="text-[9px] text-zinc-500">${item.cnpj}</div></td>
+                    <td><span class="badge badge-success">${item.ref}</span></td>
+                    <td class="text-[10px] text-zinc-400">${item.atividades.length} Atividades</td>
+                    <td class="font-bold text-orange-500">R$ ${item.totalDas}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button onclick="viewPGDAS(${idx})" class="btn-orange text-[9px]"><i class="fas fa-file-pdf"></i> PDF</button>
+                            <i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('pgdas', ${idx})"></i>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewPGDAS(idx) {
+            const item = JSON.parse(localStorage.getItem('pgdas_history'))[idx];
+            const body = document.getElementById('modal-pgdas-body');
+            
+            let html = `
+                <div class="flex justify-between items-end mb-6 border-b border-zinc-700 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">${item.empresa}</h2>
+                        <p class="text-zinc-500 text-xs">${item.cnpj}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-orange-500 font-bold text-lg">${item.ref}</p>
+                        <p class="text-white text-sm">Total DAS: R$ ${item.totalDas}</p>
+                    </div>
+                </div>
+            `;
+
+            if(item.atividades.length === 0) {
+                html += '<p class="text-center text-zinc-500">Nenhuma atividade com movimentação encontrada neste extrato.</p>';
+            } else {
+                item.atividades.forEach(ativ => {
+                    html += `
+                        <div class="pgdas-block">
+                            <div class="pgdas-title">${ativ.desc}</div>
+                            <div class="pgdas-rec">Receita Informada: <span class="text-green-400">R$ ${ativ.receita}</span></div>
+                            <table class="tax-table">
+                                <thead>
+                                    <tr><th>IRPJ</th><th>CSLL</th><th>COFINS</th><th>PIS</th><th>CPP</th><th>ICMS</th><th>IPI</th><th>ISS</th><th>TOTAL</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        ${ativ.taxes.map(t => `<td>${t}</td>`).join('')}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                });
+            }
+
+            body.innerHTML = html;
+            document.getElementById('modal-pgdas').style.display = 'flex';
+        }
+
+        // --- UTILS ---
+        function clearHistory(type) {
+            const key = type === 'xml' ? 'xml_audit_history' : type === 'pgdas' ? 'pgdas_history' : 'global_audit_history';
+            if(confirm("Limpar todo o histórico?")) {
+                localStorage.removeItem(key);
+                type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
+            }
+        }
+
+        function deleteHistory(type, idx) {
+            const key = type === 'xml' ? 'xml_audit_history' : 'pgdas_history';
+            const h = JSON.parse(localStorage.getItem(key));
+            h.splice(idx, 1);
+            localStorage.setItem(key, JSON.stringify(h));
+            type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
+        }
+
+        function toggleChecks(source) { document.querySelectorAll('.xml-sel').forEach(c => c.checked = source.checked); }
+
+        // --- AUDITOR MOCK ---
+        function populateAuditSelect() {
+            const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
+            const sel = document.getElementById('audit-selector');
+            sel.innerHTML = '<option value="">Selecione...</option>';
+            h.forEach((item, idx) => { sel.innerHTML += `<option value="${idx}">${item.empresa} - ${item.ref}</option>`; });
+        }
+
+        function runAudit() {
+            const idx = document.getElementById('audit-selector').value;
+            if(idx === "") return;
+            const data = JSON.parse(localStorage.getItem('xml_audit_history'))[idx];
+            const divergencias = data.itens.filter(i => (i.NCM.startsWith('22') || i.NCM.startsWith('40')) && i.cst_atual !== '04' && i.cst_atual !== '06');
+            
+            const tbody = document.getElementById('tbody-retificacao');
+            tbody.innerHTML = divergencias.map(i => `
+                <tr>
+                    <td><span class="badge badge-warn">REVISAR</span></td>
+                    <td>${i.Prod}<br><small class="text-orange-500">${i.NCM}</small></td>
+                    <td>R$ ${i.vTot.toFixed(2)}</td>
+                    <td class="text-red-500">${i.cst_atual || 'Trib'}</td>
+                    <td class="text-green-500">04/06 Mono/Zero</td>
+                </tr>
+            `).join('');
+            currentAuditResults = { ...data, itens: divergencias, total: divergencias.reduce((acc, i) => acc + (i.vTot * 0.0365), 0) };
+            document.getElementById('audit-results').classList.remove('hidden');
+        }
+
+        function saveConsultation() {
+            if(!currentAuditResults) return;
+            const g = JSON.parse(localStorage.getItem('global_audit_history')) || [];
+            g.push({ data: new Date().toLocaleDateString(), empresa: currentAuditResults.empresa, ref: currentAuditResults.ref, valorRec: currentAuditResults.total, status: 'Salvo' });
+            localStorage.setItem('global_audit_history', JSON.stringify(g));
+            alert("Salvo!");
+            renderGlobalHistory();
+        }
+
+        function renderGlobalHistory() {
+            const h = JSON.parse(localStorage.getItem('global_audit_history')) || [];
+            document.getElementById('tbody-global').innerHTML = h.map(i => `<tr><td>${i.data}</td><td>${i.empresa}</td><td>${i.ref}</td><td>${formatMoney(i.valorRec)}</td><td>${i.status}</td></tr>`).join('');
+        }
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+        renderXMLHistory();
     </script>
 </body>
 </html>
