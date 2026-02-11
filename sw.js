@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-v18-master-v10';
+const CACHE_NAME = 'fiscal-audit-v19-master-v11';
 const ASSETS = [
     './',
     './index.html',
@@ -35,3 +35,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
