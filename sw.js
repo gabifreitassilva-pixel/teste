@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-suite-v18-master-v2';
+const CACHE_NAME = 'fiscal-audit-suite-v18-master-v3';
 
 // Lista exata dos arquivos que compõem a aplicação + Arquivos de Lei
 const ASSETS = [
@@ -48,3 +48,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
