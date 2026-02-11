@@ -1,15 +1,15 @@
-const CACHE_NAME = 'fiscal-audit-suite-v16.1-integrated';
+const CACHE_NAME = 'fiscal-audit-v16.2-integrated';
 
-// Lista de ativos para cache (incluindo legislação e bibliotecas externas)
+// Lista de arquivos e bibliotecas para funcionamento offline
 const ASSETS = [
     './',
     './index.html',
     './sw.js',
-    // Arquivos de Legislação
+    // Arquivos de Legislação (Devem estar na mesma pasta)
     './BENEFICIOS ISENCOES E REDUCAO.HTML',
     './CONVÊNIO ICMS N° 142, DE 14 DE DEZEMBRO DE 2018.html',
     './PIS COFINS.HTML',
-    // Bibliotecas Externas para funcionamento Offline
+    // Bibliotecas Externas (Cache First)
     'https://cdn.tailwindcss.com',
     'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
@@ -17,20 +17,20 @@ const ASSETS = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
-// Instalação: Salva os arquivos no cache
+// Instalação do Service Worker
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[Service Worker] Aplicando Cache V16...');
-            // Promise.allSettled evita que falhas em um arquivo bloqueiem o sistema todo
+            console.log('[Service Worker] Fazendo cache da Versão 16.2');
+            // addAllSettled garante que o cache continue mesmo se um link falhar
             return Promise.allSettled(ASSETS.map(url => cache.add(url)))
-                .then(() => console.log('[Service Worker] Cache concluído com sucesso.'));
+                .then(() => console.log('[Service Worker] Ativos armazenados com sucesso.'));
         })
     );
 });
 
-// Ativação: Limpa versões antigas de cache
+// Ativação e limpeza de caches antigos
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => Promise.all(
@@ -40,14 +40,15 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Estratégia de busca: Tenta o Cache primeiro, depois a Rede
+// Estratégia de Fetch: Cache First -> Falling back to Network
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
+            // Se o arquivo estiver no cache (offline), usa ele. Caso contrário, vai na internet.
             return response || fetch(event.request).then((fetchRes) => {
                 return fetchRes;
             }).catch(() => {
-                // Se a rede falhar e for uma navegação de página, retorna o index
+                // Fallback para navegação: se estiver offline e tentar carregar uma página, mostra o index
                 if (event.request.mode === 'navigate') {
                     return caches.match('./index.html');
                 }
@@ -55,4 +56,3 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
-
