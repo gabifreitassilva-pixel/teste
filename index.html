@@ -36,34 +36,28 @@
         .btn-red:hover { background: #b91c1c; }
 
         /* Tabelas */
-        .table-container { border: 1px solid var(--border-color); border-radius: 8px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; } /* Min-width para garantir layout */
-        th { background: #111; color: var(--orange-main); font-size: 11px; text-transform: uppercase; padding: 15px; text-align: left; font-weight: 900; border-bottom: 2px solid #222; white-space: nowrap; }
-        td { padding: 15px; font-size: 11px; border-bottom: 1px solid #1a1a1a; color: #ccc; vertical-align: top; }
-        tr:hover td { background: #0f0f0f; }
+        .table-container { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #111; color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 12px; text-align: left; font-weight: 800; border-bottom: 2px solid #222; }
+        td { padding: 10px 12px; font-size: 11px; border-bottom: 1px solid #1a1a1a; color: #ccc; }
+        tr:hover td { background: #0f0f0f; color: #fff; }
 
-        /* Estilos Específicos do Relatório PGDAS (Layout do Print) */
-        .col-empresa { width: 20%; }
-        .col-competencia { width: 10%; text-align: center; }
-        .col-valores { width: 10%; text-align: right; font-family: monospace; font-size: 12px; }
-        .col-detalhe { width: 45%; }
-        
-        .pgdas-activity-block { margin-bottom: 20px; border-left: 2px solid #333; padding-left: 15px; }
-        .pgdas-desc { font-weight: bold; color: #fff; margin-bottom: 5px; font-size: 11px; line-height: 1.4; }
-        .pgdas-rec-info { font-size: 11px; color: #888; margin-bottom: 8px; font-weight: bold; text-transform: uppercase; }
-        .pgdas-rec-info span { color: var(--orange-main); }
-
-        .mini-tax-table { width: 100%; font-size: 10px; text-align: center; border-spacing: 0; }
-        .mini-tax-table th { background: transparent; color: #666; font-weight: normal; padding: 2px 5px; border: none; text-align: center; font-size: 9px; }
-        .mini-tax-table td { background: transparent; color: #fff; font-weight: bold; padding: 2px 5px; border-top: 1px solid #222; font-family: monospace; }
-
-        /* Modal */
+        /* Modal PGDAS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 50; display: none; justify-content: center; align-items: center; }
         .modal-content { background: #09090b; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; border: 1px solid #333; border-radius: 12px; padding: 25px; }
+        
+        .pgdas-block { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 15px; }
+        .pgdas-title { color: #f97316; font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+        .pgdas-rec { color: #fff; font-size: 11px; margin-bottom: 10px; font-weight: bold; }
+        
+        .tax-table { width: 100%; font-size: 10px; text-align: center; border: 1px solid #333; margin-top: 10px; }
+        .tax-table th { background: #18181b; color: #888; padding: 5px; border: 1px solid #333; }
+        .tax-table td { background: #000; color: #fff; padding: 5px; border: 1px solid #333; font-family: monospace; }
         
         /* Badges */
         .badge { padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; }
         .badge-warn { background: #422006; color: #fdba74; border: 1px solid #c2410c; }
+        .badge-success { background: #064e3b; color: #34d399; border: 1px solid #059669; }
     </style>
 </head>
 <body>
@@ -150,16 +144,7 @@
             </div>
             <div class="table-container">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="col-empresa">EMPRESA</th>
-                            <th class="col-competencia">COMPETÊNCIA</th>
-                            <th class="col-valores">RTB12</th>
-                            <th class="col-valores">RECEITA<br>MENSAL</th>
-                            <th class="col-detalhe">DETALHAMENTO</th>
-                            <th>AÇÕES</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Empresa</th><th>Competência</th><th>Resumo</th><th>RBT12</th><th>Ações</th></tr></thead>
                     <tbody id="tbody-pgdas"></tbody>
                 </table>
             </div>
@@ -210,7 +195,7 @@
     <div id="modal-pgdas" class="modal-overlay">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4">
-                <h3 class="text-xl font-black text-white italic">VISUALIZAÇÃO PDF ORIGINAL</h3>
+                <h3 class="text-xl font-black text-white italic">DETALHAMENTO PGDAS</h3>
                 <button onclick="document.getElementById('modal-pgdas').style.display='none'" class="text-red-500 font-black text-xl">X</button>
             </div>
             <div id="modal-pgdas-body"></div>
@@ -241,7 +226,7 @@
             if(id === 'global-history-panel') renderGlobalHistory();
         }
 
-        // --- XML PROCESSING ---
+        // --- XML PROCESSING (MELHORADO COM TAGS COMPLETAS) ---
         async function handleXMLFiles(files) {
             xmlBuffer = [];
             const loadFile = async (f) => {
@@ -258,12 +243,20 @@
             document.getElementById('btn-run-xml').disabled = false;
         }
 
-        function extractTag(parent, tagName) { return parent.getElementsByTagName(tagName)[0]?.textContent || ""; }
+        function extractTag(parent, tagName) {
+            return parent.getElementsByTagName(tagName)[0]?.textContent || "";
+        }
+
         function extractDateCorrectly(ide) {
             let dEmi = extractTag(ide, "dEmi");
             let dhEmi = extractTag(ide, "dhEmi");
-            if (dEmi && dEmi.length === 8) return `${dEmi.substring(0,4)}-${dEmi.substring(4,6)}-${dEmi.substring(6,8)}`;
-            if (dhEmi) return dhEmi.substring(0, 10);
+
+            if (dEmi && dEmi.length === 8) {
+                return `${dEmi.substring(0,4)}-${dEmi.substring(4,6)}-${dEmi.substring(6,8)}`;
+            }
+            if (dhEmi) {
+                return dhEmi.substring(0, 10);
+            }
             return null;
         }
 
@@ -276,49 +269,96 @@
                 const xml = parser.parseFromString(text, "text/xml");
                 const ide = xml.getElementsByTagName("ide")[0];
                 const emit = xml.getElementsByTagName("emit")[0];
+                
                 if(!ide || !emit) return;
+
                 const dataIso = extractDateCorrectly(ide);
                 if(!dataIso) return;
+
                 const cnpjRaw = extractTag(emit, "CNPJ");
                 const nome = extractTag(emit, "xNome");
                 const [ano, mes, dia] = dataIso.split('-');
+                
                 const mesIdx = parseInt(mes) - 1;
                 const ref = `${MONTHS_FULL[mesIdx]}/${ano}`;
                 const key = `${cnpjRaw}_${ano}${mes}`;
-                if(!groups[key]) groups[key] = { key, empresa: nome, cnpjRaw, cnpj: formatCNPJ(cnpjRaw), ref, itens: [] };
+
+                if(!groups[key]) {
+                    groups[key] = {
+                        key, 
+                        empresa: nome, 
+                        cnpjRaw, 
+                        cnpj: formatCNPJ(cnpjRaw), 
+                        ref, 
+                        itens: []
+                    };
+                }
+
                 const nNota = extractTag(ide, "nNF") || extractTag(ide, "nCFe") || "S/N";
                 const dets = xml.getElementsByTagName("det");
+
                 for(let i=0; i<dets.length; i++) {
                     const prod = dets[i].getElementsByTagName("prod")[0];
                     const imp = dets[i].getElementsByTagName("imposto")[0];
                     if(!prod) continue;
+
+                    // Extração de Impostos Detalhada
                     let csosn = "", cstPis = "", cstCofins = "", orig = "";
+                    
                     const icms = imp.getElementsByTagName("ICMS")[0];
                     if(icms) {
                         orig = icms.innerHTML.match(/<Orig>(.*?)<\/Orig>/)?.[1] || "";
-                        if(icms.textContent.includes("CSOSN")) csosn = icms.innerHTML.match(/<CSOSN>(.*?)<\/CSOSN>/)?.[1] || "";
-                        else if (icms.textContent.includes("CST")) csosn = icms.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+                        if(icms.textContent.includes("CSOSN")) {
+                            csosn = icms.innerHTML.match(/<CSOSN>(.*?)<\/CSOSN>/)?.[1] || "";
+                        } else if (icms.textContent.includes("CST")) {
+                            csosn = icms.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+                        }
                     }
+
                     const pis = imp.getElementsByTagName("PIS")[0];
                     if(pis) cstPis = pis.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+
                     const cofins = imp.getElementsByTagName("COFINS")[0];
                     if(cofins) cstCofins = cofins.innerHTML.match(/<CST>(.*?)<\/CST>/)?.[1] || "";
+
+                    const vItem12741 = extractTag(imp, "vItem12741");
+
                     groups[key].itens.push({
-                        Empresa: nome, CNPJ: formatCNPJ(cnpjRaw), Nota: nNota, Data: `${dia}/${mes}/${ano}`, MesAno: ref,
-                        cProd: extractTag(prod, "cProd"), cEAN: extractTag(prod, "cEAN"), Prod: extractTag(prod, "xProd"),
-                        NCM: extractTag(prod, "NCM"), CFOP: extractTag(prod, "CFOP"), Un: extractTag(prod, "uCom"),
-                        Qtd: extractTag(prod, "qCom"), vUn: extractTag(prod, "vUnCom"), vTot: parseFloat(extractTag(prod, "vProd") || 0),
-                        indRegra: extractTag(prod, "indRegra"), vItem12741: extractTag(imp, "vItem12741"),
-                        Orig: orig, csosn: csosn, cstPis: cstPis, cstCofins: cstCofins, cst_atual: cstPis
+                        Empresa: nome,
+                        CNPJ: formatCNPJ(cnpjRaw),
+                        Nota: nNota,
+                        Data: `${dia}/${mes}/${ano}`,
+                        MesAno: ref,
+                        // Tags completas solicitadas
+                        cProd: extractTag(prod, "cProd"),
+                        cEAN: extractTag(prod, "cEAN"),
+                        Prod: extractTag(prod, "xProd"),
+                        NCM: extractTag(prod, "NCM"),
+                        CFOP: extractTag(prod, "CFOP"),
+                        Un: extractTag(prod, "uCom"),
+                        Qtd: extractTag(prod, "qCom"),
+                        vUn: extractTag(prod, "vUnCom"),
+                        vTot: parseFloat(extractTag(prod, "vProd") || 0),
+                        indRegra: extractTag(prod, "indRegra"),
+                        vItem12741: vItem12741,
+                        // Impostos Detalhados
+                        Orig: orig,
+                        csosn: csosn, 
+                        cstPis: cstPis, 
+                        cstCofins: cstCofins,
+                        cst_atual: cstPis
                     });
                 }
             });
+
             Object.values(groups).forEach(g => {
                 const idx = h.findIndex(x => x.key === g.key);
-                if(idx >= 0) h[idx] = g; else h.push(g);
+                if(idx >= 0) h[idx] = g;
+                else h.push(g);
             });
+
             localStorage.setItem('xml_audit_history', JSON.stringify(h));
-            alert("XMLs Processados!");
+            alert("XMLs Processados! Dados detalhados extraídos.");
             document.getElementById('label-xml').innerText = "Selecionar Arquivos";
             document.getElementById('btn-run-xml').disabled = true;
             renderXMLHistory();
@@ -332,16 +372,26 @@
                     <td><div class="font-bold text-white text-[11px]">${item.empresa}</div><div class="text-[9px] text-zinc-500">${item.cnpj}</div></td>
                     <td><span class="badge badge-warn text-[10px]">${item.ref}</span></td>
                     <td class="text-[11px]">${item.itens.length} produtos</td>
-                    <td><div class="flex gap-3"><i class="fas fa-file-excel text-green-500 cursor-pointer" onclick="downloadCSV(${idx})" title="Baixar Relatório"></i><i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('xml', ${idx})"></i></div></td>
+                    <td>
+                        <div class="flex gap-3">
+                            <i class="fas fa-file-excel text-green-500 cursor-pointer" onclick="downloadCSV(${idx})" title="Baixar Relatório Completo"></i>
+                            <i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('xml', ${idx})"></i>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
         }
 
         function generateAndDownloadCSV(items) {
+            // Relatório Melhorado com tags completas
             let csv = "Empresa;CNPJ;Nota;Data;Mes/Ano;Cod.Prod;EAN;Produto;NCM;CFOP;Un;Qtd;Vl.Unit;Vl.Total;Vl.Aprox.Trib;Origem;CSOSN/ICMS;CST_PIS;CST_COFINS;Ind.Regra\r\n";
             items.forEach(lote => {
                 lote.itens.forEach(i => {
-                    csv += `${i.Empresa};${i.CNPJ};${i.Nota};${i.Data};${i.MesAno};${i.cProd};${i.cEAN};${i.Prod.replace(/;/g, " ")};${i.NCM};${i.CFOP};${i.Un};${parseFloat(i.Qtd).toFixed(4).replace('.',',')};${parseFloat(i.vUn).toFixed(2).replace('.',',')};${i.vTot.toFixed(2).replace('.',',')};${i.vItem12741};${i.Orig};${i.csosn};${i.cstPis};${i.cstCofins};${i.indRegra}\r\n`;
+                    const vUn = parseFloat(i.vUn).toFixed(2).replace('.',',');
+                    const vTot = i.vTot.toFixed(2).replace('.',',');
+                    const qtd = parseFloat(i.Qtd).toFixed(4).replace('.',',');
+                    const descSafe = i.Prod.replace(/;/g, " ");
+                    csv += `${i.Empresa};${i.CNPJ};${i.Nota};${i.Data};${i.MesAno};${i.cProd};${i.cEAN};${descSafe};${i.NCM};${i.CFOP};${i.Un};${qtd};${vUn};${vTot};${i.vItem12741};${i.Orig};${i.csosn};${i.cstPis};${i.cstCofins};${i.indRegra}\r\n`;
                 });
             });
             const link = document.createElement("a");
@@ -350,7 +400,7 @@
             link.click();
         }
 
-        // --- PGDAS PROCESSING (RE-ENGINEERED: EXTRAÇÃO ROBUSTA) ---
+        // --- PGDAS PROCESSING (MELHORADO COM ATIVIDADES COMPLETAS) ---
         async function handlePGDASFiles(files) {
             pgdasFiles = Array.from(files);
             document.getElementById('label-pgdas').innerText = `${files.length} PDFs`;
@@ -370,145 +420,94 @@
                     fullText += content.items.map(item => item.str).join(" ") + " ";
                 }
                 
-                // Normaliza o texto (espaços duplos e quebras)
                 fullText = fullText.replace(/\s+/g, ' ');
 
-                // --- 1. EXTRAÇÃO DE EMPRESA (Busca o primeiro CNPJ válido) ---
-                const cnpjMatch = fullText.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
-                const cnpj = cnpjMatch ? cnpjMatch[1] : "CNPJ NÃO ENCONTRADO";
+                // 1. Identificação
+                // Busca CNPJ Matriz que está próximo ao texto "CNPJ Matriz:"
+                const cnpj = (fullText.match(/CNPJ Matriz:\s*(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || fullText.match(/CNPJ Matriz:.*?(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/) || ["", "CNPJ N/A"])[1];
                 
-                // Tenta achar o nome: geralmente está entre "Nome empresarial:" e "Data"
-                let razao = "EMPRESA NÃO IDENTIFICADA";
-                const nomeStart = fullText.indexOf("Nome empresarial:");
-                if (nomeStart !== -1) {
-                    const nomeEnd = fullText.indexOf("Data", nomeStart);
-                    if (nomeEnd !== -1) {
-                        razao = fullText.substring(nomeStart + 17, nomeEnd).trim();
-                    }
+                // Busca Nome Empresarial
+                const razao = (fullText.match(/Nome empresarial:\s*(.*?)\s*Data/) || ["", "EMPRESA DESCONHECIDA"])[1];
+
+                // 2. Data Extenso
+                const periodoRaw = (fullText.match(/Período de Apuração:\s*(\d{2}\/\d{2}\/\d{4})\s*a\s*(\d{2}\/\d{2}\/\d{4})/) || ["","",""])[1];
+                let refExtenso = "PERÍODO DESC.";
+                if(periodoRaw) {
+                    const [d, m, a] = periodoRaw.split('/');
+                    const mesNome = MONTHS_FULL[parseInt(m)-1];
+                    refExtenso = `${mesNome} ${a}`;
                 }
 
-                // --- 2. COMPETÊNCIA ---
-                const periodoMatch = fullText.match(/Período de Apuração:\s*(\d{2}\/\d{2}\/\d{4})\s*a\s*(\d{2}\/\d{2}\/\d{4})/);
-                let refExtenso = "REF";
-                if(periodoMatch) {
-                    const [d, m, a] = periodoMatch[2].split('/');
-                    refExtenso = `${MONTHS_FULL[parseInt(m)-1]}/${a}`; 
-                }
+                // 3. RBT12
+                // Busca RBT12 no texto
+                const rbt12Match = fullText.match(/Receita bruta acumulada nos doze meses anteriores ao PA \(RBT12\)\s*([\d\.,]+)/);
+                const rbt12 = rbt12Match ? rbt12Match[1] : "0,00";
 
-                // --- 3. RBT12 (Busca "RBT12" e o próximo valor) ---
-                let rbt12 = "0,00";
-                const rbtIndex = fullText.indexOf("RBT12");
-                if (rbtIndex !== -1) {
-                    // Pega um pedaço do texto logo após o RBT12
-                    const chunk = fullText.substring(rbtIndex, rbtIndex + 100);
-                    const valMatch = chunk.match(/([\d\.]+,[\d]{2})/);
-                    if (valMatch) rbt12 = valMatch[1];
-                }
-
-                // --- 4. ATIVIDADES (Loop por blocos) ---
+                // 4. Atividades e Impostos Detalhados (Loop por "Valor do Débito por Tributo para a Atividade")
                 const atividades = [];
-                let totalMensal = 0;
-
-                // Tenta pegar o total do cabeçalho
-                const totalGeralMatch = fullText.match(/Receita Bruta do PA \(RPA\) Competência.*?([\d\.]+,[\d]{2})/);
-                if (totalGeralMatch) {
-                    totalMensal = parseFloat(totalGeralMatch[1].replace('.','').replace(',','.'));
-                }
-
                 const parts = fullText.split("Valor do Débito por Tributo para a Atividade");
+                
+                // Pula a parte 0 (antes da primeira atividade)
                 for(let i=1; i<parts.length; i++) {
                     const part = parts[i];
                     
-                    // Descrição
-                    let desc = "Atividade " + i;
-                    const recIndex = part.indexOf("Receita Bruta Informada");
-                    if (recIndex !== -1) {
-                        // Pega o texto anterior à receita
-                        let rawDesc = part.substring(0, recIndex).trim();
-                        // Remove lixo do início (ex: " (R$) :")
-                        desc = rawDesc.replace(/^\s*\(R\$\)\s*:\s*/, '').replace(/^[^a-zA-Z]*/, '').trim();
-                    }
+                    // Descrição (está logo no início da parte até "Receita Bruta Informada")
+                    const descMatch = part.split("Receita Bruta Informada")[0];
+                    let desc = descMatch.replace(/^\s*\(R\$\)\s*:\s*/, '').trim();
+                    // Remove lixo do início se houver
+                    desc = desc.replace(/^[^a-zA-Z]*/, ''); 
 
-                    // Receita
-                    const recMatch = part.match(/Receita Bruta Informada.*?([\d\.]+,[\d]{2})/);
+                    // Receita Bruta
+                    const recMatch = part.match(/Receita Bruta Informada:\s*R\$\s*([\d\.,]+)/);
                     const receita = recMatch ? recMatch[1] : "0,00";
+
+                    // Tabela de Impostos (Busca a sequencia de 8 ou 9 valores)
+                    // Padrão: IRPJ CSLL COFINS PIS CPP ICMS IPI ISS (Total)
+                    // Busca sequencia de numeros com virgula
+                    const taxRegex = /((?:[\d\.]+,[\d]{2}\s+){8}[\d\.]+,[\d]{2})/;
+                    const tableMatch = part.match(taxRegex);
                     
-                    // Se não achou total no cabeçalho, soma aqui
-                    if (!totalGeralMatch) {
-                        totalMensal += parseFloat(receita.replace('.','').replace(',','.'));
-                    }
-
-                    // Impostos (Pega os primeiros 9 valores após a receita)
                     let taxValues = ["0,00","0,00","0,00","0,00","0,00","0,00","0,00","0,00","0,00"];
-                    if (recIndex !== -1) {
-                        const afterReceita = part.substring(recIndex + 25);
-                        const allNumbers = afterReceita.match(/([\d\.]+,[\d]{2})/g) || [];
-                        if(allNumbers.length >= 9) taxValues = allNumbers.slice(0, 9);
+                    
+                    if(tableMatch) {
+                        // Limpa espaços e cria array
+                        taxValues = tableMatch[1].trim().split(/\s+/);
                     }
 
-                    atividades.push({ desc: desc, receita: receita, taxes: taxValues });
+                    atividades.push({
+                        desc: desc,
+                        receita: receita,
+                        taxes: taxValues // Array com IRPJ, CSLL, COFINS, PIS, CPP, ICMS, IPI, ISS, Total
+                    });
                 }
 
-                // Formata o total se não foi pego direto
-                let receitaTotalStr = totalGeralMatch ? totalGeralMatch[1] : totalMensal.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-
-                if(atividades.length > 0 || cnpj !== "CNPJ NÃO ENCONTRADO") {
-                     h.push({ 
-                         empresa: razao, 
-                         cnpj: cnpj, 
-                         ref: refExtenso, 
-                         rbt12: rbt12, 
-                         receitaMensal: receitaTotalStr, 
-                         atividades: atividades 
-                     });
-                    processados++;
-                }
+                h.push({
+                    empresa: razao,
+                    cnpj: cnpj,
+                    ref: refExtenso, // Ex: Novembro 2025
+                    rbt12: rbt12,
+                    atividades: atividades
+                });
+                processados++;
             }
 
             localStorage.setItem('pgdas_history', JSON.stringify(h));
-            if(processados === 0) alert("ATENÇÃO: Nenhum dado extraído. Verifique se o PDF contém texto selecionável.");
-            else alert(`${processados} PGDAS processado(s) com sucesso!`);
+            alert(`${processados} PGDAS Processados!`);
             renderPGDASHistory();
         }
 
         function renderPGDASHistory() {
             const h = JSON.parse(localStorage.getItem('pgdas_history')) || [];
-            
             document.getElementById('tbody-pgdas').innerHTML = h.map((item, idx) => `
-                <tr class="align-top border-b border-zinc-800">
-                    <td class="font-bold text-white text-[12px] whitespace-nowrap">
-                        ${item.empresa}<br>
-                        <span class="text-zinc-500 font-mono text-[10px]">${item.cnpj}</span>
-                    </td>
-                    <td class="text-center">
-                        <span class="text-[12px] font-black uppercase text-white">${item.ref}</span>
-                    </td>
-                    <td class="text-right">
-                        <span class="text-[12px] font-black text-white font-mono">${item.rbt12}</span>
-                    </td>
-                    <td class="text-right">
-                        <span class="text-[14px] font-black text-white font-mono">${item.receitaMensal}</span>
-                    </td>
-                    <td class="pgdas-detail-cell">
-                        ${item.atividades.map(ativ => `
-                            <div class="pgdas-activity-block">
-                                <div class="pgdas-desc">${ativ.desc}</div>
-                                <div class="pgdas-rec-info">RECEITA INFORMADA: <span>R$ ${ativ.receita}</span></div>
-                                <table class="mini-tax-table">
-                                    <thead>
-                                        <tr><th>IRPJ</th><th>CSLL</th><th>COFINS</th><th>PIS</th><th>CPP</th><th>ICMS</th><th>IPI</th><th>ISS</th><th>TOTAL</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>${ativ.taxes.map(t => `<td>${t}</td>`).join('')}</tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        `).join('')}
-                    </td>
-                    <td class="align-middle text-center">
-                         <div class="flex flex-col gap-2 items-center">
-                            <button onclick="viewPGDAS(${idx})" class="btn-orange text-[9px] w-full justify-center"><i class="fas fa-file-pdf"></i> VER PDF</button>
-                            <i class="fas fa-trash text-red-500 cursor-pointer text-xs" onclick="deleteHistory('pgdas', ${idx})"></i>
+                <tr>
+                    <td><div class="font-bold text-white text-[11px]">${item.empresa}</div><div class="text-[9px] text-zinc-500">${item.cnpj}</div></td>
+                    <td><span class="badge badge-success">${item.ref}</span></td>
+                    <td class="text-[10px] text-zinc-400">${item.atividades.length} Atividades</td>
+                    <td class="font-bold text-blue-400">RBT12: ${item.rbt12}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <button onclick="viewPGDAS(${idx})" class="btn-orange text-[9px]"><i class="fas fa-eye"></i> Visualizar</button>
+                            <i class="fas fa-trash text-red-500 cursor-pointer" onclick="deleteHistory('pgdas', ${idx})"></i>
                         </div>
                     </td>
                 </tr>
@@ -518,19 +517,45 @@
         function viewPGDAS(idx) {
             const item = JSON.parse(localStorage.getItem('pgdas_history'))[idx];
             const body = document.getElementById('modal-pgdas-body');
+            
             let html = `
-                <h2 class="text-xl font-bold mb-4 text-white">${item.empresa}</h2>
-                ${item.atividades.map(ativ => `
-                     <div class="pgdas-activity-block" style="border-bottom: 1px dashed #333; padding-bottom: 10px;">
-                        <div class="pgdas-desc">${ativ.desc}</div>
-                        <div class="pgdas-rec-info">Receita: R$ ${ativ.receita}</div>
-                        <table class="mini-tax-table">
-                            <thead><tr><th>IRPJ</th><th>CSLL</th><th>COFINS</th><th>PIS</th><th>CPP</th><th>ICMS</th><th>IPI</th><th>ISS</th><th>Total</th></tr></thead>
-                            <tbody><tr>${ativ.taxes.map(t => `<td>${t}</td>`).join('')}</tr></tbody>
-                        </table>
+                <div class="flex justify-between items-end mb-6 border-b border-zinc-700 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">${item.empresa}</h2>
+                        <p class="text-zinc-500 text-xs font-mono">${item.cnpj}</p>
                     </div>
-                `).join('')}
+                    <div class="text-right">
+                        <p class="text-orange-500 font-bold text-xl uppercase">${item.ref}</p>
+                        <p class="text-blue-400 text-sm font-bold">RBT12: R$ ${item.rbt12}</p>
+                    </div>
+                </div>
             `;
+
+            if(item.atividades.length === 0) {
+                html += '<p class="text-center text-zinc-500">Nenhuma atividade com movimentação identificada.</p>';
+            } else {
+                item.atividades.forEach(ativ => {
+                    html += `
+                        <div class="pgdas-block">
+                            <div class="pgdas-title">${ativ.desc}</div>
+                            <div class="pgdas-rec">Receita Bruta Informada: <span class="text-green-400">R$ ${ativ.receita}</span></div>
+                            <table class="tax-table">
+                                <thead>
+                                    <tr>
+                                        <th>IRPJ</th><th>CSLL</th><th>COFINS</th><th>PIS/PASEP</th><th>CPP</th><th>ICMS</th><th>IPI</th><th>ISS</th><th>TOTAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        ${ativ.taxes.map(t => `<td>${t}</td>`).join('')}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                });
+            }
+
             body.innerHTML = html;
             document.getElementById('modal-pgdas').style.display = 'flex';
         }
@@ -543,6 +568,7 @@
                 type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
             }
         }
+
         function deleteHistory(type, idx) {
             const key = type === 'xml' ? 'xml_audit_history' : 'pgdas_history';
             const h = JSON.parse(localStorage.getItem(key));
@@ -550,14 +576,20 @@
             localStorage.setItem(key, JSON.stringify(h));
             type === 'xml' ? renderXMLHistory() : renderPGDASHistory();
         }
+
         function toggleChecks(source) { document.querySelectorAll('.xml-sel').forEach(c => c.checked = source.checked); }
+        
         function exportBatchByCNPJ() {
             const h = JSON.parse(localStorage.getItem('xml_audit_history')) || [];
             const selectedIdx = Array.from(document.querySelectorAll('.xml-sel:checked')).map(cb => parseInt(cb.dataset.idx));
             if(!selectedIdx.length) return alert("Selecione os itens!");
             generateAndDownloadCSV(selectedIdx.map(i => h[i]));
         }
-        function downloadCSV(idx) { const item = JSON.parse(localStorage.getItem('xml_audit_history'))[idx]; generateAndDownloadCSV([item]); }
+
+        function downloadCSV(idx) {
+            const item = JSON.parse(localStorage.getItem('xml_audit_history'))[idx];
+            generateAndDownloadCSV([item]);
+        }
 
         // --- AUDITOR MOCK ---
         function populateAuditSelect() {
@@ -566,16 +598,27 @@
             sel.innerHTML = '<option value="">Selecione...</option>';
             h.forEach((item, idx) => { sel.innerHTML += `<option value="${idx}">${item.empresa} - ${item.ref}</option>`; });
         }
+
         function runAudit() {
             const idx = document.getElementById('audit-selector').value;
             if(idx === "") return;
             const data = JSON.parse(localStorage.getItem('xml_audit_history'))[idx];
             const divergencias = data.itens.filter(i => (i.NCM.startsWith('22') || i.NCM.startsWith('40')) && i.cst_atual !== '04' && i.cst_atual !== '06');
+            
             const tbody = document.getElementById('tbody-retificacao');
-            tbody.innerHTML = divergencias.map(i => `<tr><td><span class="badge badge-warn">REVISAR</span></td><td>${i.Prod}<br><small class="text-orange-500">${i.NCM}</small></td><td>R$ ${i.vTot.toFixed(2)}</td><td class="text-red-500">${i.cst_atual || 'Trib'}</td><td class="text-green-500">04/06 Mono/Zero</td></tr>`).join('');
+            tbody.innerHTML = divergencias.map(i => `
+                <tr>
+                    <td><span class="badge badge-warn">REVISAR</span></td>
+                    <td>${i.Prod}<br><small class="text-orange-500">${i.NCM}</small></td>
+                    <td>R$ ${i.vTot.toFixed(2)}</td>
+                    <td class="text-red-500">${i.cst_atual || 'Trib'}</td>
+                    <td class="text-green-500">04/06 Mono/Zero</td>
+                </tr>
+            `).join('');
             currentAuditResults = { ...data, itens: divergencias, total: divergencias.reduce((acc, i) => acc + (i.vTot * 0.0365), 0) };
             document.getElementById('audit-results').classList.remove('hidden');
         }
+
         function saveConsultation() {
             if(!currentAuditResults) return;
             const g = JSON.parse(localStorage.getItem('global_audit_history')) || [];
@@ -584,6 +627,7 @@
             alert("Salvo!");
             renderGlobalHistory();
         }
+
         function renderGlobalHistory() {
             const h = JSON.parse(localStorage.getItem('global_audit_history')) || [];
             document.getElementById('tbody-global').innerHTML = h.map(i => `<tr><td>${i.data}</td><td>${i.empresa}</td><td>${i.ref}</td><td>${formatMoney(i.valorRec)}</td><td>${i.status}</td></tr>`).join('');
