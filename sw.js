@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fiscal-audit-suite-v16.0-integrated';
+const CACHE_NAME = 'fiscal-audit-suite-v16.1-integrated';
 
 // Lista de ativos para cache (incluindo legislação e bibliotecas externas)
 const ASSETS = [
@@ -55,3 +55,4 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
