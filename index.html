@@ -1,144 +1,32 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCALAUDIT - V16.6</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        :root { --orange-main: #f97316; --bg-dark: #000; }
-        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; border-right: 1px solid #1a1a1a; flex-shrink: 0; }
-        .nav-link { padding: 12px 20px; font-size: 11px; font-weight: 700; color: #666; cursor: pointer; display: flex; align-items: center; gap: 10px; border-left: 3px solid transparent; }
-        .nav-link.active { color: #f97316; background: rgba(249,115,22,0.1); border-left-color: #f97316; }
-        .main-content { flex: 1; overflow-y: auto; padding: 40px; background: #050505; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; }
-        th { color: #f97316; font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 2px solid #111; }
-        td { padding: 15px; border-bottom: 1px solid #111; vertical-align: top; font-size: 11px; }
-        .tag-trib { background: #111; border: 1px solid #222; padding: 2px 4px; border-radius: 3px; font-size: 9px; color: #aaa; margin: 1px; display: inline-block; }
-    </style>
-</head>
-<body>
-    <aside class="sidebar">
-        <div class="p-8"><h1 class="text-xl font-black italic">FISCAL<span class="text-orange-500">AUDIT</span></h1></div>
-        <nav>
-            <div class="nav-link active" onclick="showTab('carga', this)"><i class="fas fa-upload"></i> Módulo de Carga</div>
-            <div class="nav-link" onclick="showTab('hist', this)"><i class="fas fa-history"></i> Histórico PGDAS</div>
-        </nav>
-    </aside>
+const CACHE_NAME = 'fiscal-audit-v16.5';
+const ASSETS = [
+    './',
+    './index.html',
+    './sw.js',
+    'https://cdn.tailwindcss.com',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
+];
 
-    <main class="main-content">
-        <div id="carga" class="tab-content active">
-            <h2 class="text-3xl font-black mb-8 italic uppercase text-white">Módulo de Carga</h2>
-            <div class="max-w-xl p-10 border-2 border-dashed border-zinc-800 rounded-2xl text-center hover:bg-zinc-900/50 cursor-pointer" onclick="document.getElementById('file-in').click()">
-                <p id="file-label" class="text-zinc-500 font-bold uppercase text-xs">Selecione o PDF do PGDAS</p>
-                <input type="file" id="file-in" class="hidden" multiple onchange="updateLabel(this.files)">
-            </div>
-            <button onclick="processarPDFs()" id="btn-run" class="mt-6 w-full max-w-xl bg-orange-600 text-black font-black py-4 rounded uppercase text-xs disabled:opacity-30" disabled>Processar e Salvar</button>
-        </div>
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    );
+});
 
-        <div id="hist" class="tab-content">
-            <h2 class="text-3xl font-black mb-8 italic uppercase text-white">Extratos PGDAS Analisados</h2>
-            <div class="bg-zinc-950 border border-zinc-900 rounded-xl overflow-hidden">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Empresa / CNPJ</th>
-                            <th>Competência</th>
-                            <th>RTB12</th>
-                            <th>Receita Mensal</th>
-                            <th>Atividades / Tributos</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-pgdas"></tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((keys) => Promise.all(
+            keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        ))
+    );
+    self.clients.claim();
+});
 
-    <script>
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-        let filesToProcess = [];
-
-        function showTab(id, el) {
-            document.querySelectorAll('.tab-content, .nav-link').forEach(x => x.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active');
-            if(id === 'hist') renderLista();
-        }
-
-        function updateLabel(files) {
-            filesToProcess = Array.from(files);
-            document.getElementById('file-label').innerText = `${files.length} Arquivo(s) Selecionado(s)`;
-            document.getElementById('btn-run').disabled = false;
-        }
-
-        async function processarPDFs() {
-            const db = JSON.parse(localStorage.getItem('pgdas_data') || '[]');
-            for(let file of filesToProcess) {
-                const doc = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                let text = "";
-                for(let i=1; i<=doc.numPages; i++) {
-                    const page = await doc.getPage(i);
-                    const content = await page.getTextContent();
-                    text += content.items.map(m => m.str).join(" ") + " ";
-                }
-
-                const info = {
-                    empresa: (text.match(/Nome empresarial:\s*(.*?)\s*Data/i) || ["","Empresa"])[1].trim(),
-                    cnpj: (text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/) || [""])[0],
-                    periodo: (text.match(/Período de Apuração:\s*([\d\/]+)/) || ["",""])[1],
-                    rpa: (text.match(/Receita Bruta do PA \(RPA\).*?([\d\.,]+)/i) || ["","0,00"])[1],
-                    rbt12: (text.match(/Receita bruta acumulada.*?\(RBT12\).*?([\d\.,]+)/i) || ["","0,00"])[1],
-                    atividades: []
-                };
-
-                const regexAtiv = /Atividade \(R\$\):\s*(.*?)\s*Receita Bruta Informada:\s*R\$\s*([\d\.,]+)[\s\S]*?Total\s*([\d\.,\s]+)/gi;
-                let m;
-                while((m = regexAtiv.exec(text)) !== null) {
-                    info.atividades.push({ nome: m[1].trim(), valor: m[2], tribs: m[3].trim().split(/\s+/).filter(v => v.includes(',')) });
-                }
-                db.push(info);
-            }
-            localStorage.setItem('pgdas_data', JSON.stringify(db));
-            alert("Dados extraídos e salvos!");
-            showTab('hist', document.querySelectorAll('.nav-link')[1]);
-        }
-
-        function renderLista() {
-            const data = JSON.parse(localStorage.getItem('pgdas_data') || '[]');
-            document.getElementById('lista-pgdas').innerHTML = data.map((i, idx) => `
-                <tr class="hover:bg-zinc-900/30">
-                    <td><div class="font-black text-white">${i.empresa}</div><div class="text-[9px] text-zinc-600 font-mono">${i.cnpj}</div></td>
-                    <td class="text-orange-500 font-black">${i.periodo}</td>
-                    <td class="text-white font-bold">R$ ${i.rbt12}</td>
-                    <td class="text-white font-bold">R$ ${i.rpa}</td>
-                    <td>
-                        ${i.atividades.map(a => `
-                            <div class="mb-2 p-2 bg-black border border-zinc-900 rounded">
-                                <div class="text-[8px] text-zinc-500 uppercase font-bold mb-1">${a.nome.substring(0,50)}...</div>
-                                <div class="text-[9px] text-white font-bold mb-1 text-orange-400">REC: R$ ${a.valor}</div>
-                                <div>${a.tribs.map(t => `<span class="tag-trib">${t}</span>`).join('')}</div>
-                            </div>
-                        `).join('')}
-                    </td>
-                    <td><button onclick="remover(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button></td>
-                </tr>
-            `).join('');
-        }
-        function remover(idx) {
-            let d = JSON.parse(localStorage.getItem('pgdas_data'));
-            d.splice(idx,1);
-            localStorage.setItem('pgdas_data', JSON.stringify(d));
-            renderLista();
-        }
-    </script>
-</body>
-</html>
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request).then((res) => res || fetch(event.request))
+    );
+});
