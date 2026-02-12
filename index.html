@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FISCALAUDIT - Auditoria Integrada</title>
+    <title>FISCALAUDIT - V16.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        :root { --orange-main: #f97316; --bg-dark: #000000; --card-bg: #0a0a0a; --border-color: #1a1a1a; }
-        body { background-color: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .nav-link { padding: 12px 20px; font-size: 11px; font-weight: 700; color: #666; cursor: pointer; display: flex; align-items: center; gap: 10px; text-transform: uppercase; border-left: 3px solid transparent; }
-        .nav-link.active { color: var(--orange-main); background: rgba(249,115,22,0.1); border-left-color: var(--orange-main); }
+        :root { --orange-main: #f97316; --bg-dark: #000; }
+        body { background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; border-right: 1px solid #1a1a1a; flex-shrink: 0; }
+        .nav-link { padding: 12px 20px; font-size: 11px; font-weight: 700; color: #666; cursor: pointer; display: flex; align-items: center; gap: 10px; border-left: 3px solid transparent; }
+        .nav-link.active { color: #f97316; background: rgba(249,115,22,0.1); border-left-color: #f97316; }
         .main-content { flex: 1; overflow-y: auto; padding: 40px; background: #050505; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { color: var(--orange-main); font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 2px solid #111; letter-spacing: 1px; }
-        td { padding: 15px; border-bottom: 1px solid #111; vertical-align: top; }
-        .tag-trib { background: #111; border: 1px solid #222; padding: 2px 5px; border-radius: 3px; font-size: 9px; color: #aaa; margin: 1px; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; }
+        th { color: #f97316; font-size: 10px; text-transform: uppercase; padding: 15px; text-align: left; border-bottom: 2px solid #111; }
+        td { padding: 15px; border-bottom: 1px solid #111; vertical-align: top; font-size: 11px; }
+        .tag-trib { background: #111; border: 1px solid #222; padding: 2px 4px; border-radius: 3px; font-size: 9px; color: #aaa; margin: 1px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -34,19 +34,16 @@
 
     <main class="main-content">
         <div id="carga" class="tab-content active">
-            <h2 class="text-3xl font-black mb-8 italic uppercase">Módulo de Carga</h2>
+            <h2 class="text-3xl font-black mb-8 italic uppercase text-white">Módulo de Carga</h2>
             <div class="max-w-xl p-10 border-2 border-dashed border-zinc-800 rounded-2xl text-center hover:bg-zinc-900/50 cursor-pointer" onclick="document.getElementById('file-in').click()">
-                <p id="file-label" class="text-zinc-500 font-bold uppercase text-xs">Arraste ou Selecione o PGDAS (PDF)</p>
+                <p id="file-label" class="text-zinc-500 font-bold uppercase text-xs">Selecione o PDF do PGDAS</p>
                 <input type="file" id="file-in" class="hidden" multiple onchange="updateLabel(this.files)">
             </div>
-            <button onclick="processarPDFs()" id="btn-run" class="mt-6 w-full max-w-xl bg-orange-600 hover:bg-orange-500 text-black font-black py-4 rounded uppercase text-xs tracking-widest disabled:opacity-30" disabled>Extrair e Salvar no Histórico</button>
+            <button onclick="processarPDFs()" id="btn-run" class="mt-6 w-full max-w-xl bg-orange-600 text-black font-black py-4 rounded uppercase text-xs disabled:opacity-30" disabled>Processar e Salvar</button>
         </div>
 
         <div id="hist" class="tab-content">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-black italic uppercase">Extratos PGDAS Analisados</h2>
-                <button onclick="apagarTudo()" class="bg-red-900/20 text-red-500 border border-red-900/50 px-4 py-2 rounded-lg text-[10px] font-bold uppercase">Limpar Lista</button>
-            </div>
+            <h2 class="text-3xl font-black mb-8 italic uppercase text-white">Extratos PGDAS Analisados</h2>
             <div class="bg-zinc-950 border border-zinc-900 rounded-xl overflow-hidden">
                 <table>
                     <thead>
@@ -56,7 +53,7 @@
                             <th>RTB12</th>
                             <th>Receita Mensal</th>
                             <th>Atividades / Tributos</th>
-                            <th>Total DAS</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody id="lista-pgdas"></tbody>
@@ -79,7 +76,7 @@
 
         function updateLabel(files) {
             filesToProcess = Array.from(files);
-            document.getElementById('file-label').innerText = `${files.length} Arquivo(s) Preparado(s)`;
+            document.getElementById('file-label').innerText = `${files.length} Arquivo(s) Selecionado(s)`;
             document.getElementById('btn-run').disabled = false;
         }
 
@@ -95,13 +92,12 @@
                 }
 
                 const info = {
-                    empresa: (text.match(/Nome empresarial:\s*(.*?)\s*Data/i) || ["","Empresa não lida"])[1].trim(),
+                    empresa: (text.match(/Nome empresarial:\s*(.*?)\s*Data/i) || ["","Empresa"])[1].trim(),
                     cnpj: (text.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/) || [""])[0],
                     periodo: (text.match(/Período de Apuração:\s*([\d\/]+)/) || ["",""])[1],
                     rpa: (text.match(/Receita Bruta do PA \(RPA\).*?([\d\.,]+)/i) || ["","0,00"])[1],
                     rbt12: (text.match(/Receita bruta acumulada.*?\(RBT12\).*?([\d\.,]+)/i) || ["","0,00"])[1],
-                    atividades: [],
-                    total: (text.match(/Valor Total do DAS:\s*R\$\s*([\d\.,]+)/i) || ["","0,00"])[1]
+                    atividades: []
                 };
 
                 const regexAtiv = /Atividade \(R\$\):\s*(.*?)\s*Receita Bruta Informada:\s*R\$\s*([\d\.,]+)[\s\S]*?Total\s*([\d\.,\s]+)/gi;
@@ -112,33 +108,37 @@
                 db.push(info);
             }
             localStorage.setItem('pgdas_data', JSON.stringify(db));
-            alert("Sucesso! Dados extraídos conforme o modelo.");
+            alert("Dados extraídos e salvos!");
             showTab('hist', document.querySelectorAll('.nav-link')[1]);
         }
 
         function renderLista() {
             const data = JSON.parse(localStorage.getItem('pgdas_data') || '[]');
-            document.getElementById('lista-pgdas').innerHTML = data.map(i => `
+            document.getElementById('lista-pgdas').innerHTML = data.map((i, idx) => `
                 <tr class="hover:bg-zinc-900/30">
-                    <td><div class="font-black text-white text-[11px]">${i.empresa}</div><div class="text-[9px] text-zinc-600 font-mono">${i.cnpj}</div></td>
-                    <td><span class="text-orange-500 font-black text-[10px] uppercase">${i.periodo}</span></td>
-                    <td class="font-bold text-white text-[11px]">R$ ${i.rbt12}</td>
-                    <td class="font-bold text-white text-[11px]">R$ ${i.rpa}</td>
+                    <td><div class="font-black text-white">${i.empresa}</div><div class="text-[9px] text-zinc-600 font-mono">${i.cnpj}</div></td>
+                    <td class="text-orange-500 font-black">${i.periodo}</td>
+                    <td class="text-white font-bold">R$ ${i.rbt12}</td>
+                    <td class="text-white font-bold">R$ ${i.rpa}</td>
                     <td>
                         ${i.atividades.map(a => `
-                            <div class="mb-3 p-2 bg-black border border-zinc-900 rounded">
-                                <div class="text-[8px] text-zinc-500 uppercase font-bold mb-1">${a.nome.substring(0,60)}...</div>
-                                <div class="text-[10px] text-white font-bold mb-1">Rec: R$ ${a.valor}</div>
+                            <div class="mb-2 p-2 bg-black border border-zinc-900 rounded">
+                                <div class="text-[8px] text-zinc-500 uppercase font-bold mb-1">${a.nome.substring(0,50)}...</div>
+                                <div class="text-[9px] text-white font-bold mb-1 text-orange-400">REC: R$ ${a.valor}</div>
                                 <div>${a.tribs.map(t => `<span class="tag-trib">${t}</span>`).join('')}</div>
                             </div>
                         `).join('')}
                     </td>
-                    <td class="font-black text-green-500 text-[11px]">R$ ${i.total}</td>
+                    <td><button onclick="remover(${idx})" class="text-red-600"><i class="fas fa-trash"></i></button></td>
                 </tr>
             `).join('');
         }
-
-        function apagarTudo() { localStorage.removeItem('pgdas_data'); renderLista(); }
+        function remover(idx) {
+            let d = JSON.parse(localStorage.getItem('pgdas_data'));
+            d.splice(idx,1);
+            localStorage.setItem('pgdas_data', JSON.stringify(d));
+            renderLista();
+        }
     </script>
 </body>
 </html>
