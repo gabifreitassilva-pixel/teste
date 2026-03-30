@@ -468,23 +468,52 @@
     // ==========================================
     // API RECEITA FEDERAL (BRASIL API)
     // ==========================================
-    window.buscarDadosReceita = async function(cnpjStr) {
+    window.buscarDadosReceita = async function(cnpjStr, anoConsultaStr) {
         const cnpjLimpo = cnpjStr.replace(/\D/g, '');
         if (cnpjLimpo.length !== 14) return null;
+        
+        const anoConsultaNum = parseInt(anoConsultaStr) || new Date().getFullYear();
         
         try {
             const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
             if (response.ok) {
                 const data = await response.json();
                 
+                // Lógica Inteligente de Histórico (Ano Base vs Datas da Receita)
+                function estavaNoRegime(opcaoAtual, dataOpcao, dataExclusao, anoBase) {
+                    if (opcaoAtual && !dataExclusao) return true; // Ativa até hoje
+                    if (!dataOpcao) return opcaoAtual; // Fallback se a API ocultar as datas
+                    
+                    let anoOpcao = parseInt(dataOpcao.substring(0, 4));
+                    let ativo = (anoOpcao <= anoBase); // Se entrou no regime ANTES ou DURANTE o ano consultado
+                    
+                    if (dataExclusao) {
+                        let anoExclusao = parseInt(dataExclusao.substring(0, 4));
+                        if (anoExclusao < anoBase) {
+                            ativo = false; // Foi excluída ANTES do ano base que estamos olhando
+                        }
+                    }
+                    return ativo;
+                }
+
+                // Aplica a checagem no ano específico
+                let eraMei = estavaNoRegime(data.opcao_pelo_mei, data.data_opcao_pelo_mei, data.data_exclusao_do_mei, anoConsultaNum);
+                let eraSimples = estavaNoRegime(data.opcao_pelo_simples, data.data_opcao_pelo_simples, data.data_exclusao_do_simples, anoConsultaNum);
+
                 let regime = "Normal (Lucro Presumido/Real)";
-                if (data.opcao_pelo_mei) regime = "MEI";
-                else if (data.opcao_pelo_simples) regime = "Simples Nacional";
+                if (eraMei) regime = "MEI";
+                else if (eraSimples) regime = "Simples Nacional";
                 
+                // Lógica de Histórico para Situação Cadastral (Ativa/Baixada)
                 let situacao = data.descricao_situacao_cadastral || "DESCONHECIDA";
                 if (situacao === "BAIXADA" && data.data_situacao_cadastral) {
-                    const dataFormatada = data.data_situacao_cadastral.split('-').reverse().join('/');
-                    situacao = `BAIXADA EM ${dataFormatada}`;
+                    let anoBaixa = parseInt(data.data_situacao_cadastral.substring(0, 4));
+                    if (anoBaixa > anoConsultaNum) {
+                        situacao = "ATIVA (No Ano-Base)"; // Fechou depois do ano consultado
+                    } else {
+                        const dataFormatada = data.data_situacao_cadastral.split('-').reverse().join('/');
+                        situacao = `BAIXADA EM ${dataFormatada}`;
+                    }
                 }
 
                 return {
@@ -569,10 +598,10 @@
             nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim() || "EMPRESA";
             cnpj = window.formatarCNPJ(cnpj);
 
-            // Consulta Inteligente na Receita ao criar nova empresa
+            // Consulta Inteligente na Receita ao criar nova empresa (COM ANO HISTÓRICO)
             let regime = null;
             let situacao = null;
-            let apiData = await window.buscarDadosReceita(cnpj);
+            let apiData = await window.buscarDadosReceita(cnpj, anoSelecionado);
             
             if (apiData) {
                 if(nome === "EMPRESA" || nome.length < 3) nome = apiData.nome;
@@ -701,11 +730,11 @@
         nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim();
         if (nome.length < 3) nome = "EMPRESA NÃO IDENTIFICADA";
 
-        // Sempre busca na API para Auditoria ter as badges também
+        // Sempre busca na API para Auditoria ter as badges também (COM ANO HISTÓRICO)
         let regime = null;
         let situacao = null;
         if (cnpj !== "N/A") {
-            let apiData = await window.buscarDadosReceita(cnpj);
+            let apiData = await window.buscarDadosReceita(cnpj, ano);
             if (apiData) {
                 if (nome === "EMPRESA NÃO IDENTIFICADA") nome = apiData.nome;
                 regime = apiData.regime;
