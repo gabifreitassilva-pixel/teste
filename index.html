@@ -1,32 +1,1009 @@
-const CACHE_NAME = 'fiscal-audit-v16.5';
-const ASSETS = [
-    './',
-    './index.html',
-    './sw.js',
-    'https://cdn.tailwindcss.com',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
-];
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor DEFES 2025</title>
+    <!-- BIBLIOTECA PARA LER PDF (DEFIS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+    <style>
+        :root {
+            --bg-black: #0a0a0a;
+            --card-gray: #1a1a1a;
+            --primary-orange: #ff6600;
+            --primary-orange-hover: #e65c00;
+            --text-white: #f0f0f0;
+            --text-muted: #a0a0a0;
+            --border-gray: #333333;
+            --danger-red: #ff4444;
+            --success-green: #00C851;
+            --warning-yellow: #ffbb33;
+        }
 
-self.addEventListener('install', (event) => {
-    self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-    );
-});
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => Promise.all(
-            keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-        ))
-    );
-    self.clients.claim();
-});
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-white);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((res) => res || fetch(event.request))
-    );
-});
+        /* Menu Lateral */
+        .sidebar {
+            width: 250px;
+            background-color: var(--card-gray);
+            border-right: 2px solid var(--border-gray);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary-orange);
+            background: #111;
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary-orange);
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            padding: 15px 0;
+        }
+
+        .tab-btn {
+            padding: 18px 25px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.3s;
+            border-left: 4px solid transparent;
+        }
+
+        .tab-btn:hover {
+            background-color: #252525;
+            color: var(--text-white);
+        }
+
+        .tab-btn.active {
+            background-color: #2a2a2a;
+            color: var(--primary-orange);
+            border-left: 4px solid var(--primary-orange);
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background-color: var(--bg-black);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 25px;
+            color: var(--text-white);
+            border-bottom: 1px solid var(--border-gray);
+            padding-bottom: 10px;
+        }
+
+        /* Controles */
+        .controls-panel {
+            background-color: var(--card-gray);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-gray);
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            background-color: #121212;
+            color: var(--text-white);
+            border: 1px solid var(--border-gray);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 100px;
+            resize: vertical;
+            margin-top: 10px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-orange);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button.btn-primary {
+            background-color: var(--primary-orange);
+            color: #000;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button.btn-primary:hover { background-color: var(--primary-orange-hover); }
+
+        button.btn-secondary {
+            background-color: #333;
+            color: var(--text-white);
+            padding: 12px 20px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button.btn-secondary:hover { background-color: #444; }
+
+        /* Tabelas */
+        .table-container {
+            background-color: var(--card-gray);
+            border-radius: 8px;
+            border: 1px solid var(--border-gray);
+            overflow-x: auto;
+            max-height: 60vh;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #000;
+            color: var(--primary-orange);
+            padding: 10px 15px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-gray);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-gray);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        tr:hover td { background-color: #222; }
+
+        .empresa-nome { font-weight: bold; font-size: 15px; color: var(--text-white); display: block; }
+        .empresa-cnpj { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: block; }
+
+        .btn-action {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-gray);
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin: 2px;
+            cursor: pointer;
+        }
+
+        .btn-action:hover { border-color: var(--primary-orange); color: var(--primary-orange); }
+
+        /* Cores de Status de Auditoria */
+        .status-ok { color: var(--success-green); font-weight: bold; }
+        .status-alerta { color: var(--danger-red); font-weight: bold; }
+        .status-info { color: #33b5e5; font-weight: bold; }
+
+        /* Linha com Erro (Fundo Vermelho) */
+        .linha-erro td {
+            background-color: rgba(255, 68, 68, 0.15) !important;
+            border-bottom: 1px solid rgba(255, 68, 68, 0.3) !important;
+        }
+        .linha-erro:hover td {
+            background-color: rgba(255, 68, 68, 0.25) !important;
+        }
+
+        /* Filtros de Coluna (Estilo Excel com Dropdown) */
+        .col-filter {
+            width: 100%;
+            margin-top: 8px;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #555;
+            font-size: 12px;
+            font-weight: normal;
+            cursor: pointer;
+            appearance: auto;
+        }
+        .col-filter:focus {
+            outline: none;
+            border-color: var(--primary-orange);
+            background: #333;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-black); }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-orange); }
+
+        /* Receita Federal Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-right: 5px;
+            margin-top: 6px;
+            font-weight: bold;
+        }
+        .badge-loading { background: #333; color: #aaa; border: 1px solid #555; }
+    </style>
+</head>
+<body>
+
+<!-- INPUT GLOBAL INVISÍVEL PARA LER PDF DE QUALQUER ABA -->
+<input type="file" id="pdfInputGlobal" accept=".pdf" multiple style="display: none;" onchange="window.processarPDF(event)">
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2>DEFES 2025</h2>
+    </div>
+    <div class="nav-menu">
+        <button class="tab-btn" onclick="window.abrirAba('aba-auditoria')">Auditoria de Saldos</button>
+        <button class="tab-btn active" onclick="window.abrirAba('aba-controle')">Controle de Entregas</button>
+    </div>
+</div>
+
+<div class="main-content">
+    
+    <!-- ================= ABA: AUDITORIA DE SALDOS ================= -->
+    <div id="aba-auditoria" class="tab-content">
+        <h1>Auditoria e Cruzamento de Declarações</h1>
+        <div class="controls-panel">
+            <p style="color: var(--text-muted); font-size: 13px;">Importe as declarações (DEFIS) em PDF. O sistema fará a conferência automática entre os anos.</p>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="document.getElementById('pdfInputGlobal').click()">Importar DEFIS (PDF)</button>
+                <button class="btn-secondary" onclick="window.exportarCSV('tabelaAuditoria', 'Auditoria_DEFES')">Exportar Auditoria (.CSV)</button>
+                <button class="btn-secondary" onclick="window.apagarAuditoria()" style="background-color: var(--danger-red); color: white; border-color: var(--danger-red);">Apagar Dados</button>
+                <span id="loading-indicator-auditoria" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px; margin-left: 10px;">⏳ Salvando na Nuvem...</span>
+            </div>
+            <input type="text" id="filtroAuditoria" placeholder="🔍 Busca Geral (Digite qualquer palavra)..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
+        </div>
+        
+        <div class="table-container">
+            <table id="tabelaAuditoria">
+                <thead>
+                    <tr>
+                        <th>Ano Base<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Tipo<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Empresa / CNPJ<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Caixa Inicial<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Caixa Final<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Emp. Ini.<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Emp. Fim<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Rend. Isentos (R$)<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Rend. Tributáveis (R$)<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Estoque Inicial<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Estoque Final<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Aquisições (R$)<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Entradas (R$)<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Despesas (R$)<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Status da Auditoria<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                    </tr>
+                </thead>
+                <tbody id="corpoAuditoria">
+                    <!-- Tabela preenchida via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= ABA: CONTROLE DE ENTREGAS ================= -->
+    <div id="aba-controle" class="tab-content active">
+        <h1>Controle de Entregas e Baixas</h1>
+        
+        <div class="controls-panel">
+            <div style="margin-bottom: 20px; background: #222; padding: 15px; border-radius: 6px; border: 1px solid var(--border-gray); display: inline-block;">
+                <label for="selectAnoControle" style="color: var(--primary-orange); font-weight: bold; margin-right: 10px;">Ano de Controle (DEFIS):</label>
+                <select id="selectAnoControle" style="padding: 8px; border-radius: 4px; background: #111; color: #fff; border: 1px solid var(--border-gray); font-size: 14px; outline: none;">
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022" selected>2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                </select>
+                <br>
+                <span style="color: var(--text-muted); font-size: 12px; display: inline-block; margin-top: 5px;">
+                    * Declarações importadas DENTRO deste ano aparecerão abaixo. Outros anos vão direto para Auditoria.
+                </span>
+            </div>
+
+            <label style="color: var(--primary-orange); font-weight: bold; display: block;">Cole a lista de Empresas e CNPJs abaixo:</label>
+            <textarea id="inputDadosMistos" placeholder="Exemplo:&#10;TBJ PARK SERVICOS DE VALET LTDA 26.272.296/0001-93"></textarea>
+            
+            <div class="btn-group">
+                <button class="btn-primary" onclick="window.processarListaEmpresas()">Criar Linhas na Tabela</button>
+                <button class="btn-primary" style="background-color: #00C851; color: white;" onclick="document.getElementById('pdfInputGlobal').click()">Importar DEFIS (Gera Linha e Faz Baixa)</button>
+                <button class="btn-secondary" onclick="window.exportarCSV('tabelaControle', 'Controle_Entregas')">Exportar Controle (.CSV)</button>
+                <button class="btn-secondary" onclick="window.apagarControle()" style="background-color: var(--danger-red); color: white; border-color: var(--danger-red);">Apagar Lista</button>
+                <span id="loading-indicator-controle" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px; margin-left: 10px;">⏳ Salvando na Nuvem...</span>
+            </div>
+            <input type="text" id="filtroControle" placeholder="🔍 Busca Geral (Digite qualquer palavra)..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
+        </div>
+
+        <div class="table-container">
+            <table id="tabelaControle">
+                <thead>
+                    <tr>
+                        <th>Ano Base<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
+                        <th>Dados da Empresa<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
+                        <th>Status<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
+                        <th>Data/Hora da Ação<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
+                        <th>Ações Rápidas</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoControle">
+                    <!-- Tabela preenchida via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- FIREBASE & LOGIC SCRIPT (MODULAR) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ESTADO GLOBAL DA APLICAÇÃO
+    window.bancoAuditoria = {}; 
+    window.bancoControle = []; 
+
+    // CONFIGURAÇÃO DE SALVAMENTO EM NUVEM (FIREBASE)
+    let db = null;
+    let auth = null;
+    let userId = null;
+    let appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    try {
+        if (typeof __firebase_config !== 'undefined') {
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+            initAuth();
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    await window.carregarDadosFirebase();
+                }
+            });
+        }
+    } catch(e) { console.error("Firebase init error:", e); }
+
+    window.salvarDadosFirebase = async function() {
+        if (!userId || !db) return;
+        document.getElementById('loading-indicator-controle').style.display = 'inline-block';
+        document.getElementById('loading-indicator-auditoria').style.display = 'inline-block';
+        
+        try {
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'defes_data', 'estado_geral');
+            await setDoc(docRef, {
+                auditoria: window.bancoAuditoria,
+                controle: window.bancoControle
+            });
+        } catch(e) { console.error("Erro ao salvar:", e); }
+        
+        setTimeout(() => {
+            document.getElementById('loading-indicator-controle').style.display = 'none';
+            document.getElementById('loading-indicator-auditoria').style.display = 'none';
+        }, 800);
+    }
+
+    window.carregarDadosFirebase = async function() {
+        if (!userId || !db) return;
+        try {
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'defes_data', 'estado_geral');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                window.bancoAuditoria = data.auditoria || {};
+                window.bancoControle = data.controle || [];
+                window.recalcularAuditoria();
+                window.renderizarTabelaControle();
+            }
+        } catch(e) { console.error("Erro ao carregar:", e); }
+    }
+
+    // ==========================================
+    // API RECEITA FEDERAL (BRASIL API)
+    // ==========================================
+    window.buscarDadosReceita = async function(cnpjStr) {
+        const cnpjLimpo = cnpjStr.replace(/\D/g, '');
+        if (cnpjLimpo.length !== 14) return null;
+        
+        try {
+            const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+            if (response.ok) {
+                const data = await response.json();
+                
+                let regime = "Normal (Lucro Presumido/Real)";
+                if (data.opcao_pelo_mei) regime = "MEI";
+                else if (data.opcao_pelo_simples) regime = "Simples Nacional";
+                
+                let situacao = data.descricao_situacao_cadastral || "DESCONHECIDA";
+                if (situacao === "BAIXADA" && data.data_situacao_cadastral) {
+                    const dataFormatada = data.data_situacao_cadastral.split('-').reverse().join('/');
+                    situacao = `BAIXADA EM ${dataFormatada}`;
+                }
+
+                return {
+                    nome: data.razao_social || data.nome_fantasia || "",
+                    regime: regime,
+                    situacao: situacao
+                };
+            }
+        } catch (e) { console.warn("Erro ao buscar BrasilAPI", e); }
+        return null;
+    }
+
+    // ==========================================
+    // RENDERIZADOR E ESTADO DA ABA CONTROLE
+    // ==========================================
+    window.renderizarTabelaControle = function() {
+        const tbody = document.getElementById('corpoControle');
+        tbody.innerHTML = '';
+        
+        // Ordenação Alfabética
+        window.bancoControle.sort((a, b) => {
+            if (a.nome === b.nome) return a.ano.localeCompare(b.ano);
+            return a.nome.localeCompare(b.nome); 
+        });
+
+        window.bancoControle.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            
+            // Construção das Badges Visuais (Receita Federal)
+            let badges = '';
+            if (item.regime) {
+                let color = item.regime === 'MEI' ? '#6f42c1' : (item.regime.includes('Simples') ? '#00C851' : '#17a2b8');
+                badges += `<span class="badge" style="background: ${color}20; border: 1px solid ${color}; color: ${color};">${item.regime.toUpperCase()}</span>`;
+            }
+            if (item.situacao) {
+                let color = item.situacao.includes('BAIXADA') ? '#ff4444' : '#00C851';
+                badges += `<span class="badge" style="background: ${color}20; border: 1px solid ${color}; color: ${color};">${item.situacao.toUpperCase()}</span>`;
+            }
+
+            tr.innerHTML = `
+                <td>${item.ano}</td>
+                <td>
+                    <span class="empresa-nome">${item.nome}</span>
+                    <span class="empresa-cnpj">${item.cnpj}</span>
+                    ${badges}
+                </td>
+                <td class="status-cell" style="color: ${item.statusCor}; font-weight: bold;">${item.status}</td>
+                <td class="data-cell" style="color: var(--text-muted); font-size: 13px;">${item.dataHoraAcao}</td>
+                <td>
+                    <button class="btn-action" onclick="window.executarAcao(${index}, 'Entregue', 'var(--success-green)')">Entregue</button>
+                    <button class="btn-action" onclick="window.executarAcao(${index}, 'Baixada', '#007bff')">Baixada</button>
+                    <button class="btn-action" onclick="window.executarAcao(${index}, 'L. Presumido', '#17a2b8')">L. Presumido</button>
+                    <button class="btn-action" onclick="window.executarAcao(${index}, 'MEI', '#6f42c1')">MEI</button>
+                    <button class="btn-action" onclick="window.executarAcao(${index}, 'Troca', 'var(--danger-red)')">Troca</button>
+                    <button class="btn-action" onclick="window.deletarLinha(${index})" style="color: var(--danger-red); border-color: var(--danger-red);">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        window.atualizarOpcoesDosFiltros('tabelaControle');
+        window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle');
+    }
+
+    window.processarListaEmpresas = async function() {
+        const textarea = document.getElementById('inputDadosMistos');
+        const textoOriginal = textarea.value.trim();
+        if (!textoOriginal) return alert("Cole as informações da empresa.");
+
+        const anoSelecionado = document.getElementById('selectAnoControle').value;
+        const linhas = textoOriginal.split('\n');
+        
+        document.body.style.cursor = 'wait';
+
+        for (let linha of linhas) {
+            if (linha.trim() === '') continue;
+            const regexCNPJ = /(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{14})/g;
+            const matches = linha.match(regexCNPJ);
+
+            let cnpj = matches ? matches[0] : "CNPJ NÃO LOCALIZADO";
+            let nome = matches ? linha.replace(cnpj, '').trim() : linha;
+            nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim() || "EMPRESA";
+            cnpj = window.formatarCNPJ(cnpj);
+
+            // Consulta Inteligente na Receita ao criar nova empresa
+            let regime = null;
+            let situacao = null;
+            let apiData = await window.buscarDadosReceita(cnpj);
+            
+            if (apiData) {
+                if(nome === "EMPRESA" || nome.length < 3) nome = apiData.nome;
+                regime = apiData.regime;
+                situacao = apiData.situacao;
+            }
+
+            // Verifica se já existe para não duplicar
+            let indexExistente = window.bancoControle.findIndex(e => e.cnpj === cnpj && e.ano === anoSelecionado);
+            if (indexExistente === -1) {
+                window.bancoControle.push({
+                    ano: anoSelecionado,
+                    nome: nome.toUpperCase(),
+                    cnpj: cnpj,
+                    status: "Pendente",
+                    statusCor: "var(--warning-yellow)",
+                    dataHoraAcao: "-",
+                    regime: regime,
+                    situacao: situacao
+                });
+            }
+        }
+        
+        textarea.value = '';
+        document.body.style.cursor = 'default';
+        window.renderizarTabelaControle();
+        window.salvarDadosFirebase();
+    }
+
+    window.executarAcao = function(index, statusNome, cor) {
+        const item = window.bancoControle[index];
+        const agora = new Date();
+        item.status = statusNome;
+        item.statusCor = cor;
+        item.dataHoraAcao = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        
+        window.renderizarTabelaControle();
+        window.salvarDadosFirebase();
+    }
+
+    window.deletarLinha = function(index) {
+        if(confirm("Deseja excluir esta linha permanentemente?")) {
+            window.bancoControle.splice(index, 1);
+            window.renderizarTabelaControle();
+            window.salvarDadosFirebase();
+        }
+    }
+
+    window.apagarControle = function() {
+        if(confirm("ATENÇÃO: Tem certeza que deseja apagar toda a lista da aba de Controle?")) {
+            window.bancoControle = [];
+            window.renderizarTabelaControle();
+            window.salvarDadosFirebase();
+        }
+    }
+
+    window.apagarAuditoria = function() {
+        if(confirm("ATENÇÃO: Tem certeza que deseja apagar todo o histórico de Auditoria?")) {
+            window.bancoAuditoria = {};
+            window.recalcularAuditoria();
+            window.salvarDadosFirebase();
+        }
+    }
+
+    // ==========================================
+    // LÓGICA DE IMPORTAÇÃO DE PDF E AUDITORIA
+    // ==========================================
+    window.processarPDF = async function(event) {
+        const files = event.target.files;
+        if (files.length === 0) return;
+
+        document.body.style.cursor = 'wait';
+
+        for (let file of files) {
+            const reader = new FileReader();
+            await new Promise((resolve, reject) => {
+                reader.onload = async function(e) {
+                    const typedarray = new Uint8Array(e.target.result);
+                    try {
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let textContent = "";
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const text = await page.getTextContent();
+                            textContent += text.items.map(item => item.str).join(" ") + " ";
+                        }
+                        await window.extrairEProcessarDEFIS(textContent);
+                        resolve();
+                    } catch (err) {
+                        alert("Erro ao ler o PDF: " + file.name + "\nDetalhe: " + err.message);
+                        reject(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        document.body.style.cursor = 'default';
+        event.target.value = ''; 
+        window.salvarDadosFirebase(); // Salva nuvem após PDFs processados
+    }
+
+    window.extrairEProcessarDEFIS = async function(texto) {
+        const textoLimpo = texto.replace(/\s+/g, ' ');
+
+        const cnpjMatch = textoLimpo.match(/(?:\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
+        const cnpjOriginal = cnpjMatch ? cnpjMatch[0] : "N/A";
+        const cnpj = window.formatarCNPJ(cnpjOriginal);
+
+        const anoMatch = textoLimpo.match(/Ano-Calend[aá]rio\s*(\d{4})/i);
+        const ano = anoMatch ? anoMatch[1] : "N/A";
+        
+        const tipoMatch = textoLimpo.match(/Declaração\s+(Original|Retificadora)/i);
+        const tipo = tipoMatch ? tipoMatch[1] : "Original";
+
+        let nome = "EMPRESA NÃO IDENTIFICADA";
+        const nomeIdx = textoLimpo.indexOf("Nome empresarial:");
+        
+        if (nomeIdx !== -1) {
+            const trecho = textoLimpo.substring(nomeIdx, nomeIdx + 150);
+            const matchNome = trecho.match(/Nome empresarial:\s*(.*?)\s*(?:Data de abertura|Regime de Apuração|CPF|CNPJ|$)/i);
+            if (matchNome && matchNome[1]) {
+                nome = matchNome[1].replace(/["',]/g, '').trim();
+            }
+        }
+        nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim();
+        if (nome.length < 3) nome = "EMPRESA NÃO IDENTIFICADA";
+
+        // Sempre busca na API para Auditoria ter as badges também
+        let regime = null;
+        let situacao = null;
+        if (cnpj !== "N/A") {
+            let apiData = await window.buscarDadosReceita(cnpj);
+            if (apiData) {
+                if (nome === "EMPRESA NÃO IDENTIFICADA") nome = apiData.nome;
+                regime = apiData.regime;
+                situacao = apiData.situacao;
+            }
+        }
+
+        const getValorBRL = (label) => {
+            const idx = textoLimpo.indexOf(label);
+            if (idx === -1) return "0,00";
+            const chunk = textoLimpo.substring(idx, idx + 150);
+            const match = chunk.match(/R\$\s*([\d\.,]+)/i) || chunk.match(/([\d\.,]+)\s*R\$/i) || chunk.match(/([\d\.]+\,\d{2})/);
+            return match ? match[1] : "0,00";
+        };
+
+        const getEmp = (label) => {
+            const idx = textoLimpo.indexOf(label);
+            if (idx === -1) return "0";
+            const chunk = textoLimpo.substring(idx + label.length, idx + label.length + 80);
+            const match = chunk.match(/\b(\d+)\b/);
+            return match ? match[1] : "0";
+        };
+
+        const dadosDecl = {
+            ano: ano,
+            tipo: tipo,
+            cnpj: cnpj,
+            nome: nome.toUpperCase(),
+            regime: regime,
+            situacao: situacao,
+            cxIniStr: getValorBRL("Saldo em caixa/banco no início"),
+            cxFimStr: getValorBRL("Saldo em caixa/banco no final"),
+            empIniStr: getEmp("Quantidade de empregados no início"),
+            empFimStr: getEmp("Quantidade de empregados no final"),
+            rendIsentos: getValorBRL("Rendimentos isentos pagos ao sócio"),
+            rendTrib: getValorBRL("Rendimentos tributáveis pagos ao sócio"),
+            estIni: getValorBRL("Estoque inicial do período"),
+            estFim: getValorBRL("Estoque final do período"),
+            aqInternas: getValorBRL("Aquisições no mercado interno"),
+            aqTotais: getValorBRL("Total de aquisições de mercadorias"),
+            entradas: getValorBRL("Total de entradas no período"),
+            despesas: getValorBRL("Total de despesas no período"),
+            cxIniNum: parseFloat(getValorBRL("Saldo em caixa/banco no início").replace(/\./g, '').replace(',', '.')) || 0,
+            cxFimNum: parseFloat(getValorBRL("Saldo em caixa/banco no final").replace(/\./g, '').replace(',', '.')) || 0,
+            empIniNum: parseInt(getEmp("Quantidade de empregados no início"), 10) || 0,
+            empFimNum: parseInt(getEmp("Quantidade de empregados no final"), 10) || 0
+        };
+
+        if (!window.bancoAuditoria[cnpj]) window.bancoAuditoria[cnpj] = {};
+        window.bancoAuditoria[cnpj][ano] = dadosDecl;
+
+        window.recalcularAuditoria();
+        window.tentarAutoBaixa(cnpj, ano, dadosDecl.nome, regime, situacao);
+    }
+
+    // ==========================================
+    // CRUZAMENTO DE SALDOS E RENDERIZAÇÃO AUDITORIA
+    // ==========================================
+    window.recalcularAuditoria = function() {
+        const tbody = document.getElementById('corpoAuditoria');
+        tbody.innerHTML = ''; 
+
+        let empresas = [];
+        for (let cnpj in window.bancoAuditoria) {
+            let anos = Object.keys(window.bancoAuditoria[cnpj]);
+            let nome = window.bancoAuditoria[cnpj][anos[0]].nome;
+            empresas.push({ cnpj: cnpj, nome: nome });
+        }
+        
+        empresas.sort((a, b) => a.nome.localeCompare(b.nome));
+
+        for (let empresa of empresas) {
+            let cnpj = empresa.cnpj;
+            let anos = Object.keys(window.bancoAuditoria[cnpj]).sort();
+            
+            for (let i = 0; i < anos.length; i++) {
+                let anoAtual = anos[i];
+                let declAtual = window.bancoAuditoria[cnpj][anoAtual];
+                
+                let statusHTML = `✔ Inicial (S/ Ano Anterior)`;
+                let statusCSS = `color: #33b5e5; font-weight: bold;`;
+                let temErro = false;
+                
+                if (i > 0) {
+                    let anoAnterior = anos[i - 1];
+                    let declAnt = window.bancoAuditoria[cnpj][anoAnterior];
+                    let erros = [];
+
+                    if (declAtual.cxIniNum !== declAnt.cxFimNum) {
+                        erros.push(`Caixa Inicial difere de ${anoAnterior}`);
+                    }
+                    if (declAtual.empIniNum !== declAnt.empFimNum) {
+                        erros.push(`Empregados difere de ${anoAnterior}`);
+                    }
+
+                    if (erros.length > 0) {
+                        temErro = true;
+                        statusHTML = `⚠️ ERRO: ${erros.join(" | ")}`;
+                        statusCSS = `color: var(--danger-red); font-weight: bold;`;
+                    } else {
+                        statusHTML = `✔ Conferido (Bate com ${anoAnterior})`;
+                        statusCSS = `color: var(--success-green); font-weight: bold;`;
+                    }
+                }
+
+                // Badges da Receita para a Auditoria
+                let badges = '';
+                if (declAtual.regime) {
+                    let color = declAtual.regime === 'MEI' ? '#6f42c1' : (declAtual.regime.includes('Simples') ? '#00C851' : '#17a2b8');
+                    badges += `<span class="badge" style="background: ${color}20; border: 1px solid ${color}; color: ${color};">${declAtual.regime.toUpperCase()}</span>`;
+                }
+                if (declAtual.situacao) {
+                    let color = declAtual.situacao.includes('BAIXADA') ? '#ff4444' : '#00C851';
+                    badges += `<span class="badge" style="background: ${color}20; border: 1px solid ${color}; color: ${color};">${declAtual.situacao.toUpperCase()}</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = temErro ? 'linha-erro' : '';
+                tr.innerHTML = `
+                    <td><b>${declAtual.ano}</b></td>
+                    <td>${declAtual.tipo}</td>
+                    <td>
+                        <span class="empresa-nome">${declAtual.nome}</span>
+                        <span class="empresa-cnpj">${declAtual.cnpj}</span>
+                        ${badges}
+                    </td>
+                    <td>R$ ${declAtual.cxIniStr}</td>
+                    <td>R$ ${declAtual.cxFimStr}</td>
+                    <td>${declAtual.empIniStr}</td>
+                    <td>${declAtual.empFimStr}</td>
+                    <td>R$ ${declAtual.rendIsentos}</td>
+                    <td>R$ ${declAtual.rendTrib}</td>
+                    <td>R$ ${declAtual.estIni}</td>
+                    <td>R$ ${declAtual.estFim}</td>
+                    <td>R$ ${declAtual.aqInternas}</td>
+                    <td>R$ ${declAtual.entradas}</td>
+                    <td>R$ ${declAtual.despesas}</td>
+                    <td><span style="${statusCSS}">${statusHTML}</span></td>
+                `;
+                tbody.appendChild(tr); 
+            }
+        }
+        
+        window.atualizarOpcoesDosFiltros('tabelaAuditoria');
+        window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria');
+    }
+
+    // ==========================================
+    // INTEGRAÇÃO ENTRE ABAS
+    // ==========================================
+    window.tentarAutoBaixa = function(cnpjImportado, anoImportado, nomeImportado, regime, situacao) {
+        const anoSelecionado = document.getElementById('selectAnoControle').value;
+        if (anoImportado !== anoSelecionado) return;
+
+        let indexExistente = window.bancoControle.findIndex(e => e.cnpj === cnpjImportado && e.ano === anoImportado);
+        
+        if (indexExistente !== -1) {
+            let item = window.bancoControle[indexExistente];
+            item.nome = nomeImportado;
+            item.regime = regime || item.regime;
+            item.situacao = situacao || item.situacao;
+            
+            if (item.status.includes('Pendente')) {
+                const agora = new Date();
+                item.status = "Entregue (Auto)";
+                item.statusCor = "#00C851";
+                item.dataHoraAcao = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+            }
+        } else {
+            const agora = new Date();
+            window.bancoControle.push({
+                ano: anoImportado,
+                nome: nomeImportado.toUpperCase(),
+                cnpj: cnpjImportado,
+                status: "Entregue (Auto)",
+                statusCor: "#00C851",
+                dataHoraAcao: `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`,
+                regime: regime,
+                situacao: situacao
+            });
+        }
+        
+        window.renderizarTabelaControle();
+    }
+
+    // ==========================================
+    // UTILS E EVENTOS GLOBAIS
+    // ==========================================
+    window.formatarCNPJ = function(cnpj) {
+        let n = cnpj.replace(/\D/g, '');
+        if (n.length === 14) return n.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+        return cnpj;
+    }
+
+    window.abrirAba = function(idAba) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(idAba).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    window.exportarCSV = function(idTabela, nomeArquivo) {
+        const tabela = document.getElementById(idTabela);
+        let csv = [];
+        const linhas = tabela.querySelectorAll("tr");
+        
+        for (let i = 0; i < linhas.length; i++) {
+            if(linhas[i].style.display === "none") continue; // Exclui linhas filtradas do Excel
+
+            let linhaArray = [];
+            const colunas = linhas[i].querySelectorAll("th, td");
+            for (let j = 0; j < colunas.length; j++) {
+                if (colunas[j].querySelector('select')) continue; // Ignora os selects
+                if (colunas[j].querySelector('button')) continue; // Ignora os botões de ação
+
+                // Extrai apenas texto bruto sem tags (ignorando as badges coloridas)
+                let texto = colunas[j].innerText.replace(/(\r\n|\n|\r)/gm, " - ");
+                linhaArray.push(`"${texto.replace(/"/g, '""')}"`);
+            }
+            csv.push(linhaArray.join(";"));
+        }
+
+        const csvFile = new Blob(["\ufeff" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.download = `${nomeArquivo}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.href = window.URL.createObjectURL(csvFile);
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    window.atualizarOpcoesDosFiltros = function(tableId) {
+        const table = document.getElementById(tableId);
+        const theadSelects = table.querySelectorAll('thead .col-filter');
+        const trs = table.querySelectorAll('tbody tr');
+
+        theadSelects.forEach((select, index) => {
+            const valorSelecionadoAtual = select.value;
+            let valoresUnicos = new Set();
+
+            trs.forEach(tr => {
+                const td = tr.cells[index];
+                if (td) {
+                    let clonado = td.cloneNode(true);
+                    let badges = clonado.querySelectorAll('.badge');
+                    badges.forEach(b => b.remove()); // Remove as badges visuais do texto do filtro
+                    
+                    const textoLimpo = clonado.innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/\s+/g, " ").trim();
+                    if (textoLimpo !== "" && !clonado.querySelector('button')) { 
+                        valoresUnicos.add(textoLimpo);
+                    }
+                }
+            });
+
+            select.innerHTML = '<option value="">(Todos)</option>';
+            Array.from(valoresUnicos).sort().forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+
+            if (valoresUnicos.has(valorSelecionadoAtual)) select.value = valorSelecionadoAtual;
+        });
+    }
+
+    window.aplicarFiltrosGlobaisEColunas = function(tableId, inputGlobalId) {
+        const table = document.getElementById(tableId);
+        const trs = table.querySelectorAll('tbody tr');
+        const selectsColuna = table.querySelectorAll('thead .col-filter');
+        const globalFilter = document.getElementById(inputGlobalId) ? document.getElementById(inputGlobalId).value.toUpperCase() : "";
+
+        trs.forEach(tr => {
+            let showRow = true;
+            if (globalFilter) {
+                const textoLinha = tr.textContent || tr.innerText;
+                if (textoLinha.toUpperCase().indexOf(globalFilter) === -1) showRow = false;
+            }
+
+            if (showRow) {
+                selectsColuna.forEach((select, index) => {
+                    const filterValue = select.value.toUpperCase();
+                    if (filterValue !== "") {
+                        const td = tr.cells[index];
+                        if (td) {
+                            let clonado = td.cloneNode(true);
+                            clonado.querySelectorAll('.badge').forEach(b => b.remove());
+                            const tdText = clonado.innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/\s+/g, " ").trim().toUpperCase();
+                            if (tdText !== filterValue) showRow = false;
+                        }
+                    }
+                });
+            }
+            tr.style.display = showRow ? "" : "none";
+        });
+    }
+</script>
+
+</body>
+</html>
