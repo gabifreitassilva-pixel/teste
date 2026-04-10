@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditor DEFIS</title>
+    <title>Auditor DEFIS Avançado v2.0</title>
     <!-- BIBLIOTECAS: PDF.JS (Ler PDF) e JSZip (Baixar em Lote) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
@@ -22,6 +22,7 @@
             --success-green: #00C851;
             --warning-yellow: #ffbb33;
             --info-blue: #33b5e5;
+            --purple: #aa66cc;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -32,9 +33,9 @@
         .sidebar { width: 250px; background-color: var(--card-gray); border-right: 2px solid var(--border-gray); display: flex; flex-direction: column; }
         .sidebar-header { padding: 25px 20px; text-align: center; border-bottom: 2px solid var(--primary-orange); background: #111; }
         .sidebar-header h2 { color: var(--primary-orange); font-size: 22px; letter-spacing: 1px; }
-        .nav-menu { display: flex; flex-direction: column; padding: 15px 0; }
+        .nav-menu { display: flex; flex-direction: column; padding: 15px 0; overflow-y: auto; }
         
-        .tab-btn { padding: 18px 25px; background: transparent; border: none; color: var(--text-muted); text-align: left; cursor: pointer; font-size: 15px; font-weight: 600; transition: 0.3s; border-left: 4px solid transparent; }
+        .tab-btn { padding: 18px 25px; background: transparent; border: none; color: var(--text-muted); text-align: left; cursor: pointer; font-size: 15px; font-weight: 600; transition: 0.3s; border-left: 4px solid transparent; display: flex; align-items: center; gap: 10px;}
         .tab-btn:hover { background-color: #252525; color: var(--text-white); }
         .tab-btn.active { background-color: #2a2a2a; color: var(--primary-orange); border-left: 4px solid var(--primary-orange); }
 
@@ -57,14 +58,13 @@
         button.btn-secondary { background-color: #333; color: var(--text-white); padding: 12px 20px; border: 1px solid #555; border-radius: 6px; cursor: pointer; transition: 0.2s; }
         button.btn-secondary:hover { background-color: #444; }
 
-        /* Dashboard Cards Atualizados */
+        /* Dashboard Cards */
         .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .dash-card { background: #222; padding: 15px; border-radius: 8px; border: 1px solid var(--border-gray); text-align: center; }
         .dash-card h3 { margin: 0; font-size: 13px; color: var(--text-white); text-transform: uppercase; }
         .dash-card p { margin: 10px 0 5px; font-size: 28px; font-weight: bold; color: var(--text-white); }
         .dash-card small { color: var(--text-muted); font-size: 11px; display: block; }
         
-        /* Cores dos Cards */
         .card-total { border-bottom: 3px solid var(--info-blue); }
         .card-ok { border-bottom: 3px solid var(--success-green); }
         .card-erro { border-bottom: 3px solid var(--danger-red); }
@@ -79,6 +79,7 @@
 
         .empresa-nome { font-weight: bold; font-size: 15px; color: var(--text-white); display: block; }
         .empresa-cnpj { font-size: 13px; color: var(--text-muted); margin-top: 4px; display: inline-block; }
+        .empresa-datas { font-size: 11px; color: var(--info-blue); margin-top: 2px; display: block; }
         
         .btn-copy { background: transparent; border: none; cursor: pointer; font-size: 14px; margin-left: 5px; opacity: 0.7; transition: 0.2s; }
         .btn-copy:hover { opacity: 1; transform: scale(1.2); }
@@ -86,36 +87,21 @@
         .btn-action { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-gray); padding: 6px 10px; font-size: 12px; border-radius: 4px; margin: 2px; cursor: pointer; transition: 0.2s; }
         .btn-action:hover { border-color: var(--primary-orange); color: var(--primary-orange); }
 
-        /* Estilos de Linha Especiais */
+        /* Linhas Especiais */
         .linha-erro td { background-color: rgba(255, 68, 68, 0.1) !important; border-bottom: 1px solid rgba(255, 68, 68, 0.2) !important; }
         .linha-erro:hover td { background-color: rgba(255, 68, 68, 0.2) !important; }
         
         .linha-retificar td { background-color: rgba(255, 187, 51, 0.15) !important; border-bottom: 1px solid rgba(255, 187, 51, 0.3) !important; }
         .linha-retificar:hover td { background-color: rgba(255, 187, 51, 0.25) !important; }
 
-        /* --- COLUNA FIXA (CONGELADA) - EMPRESA NA AUDITORIA --- */
-        #tabelaAuditoria th:nth-child(1) {
-            position: sticky;
-            left: 0;
-            z-index: 20; 
-            background-color: #000;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5); 
-        }
-        #tabelaAuditoria td:nth-child(1) {
-            position: sticky;
-            left: 0;
-            z-index: 5;
-            background-color: var(--card-gray);
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
-        }
+        .linha-pendente td { background-color: rgba(255, 255, 255, 0.02); opacity: 0.7; }
+        .linha-pendente:hover td { opacity: 1; }
+
+        /* Coluna Fixa */
+        #tabelaAuditoria th:nth-child(1) { position: sticky; left: 0; z-index: 20; background-color: #000; box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
+        #tabelaAuditoria td:nth-child(1) { position: sticky; left: 0; z-index: 5; background-color: var(--card-gray); box-shadow: 2px 0 5px rgba(0,0,0,0.5); }
         #tabelaAuditoria tr:hover td:nth-child(1) { background-color: #222; }
         
-        .linha-erro td:nth-child(1) { background-color: #381b1b !important; }
-        .linha-erro:hover td:nth-child(1) { background-color: #4a2121 !important; }
-        
-        .linha-retificar td:nth-child(1) { background-color: #3b2e13 !important; }
-        .linha-retificar:hover td:nth-child(1) { background-color: #4a3815 !important; }
-
         /* Filtros */
         .col-filter { width: 100%; margin-top: 8px; padding: 4px 6px; border-radius: 4px; background: #2a2a2a; color: #fff; border: 1px solid #555; font-size: 12px; cursor: pointer; appearance: auto; }
         .col-filter:focus { outline: none; border-color: var(--primary-orange); background: #333; }
@@ -128,36 +114,48 @@
         ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary-orange); }
 
-        /* --- AJUSTES DA ABA CONTROLE --- */
-        #aba-controle .controls-panel, #aba-controle .table-container {
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        #aba-controle .controls-panel {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
+        #aba-controle .controls-panel, #aba-controle .table-container { max-width: 1400px; margin-left: auto; margin-right: auto; }
+        #aba-controle .controls-panel { display: flex; flex-direction: column; align-items: center; text-align: center; }
         #aba-controle .controls-panel > * { width: 100%; }
         #aba-controle .btn-group { justify-content: center; }
         #tabelaControle th, #tabelaControle td { white-space: normal; word-wrap: break-word; }
+
+        /* Admin Module */
+        .admin-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border-radius: 8px; border: 1px solid var(--border-gray); }
+        .admin-form-group { display: flex; flex-direction: column; }
+        .admin-form-group label { color: var(--primary-orange); font-size: 13px; font-weight: bold; margin-bottom: 5px; }
+        .admin-form-group input, .admin-form-group select { padding: 10px; border-radius: 4px; background: #222; color: white; border: 1px solid #444; outline: none; }
+        .admin-form-group input:focus, .admin-form-group select:focus { border-color: var(--primary-orange); }
+        .admin-full-width { grid-column: span 2; }
+
+        /* Overlay de Carregamento */
+        #loadingOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .spinner { border: 6px solid #333; border-top: 6px solid var(--primary-orange); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #loadingText { margin-top: 20px; font-size: 18px; font-weight: bold; color: var(--primary-orange); }
     </style>
 </head>
-<body onload="window.atualizarAnoGlobal(document.getElementById('selectAnoControle').value)">
+<body>
 
-<!-- INPUT GLOBAL PARA LER PDF -->
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div id="loadingText">Processando dados, aguarde...</div>
+</div>
+
 <input type="file" id="pdfInputGlobal" accept=".pdf" multiple style="display: none;" onchange="window.processarPDF(event)">
 
 <div class="sidebar">
     <div class="sidebar-header">
-        <h2 id="sidebar-title">DEFIS 2025</h2>
+        <h2 id="sidebar-title">DEFIS Manager</h2>
     </div>
     <div class="nav-menu">
-        <button class="tab-btn" onclick="window.abrirAba('aba-auditoria')">Auditoria de Saldos</button>
-        <button class="tab-btn active" onclick="window.abrirAba('aba-controle')">Controle de Entregas</button>
-        <button class="tab-btn" onclick="window.abrirAba('aba-historico')">Histórico (Planilhas)</button>
+        <button class="tab-btn" onclick="window.abrirAba('aba-auditoria')">📊 Auditoria Contínua</button>
+        <button class="tab-btn active" onclick="window.abrirAba('aba-controle')">✅ Controle Entregas</button>
+        <button class="tab-btn" onclick="window.abrirAba('aba-historico')">🕰️ Histórico (Downloads)</button>
+        <button class="tab-btn" onclick="window.abrirAba('aba-admin'); window.popularSelectsAdmin();" style="margin-top: 20px; border-top: 1px solid #333;">⚙️ Administração</button>
     </div>
 </div>
 
@@ -165,40 +163,47 @@
     
     <!-- ================= ABA: AUDITORIA DE SALDOS ================= -->
     <div id="aba-auditoria" class="tab-content">
-        <h1>Auditoria e Cruzamento de Declarações (DEFIS)</h1>
+        <h1>Auditoria de Saldos (Contínua)</h1>
         
-        <!-- DASHBOARD CARDS ATUALIZADOS E CLAROS -->
         <div class="dashboard-cards">
             <div class="dash-card card-total">
-                <h3>Total de Declarações</h3>
+                <h3>Total de PDFs Lidos</h3>
                 <p id="dash-total">0</p>
-                <small>PDFs Importados</small>
+                <small>Importados na Sessão</small>
             </div>
             <div class="dash-card card-ok">
-                <h3>Cruzamentos OK ✔</h3>
+                <h3>Anos Sem Divergência</h3>
                 <p id="dash-ok" style="color: var(--success-green);">0</p>
-                <small>Caixa e Func. Batem c/ Ano Anterior</small>
+                <small>Caixa/Func. em ordem</small>
             </div>
             <div class="dash-card card-erro">
                 <h3>Divergências ⚠️</h3>
                 <p id="dash-erro" style="color: var(--danger-red);">0</p>
-                <small>Erro no Caixa ou Funcionários</small>
+                <small>Erros entre anos ou fechamento</small>
             </div>
             <div class="dash-card card-retificar">
                 <h3>Para Retificar 🔄</h3>
                 <p id="dash-retificar" style="color: var(--warning-yellow);">0</p>
-                <small>Marcadas Manualmente</small>
+                <small>Sinalizado na Auditoria</small>
             </div>
         </div>
 
         <div class="controls-panel">
-            <div class="btn-group" style="justify-content: flex-start;">
-                <button class="btn-primary" onclick="document.getElementById('pdfInputGlobal').click()">Importar DEFIS (PDF)</button>
-                <button class="btn-secondary" onclick="window.exportarCSV('tabelaAuditoria', 'Auditoria_DEFIS')">Exportar Auditoria (.CSV)</button>
-                <button class="btn-secondary" onclick="window.apagarAuditoria()" style="background-color: var(--danger-red); color: white; border-color: var(--danger-red);">Apagar Dados</button>
-                <span id="loading-indicator-auditoria" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Nuvem...</span>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; background: #222; padding: 15px; border-radius: 6px; border: 1px solid var(--border-gray);">
+                <label style="color: var(--primary-orange); font-weight: bold;">Período da Auditoria (Anos):</label>
+                <input type="number" id="anoInicioAudit" value="2022" style="width: 80px; padding: 5px; border-radius: 4px; background: #111; color: white; border: 1px solid var(--border-gray); outline: none;">
+                <span style="color: var(--text-muted);">até</span>
+                <input type="number" id="anoFimAudit" value="2026" style="width: 80px; padding: 5px; border-radius: 4px; background: #111; color: white; border: 1px solid var(--border-gray); outline: none;">
+                <button class="btn-primary" onclick="window.atualizarRangeAnos()" style="padding: 6px 12px; font-size: 13px;">Aplicar Período</button>
             </div>
-            <input type="text" id="filtroAuditoria" placeholder="🔍 Busca Geral (Digite qualquer palavra)..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
+
+            <div class="btn-group" style="justify-content: flex-start;">
+                <button class="btn-primary" onclick="document.getElementById('pdfInputGlobal').click()">Importar PDFs (DEFIS)</button>
+                <button class="btn-secondary" onclick="window.exportarParaCSV('tabelaAuditoria', 'Auditoria_DEFIS', 'Exportação de Auditoria Contínua')">Exportar Auditoria (.CSV)</button>
+                <button class="btn-secondary" onclick="window.apagarAuditoria()" style="background-color: var(--danger-red); color: white; border-color: var(--danger-red);">Apagar Todos os Dados</button>
+                <span id="loading-indicator-auditoria" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Salvando...</span>
+            </div>
+            <input type="text" id="filtroAuditoria" placeholder="🔍 Busca Geral (Digite CNPJ, Nome, Erro, Status...)..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
         </div>
         
         <div class="table-container">
@@ -207,19 +212,14 @@
                     <tr>
                         <th>Empresa / CNPJ<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Ano Base<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Tipo<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Tipo Decl.<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Caixa Inicial<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Caixa Final<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Emp. Ini.<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Emp. Fim<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Rend. Isentos<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Rend. Tributáveis<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Estoque Inicial<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Estoque Final<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Aquisições<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Entradas<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Despesas<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
-                        <th>Status<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Rend. Tribut.<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
+                        <th>Status Auditoria / Justificativa<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')"><option value="">(Todos)</option></select></th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -230,35 +230,31 @@
 
     <!-- ================= ABA: CONTROLE DE ENTREGAS ================= -->
     <div id="aba-controle" class="tab-content active">
-        <h1 style="text-align: center; border-bottom: none;">Controle de Entregas e Baixas</h1>
+        <h1 style="text-align: center; border-bottom: none;">Controle de Entregas e Importação</h1>
         
         <div class="controls-panel">
-            <div style="margin-bottom: 20px; background: #222; padding: 15px; border-radius: 6px; border: 1px solid var(--border-gray); display: inline-block;">
-                <label style="color: var(--primary-orange); font-weight: bold; margin-right: 10px;">Ano de Controle (DEFIS):</label>
-                <select id="selectAnoControle" onchange="window.atualizarAnoGlobal(this.value)" style="padding: 8px; border-radius: 4px; background: #111; color: #fff; border: 1px solid var(--border-gray); font-size: 14px; outline: none;">
+            <div style="margin-bottom: 15px; background: #222; padding: 15px; border-radius: 6px; border: 1px solid var(--border-gray); display: inline-block;">
+                <label style="color: var(--primary-orange); font-weight: bold; margin-right: 10px;">Ano Principal de Controle:</label>
+                <select id="selectAnoControle" onchange="window.renderizarTabelaControle()" style="padding: 8px; border-radius: 4px; background: #111; color: #fff; border: 1px solid var(--border-gray); font-size: 14px; outline: none;">
+                    <option value="2027">2027</option>
                     <option value="2026">2026</option>
                     <option value="2025" selected>2025</option>
                     <option value="2024">2024</option>
                     <option value="2023">2023</option>
                     <option value="2022">2022</option>
-                    <option value="2021">2021</option>
-                    <option value="2020">2020</option>
                 </select>
             </div>
 
-            <textarea id="inputDadosMistos" placeholder="Cole a lista de Empresas e CNPJs aqui..."></textarea>
+            <textarea id="inputDadosMistos" placeholder="Cole a lista de Empresas e CNPJs aqui. O sistema criará as linhas de controle para o ano selecionado e gerará histórico."></textarea>
             
             <div class="btn-group">
-                <button class="btn-primary" onclick="window.processarListaEmpresas()">Criar Linhas na Tabela</button>
-                <button class="btn-primary" style="background-color: #00C851; color: white;" onclick="document.getElementById('pdfInputGlobal').click()">Importar DEFIS (Gera Baixa)</button>
-                <button class="btn-secondary" onclick="window.exportarCSV('tabelaControle', 'Controle_Entregas_DEFIS')">Exportar Controle (.CSV)</button>
-                <button class="btn-secondary" onclick="window.apagarControle()" style="background-color: var(--danger-red); color: white; border-color: var(--danger-red);">Apagar Lista</button>
-                
-                <button class="btn-secondary" onclick="window.baixarLotePDFs()" style="background-color: var(--info-blue); color: #000; font-weight: bold; border: none;">📦 Baixar PDFs (Lote Sessão)</button>
-                
-                <span id="loading-indicator-controle" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Nuvem...</span>
+                <button class="btn-primary" onclick="window.processarListaEmpresas()">Analisar e Criar Linhas (API)</button>
+                <button class="btn-primary" style="background-color: #00C851; color: white;" onclick="document.getElementById('pdfInputGlobal').click()">Importar DEFIS (Gera Baixa com Data Real)</button>
+                <button class="btn-secondary" onclick="window.exportarParaCSV('tabelaControle', 'Controle_Entregas_DEFIS', 'Exportação do Controle de Entregas')">Exportar Controle (.CSV)</button>
+                <button class="btn-secondary" onclick="window.baixarLotePDFs()" style="background-color: var(--info-blue); color: #000; font-weight: bold; border: none;">📦 Baixar Lote (PDFs)</button>
+                <span id="loading-indicator-controle" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Salvando...</span>
             </div>
-            <input type="text" id="filtroControle" placeholder="🔍 Busca Geral (Digite qualquer palavra)..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
+            <input type="text" id="filtroControle" placeholder="🔍 Busca Geral..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
         </div>
 
         <div class="table-container">
@@ -268,8 +264,8 @@
                         <th style="width: 8%; text-align: center;">Ano<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
                         <th style="width: 32%;">Dados da Empresa<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
                         <th style="width: 15%; text-align: center;">Status<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
-                        <th style="width: 15%; text-align: center;">Data/Hora da Ação<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
-                        <th style="width: 30%; text-align: center;">Ações Rápidas</th>
+                        <th style="width: 15%; text-align: center;">Data de Entrega / Ação<br><select class="col-filter" onchange="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')"><option value="">(Todos)</option></select></th>
+                        <th style="width: 30%; text-align: center;">Arquivos & Ações Manuais</th>
                     </tr>
                 </thead>
                 <tbody id="corpoControle"></tbody>
@@ -277,22 +273,19 @@
         </div>
     </div>
 
-    <!-- ================= ABA: HISTÓRICO ================= -->
+    <!-- ================= ABA: HISTÓRICO (DOWNLOADS) ================= -->
     <div id="aba-historico" class="tab-content">
-        <h1>Histórico de Ações (Exportação de Planilhas)</h1>
-        <div class="controls-panel">
-            <p style="color: var(--text-muted); font-size: 13px;">Este módulo registrará as exportações de relatórios realizadas na ferramenta.</p>
-            <div class="btn-group" style="justify-content: flex-start;">
-                <button class="btn-secondary" onclick="window.exportarCSV('tabelaHistorico', 'Historico_Logs')">Exportar Histórico (.CSV)</button>
-            </div>
-        </div>
+        <h1>Histórico e Recuperação de Planilhas</h1>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Todas as planilhas exportadas recentemente ficam salvas aqui para que você possa baixar novamente a qualquer momento.</p>
+        
         <div class="table-container">
             <table id="tabelaHistorico">
                 <thead>
                     <tr>
-                        <th>Data e Hora</th>
-                        <th>Módulo</th>
-                        <th>Ação Realizada / Detalhes</th>
+                        <th style="width: 20%;">Data e Hora do Backup</th>
+                        <th style="width: 20%;">Módulo</th>
+                        <th style="width: 40%;">Detalhes</th>
+                        <th style="width: 20%; text-align: center;">Ação</th>
                     </tr>
                 </thead>
                 <tbody id="corpoHistorico"></tbody>
@@ -300,13 +293,82 @@
         </div>
     </div>
 
+    <!-- ================= ABA: ADMINISTRAÇÃO ================= -->
+    <div id="aba-admin" class="tab-content">
+        <h1>⚙️ Administração e Ajuste Manual</h1>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Use este módulo para corrigir manualmente informações que vieram incorretas da Receita Federal (como o regime MEI/Simples) ou para ajustar valores de PDFs ilegíveis.</p>
+        
+        <div class="controls-panel">
+            <div class="admin-form">
+                <div class="admin-form-group admin-full-width">
+                    <label>Selecione a Empresa (CNPJ):</label>
+                    <select id="adminSelectCnpj" onchange="window.carregarAnosAdmin()">
+                        <option value="">-- Selecione uma Empresa --</option>
+                    </select>
+                </div>
+                
+                <div class="admin-form-group">
+                    <label>Selecione o Ano Base:</label>
+                    <select id="adminSelectAno" onchange="window.carregarDadosParaEdicaoAdmin()">
+                        <option value="">-- Selecione o Ano --</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Regime Tributário do Ano:</label>
+                    <select id="adminInputRegime">
+                        <option value="MEI">MEI</option>
+                        <option value="Simples Nacional">Simples Nacional</option>
+                        <option value="Normal (Lucro Presumido/Real)">Normal (Lucro Presumido/Real)</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Nome da Empresa:</label>
+                    <input type="text" id="adminInputNome">
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Situação Cadastral (API):</label>
+                    <input type="text" id="adminInputSituacao">
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Justificativa de Não Entrega:</label>
+                    <select id="adminInputJustificativa">
+                        <option value="">-- Nenhuma (Tem PDF ou Pendente) --</option>
+                        <option value="MEI">MEI</option>
+                        <option value="Lucro">Lucro (Presumido/Real)</option>
+                        <option value="Não Cliente">Não era Cliente</option>
+                        <option value="Não Aberta">Empresa não estava aberta</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Caixa Inicial (Ex: 1000,00):</label>
+                    <input type="text" id="adminInputCxIni">
+                </div>
+
+                <div class="admin-form-group">
+                    <label>Caixa Final (Ex: 1500,00):</label>
+                    <input type="text" id="adminInputCxFim">
+                </div>
+
+                <div class="admin-form-group admin-full-width" style="margin-top: 15px;">
+                    <button class="btn-primary" onclick="window.salvarEdicaoAdmin()" style="width: 100%; font-size: 16px;">💾 Salvar Alterações Manuais</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- FIREBASE & LOGIC SCRIPT -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    window.CONFIG = { anoInicio: 2022, anoFim: 2026 };
 
     // ESTADO GLOBAL
     window.bancoAuditoria = {}; 
@@ -346,6 +408,7 @@
         try {
             const docRef = doc(db, 'artifacts', appId, 'users', userId, 'defis_data', 'estado_geral');
             await setDoc(docRef, {
+                config: window.CONFIG,
                 auditoria: window.bancoAuditoria,
                 controle: window.bancoControle,
                 historico: window.bancoHistorico
@@ -365,6 +428,11 @@
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                if(data.config) {
+                    window.CONFIG = data.config;
+                    document.getElementById('anoInicioAudit').value = window.CONFIG.anoInicio;
+                    document.getElementById('anoFimAudit').value = window.CONFIG.anoFim;
+                }
                 window.bancoAuditoria = data.auditoria || {};
                 window.bancoControle = data.controle || [];
                 window.bancoHistorico = data.historico || [];
@@ -375,48 +443,27 @@
         } catch(e) { console.error("Erro ao carregar:", e); }
     }
 
-    // ==========================================
-    // HISTÓRICO (Apenas exportações como solicitado)
-    // ==========================================
-    window.registrarHistorico = function(modulo, detalhes) {
-        const agora = new Date();
-        const dataStr = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', second:'2-digit'})}`;
-        window.bancoHistorico.unshift({ data: dataStr, modulo: modulo, detalhes: detalhes }); 
-        
-        if(window.bancoHistorico.length > 500) window.bancoHistorico.pop();
-        
-        window.renderizarHistorico();
-        window.salvarDadosFirebase();
+    window.mostrarLoading = function(texto) {
+        document.getElementById('loadingText').innerText = texto;
+        document.getElementById('loadingOverlay').style.display = 'flex';
     }
-
-    window.renderizarHistorico = function() {
-        const tbody = document.getElementById('corpoHistorico');
-        tbody.innerHTML = '';
-        window.bancoHistorico.forEach(log => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${log.data}</td><td><b>${log.modulo}</b></td><td>${log.detalhes}</td>`;
-            tbody.appendChild(tr);
-        });
+    window.esconderLoading = function() {
+        document.getElementById('loadingOverlay').style.display = 'none';
     }
 
     // ==========================================
-    // UTILS GLOBAIS E EDIÇÃO DE NOME
+    // UTILS
     // ==========================================
-    window.atualizarAnoGlobal = function(ano) {
-        document.getElementById('sidebar-title').innerText = 'DEFIS ' + ano;
-    }
-
     window.formatarCNPJ = function(cnpj) {
-        let n = cnpj.replace(/\D/g, '');
+        let n = String(cnpj).replace(/\D/g, '');
         if (n.length === 14) return n.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
         return cnpj;
     }
 
     window.copiarCNPJLimpo = function(cnpjStr) {
-        const limpo = cnpjStr.replace(/\D/g, '');
-        navigator.clipboard.writeText(limpo).then(() => {
-            console.log(`CNPJ ${limpo} copiado!`);
-        });
+        const limpo = String(cnpjStr).replace(/\D/g, '');
+        document.execCommand('copy'); // Fallback robusto
+        navigator.clipboard.writeText(limpo).catch(()=>{});
     }
 
     window.abrirAba = function(idAba) {
@@ -426,132 +473,261 @@
         event.currentTarget.classList.add('active');
     }
 
-    // FUNÇÃO QUE ATUALIZA O NOME APÓS A EDIÇÃO MANUAL
-    window.atualizarNomeEmpresa = function(cnpj, novoNome) {
-        novoNome = novoNome.trim().toUpperCase();
-        if(!novoNome || novoNome.includes("NÃO IDENTIFICADA") || novoNome === "EMPRESA") return;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    window.calcRegimeAno = function(raw, anoBase) {
+        if(!raw) return "Normal (Lucro Presumido/Real)";
+        const verifica = (opcao, dtOpcao, dtExclusao, anoBase) => {
+            if (!dtOpcao && opcao) return true;
+            if (!dtOpcao) return false;
+            let anoOpcao = parseInt(dtOpcao.substring(0, 4));
+            if (anoOpcao > anoBase) return false; 
+            if (dtExclusao) {
+                let anoExclusao = parseInt(dtExclusao.substring(0, 4));
+                if (anoExclusao < anoBase) return false; 
+            }
+            return true;
+        };
         
-        let mudou = false;
+        if (verifica(raw.opcao_pelo_mei, raw.data_opcao_pelo_mei, raw.data_exclusao_do_mei, anoBase)) return "MEI";
+        if (verifica(raw.opcao_pelo_simples, raw.data_opcao_pelo_simples, raw.data_exclusao_do_simples, anoBase)) return "Simples Nacional";
+        return "Normal (Lucro Presumido/Real)";
+    };
 
-        window.bancoControle.forEach(item => {
-            if(item.cnpj === cnpj && item.nome !== novoNome) {
-                item.nome = novoNome;
-                mudou = true;
-            }
-        });
-
-        if(window.bancoAuditoria[cnpj]) {
-            for(let ano in window.bancoAuditoria[cnpj]) {
-                if(window.bancoAuditoria[cnpj][ano].nome !== novoNome) {
-                    window.bancoAuditoria[cnpj][ano].nome = novoNome;
-                    mudou = true;
-                }
-            }
-        }
-
-        if(mudou) {
-            window.renderizarTabelaControle();
-            window.recalcularAuditoria();
-            window.salvarDadosFirebase();
-        }
-    }
-
-    // ==========================================
-    // LOTE E ARQUIVOS (JSZIP)
-    // ==========================================
-    window.baixarLotePDFs = async function() {
-        if (window.arquivosEmMemoria.length === 0) {
-            alert("Nenhum PDF foi importado nesta sessão. Faça a importação primeiro para baixar o lote.");
-            return;
-        }
-
-        const zip = new JSZip();
-        window.arquivosEmMemoria.forEach((arq) => {
-            const nomeL = arq.nome.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
-            const cnpjL = arq.cnpj.replace(/\D/g, "");
-            const fileName = `${nomeL}_${cnpjL}_${arq.ano}.pdf`;
-            zip.file(fileName, arq.file);
-        });
-
-        zip.generateAsync({type:"blob"}).then(function(content) {
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(content);
-            link.download = `Lote_DEFIS_${new Date().getTime()}.zip`;
-            link.click();
-        });
-    }
-
-    window.baixarArquivoUnico = function(indexMemoria) {
-        const arq = window.arquivosEmMemoria[indexMemoria];
-        if(!arq) return;
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(arq.file);
-        link.download = arq.file.name;
-        link.click();
-    }
-
-    // ==========================================
-    // BRASIL API (MAIS ROBUSTA COM SITUACOES DIVERSAS)
-    // ==========================================
-    window.buscarDadosReceita = async function(cnpjStr, anoConsultaStr) {
-        const cnpjLimpo = cnpjStr.replace(/\D/g, '');
+    window.buscarDadosReceita = async function(cnpjStr) {
+        const cnpjLimpo = String(cnpjStr).replace(/\D/g, '');
         if (cnpjLimpo.length !== 14) return null;
-        const anoConsultaNum = parseInt(anoConsultaStr) || new Date().getFullYear();
         
         try {
             const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
             if (response.ok) {
                 const data = await response.json();
-                
-                function estavaNoRegime(opcaoAtual, dataOpcao, dataExclusao, anoBase) {
-                    if (opcaoAtual && !dataExclusao) return true; 
-                    if (!dataOpcao) return opcaoAtual; 
-                    let anoOpcao = parseInt(dataOpcao.substring(0, 4));
-                    let ativo = (anoOpcao <= anoBase); 
-                    if (dataExclusao) {
-                        let anoExclusao = parseInt(dataExclusao.substring(0, 4));
-                        if (anoExclusao < anoBase) ativo = false;
-                    }
-                    return ativo;
-                }
-
-                let eraMei = estavaNoRegime(data.opcao_pelo_mei, data.data_opcao_pelo_mei, data.data_exclusao_do_mei, anoConsultaNum);
-                let eraSimples = estavaNoRegime(data.opcao_pelo_simples, data.data_opcao_pelo_simples, data.data_exclusao_do_simples, anoConsultaNum);
-
-                let regime = "Normal (Lucro Presumido/Real)";
-                if (eraMei) regime = "MEI";
-                else if (eraSimples) regime = "Simples Nacional";
-                
                 let situacao = data.descricao_situacao_cadastral || "DESCONHECIDA";
+                let dataBaixa = null;
+
                 if (situacao !== "ATIVA" && data.data_situacao_cadastral) {
-                    let anoBaixa = parseInt(data.data_situacao_cadastral.substring(0, 4));
-                    if (anoBaixa > anoConsultaNum) {
-                        situacao = "ATIVA (No Ano-Base)";
-                    } else {
-                        situacao = `${situacao} EM ${data.data_situacao_cadastral.split('-').reverse().join('/')}`;
-                    }
+                    dataBaixa = data.data_situacao_cadastral;
+                    situacao = `${situacao} EM ${dataBaixa.split('-').reverse().join('/')}`;
                 }
 
-                return { nome: data.razao_social || data.nome_fantasia || "", regime: regime, situacao: situacao };
+                let dataAberturaFormatada = "Desconhecida";
+                if(data.data_inicio_atividade) {
+                    dataAberturaFormatada = data.data_inicio_atividade.split('-').reverse().join('/');
+                }
+
+                return { 
+                    nome: data.razao_social || data.nome_fantasia || "", 
+                    situacao: situacao,
+                    dataAbertura: dataAberturaFormatada,
+                    dataBaixaApi: dataBaixa, 
+                    raw: data 
+                };
             }
-        } catch (e) { console.warn("Erro ao buscar BrasilAPI", e); }
+        } catch (e) { console.warn("Erro API Receita", e); }
         return null;
+    }
+
+    // ==========================================
+    // ADMINISTRAÇÃO MANUAL
+    // ==========================================
+    window.popularSelectsAdmin = function() {
+        const selectCnpj = document.getElementById('adminSelectCnpj');
+        selectCnpj.innerHTML = '<option value="">-- Selecione uma Empresa --</option>';
+        
+        let empresas = [];
+        for (let cnpj in window.bancoAuditoria) {
+            let info = Object.values(window.bancoAuditoria[cnpj]).find(x => x);
+            if(info) empresas.push({ cnpj: cnpj, nome: info.nome });
+        }
+        empresas.sort((a, b) => a.nome.localeCompare(b.nome));
+
+        empresas.forEach(emp => {
+            let opt = document.createElement('option');
+            opt.value = emp.cnpj;
+            opt.textContent = `${emp.cnpj} - ${emp.nome}`;
+            selectCnpj.appendChild(opt);
+        });
+        
+        document.getElementById('adminSelectAno').innerHTML = '<option value="">-- Selecione o Ano --</option>';
+        window.limparCamposAdmin();
+    }
+
+    window.carregarAnosAdmin = function() {
+        const cnpj = document.getElementById('adminSelectCnpj').value;
+        const selectAno = document.getElementById('adminSelectAno');
+        selectAno.innerHTML = '<option value="">-- Selecione o Ano --</option>';
+        window.limparCamposAdmin();
+
+        if(!cnpj || !window.bancoAuditoria[cnpj]) return;
+
+        let anos = Object.keys(window.bancoAuditoria[cnpj]).sort((a,b) => b - a);
+        anos.forEach(ano => {
+            let opt = document.createElement('option');
+            opt.value = ano;
+            opt.textContent = ano;
+            selectAno.appendChild(opt);
+        });
+    }
+
+    window.limparCamposAdmin = function() {
+        document.getElementById('adminInputRegime').value = "Normal (Lucro Presumido/Real)";
+        document.getElementById('adminInputNome').value = "";
+        document.getElementById('adminInputSituacao').value = "";
+        document.getElementById('adminInputJustificativa').value = "";
+        document.getElementById('adminInputCxIni').value = "";
+        document.getElementById('adminInputCxFim').value = "";
+    }
+
+    window.carregarDadosParaEdicaoAdmin = function() {
+        const cnpj = document.getElementById('adminSelectCnpj').value;
+        const ano = document.getElementById('adminSelectAno').value;
+        if(!cnpj || !ano || !window.bancoAuditoria[cnpj][ano]) return window.limparCamposAdmin();
+
+        const dados = window.bancoAuditoria[cnpj][ano];
+        
+        document.getElementById('adminInputRegime').value = dados.regime || "Normal (Lucro Presumido/Real)";
+        document.getElementById('adminInputNome').value = dados.nome || "";
+        document.getElementById('adminInputSituacao').value = dados.situacao || "";
+        document.getElementById('adminInputJustificativa').value = dados.justificativa || "";
+        document.getElementById('adminInputCxIni').value = dados.cxIniStr || "";
+        document.getElementById('adminInputCxFim').value = dados.cxFimStr || "";
+    }
+
+    window.salvarEdicaoAdmin = function() {
+        const cnpj = document.getElementById('adminSelectCnpj').value;
+        const ano = document.getElementById('adminSelectAno').value;
+        if(!cnpj || !ano) return alert("Selecione a empresa e o ano para salvar.");
+
+        const regimeNovo = document.getElementById('adminInputRegime').value;
+        const nomeNovo = document.getElementById('adminInputNome').value;
+        const situacaoNova = document.getElementById('adminInputSituacao').value;
+        const justNova = document.getElementById('adminInputJustificativa').value;
+        const cxIniNovo = document.getElementById('adminInputCxIni').value;
+        const cxFimNovo = document.getElementById('adminInputCxFim').value;
+
+        // Atualiza Auditoria
+        if(window.bancoAuditoria[cnpj][ano]) {
+            window.bancoAuditoria[cnpj][ano].regime = regimeNovo;
+            window.bancoAuditoria[cnpj][ano].nome = nomeNovo;
+            window.bancoAuditoria[cnpj][ano].situacao = situacaoNova;
+            window.bancoAuditoria[cnpj][ano].justificativa = justNova === "" ? null : justNova;
+            
+            if(cxIniNovo !== "") {
+                window.bancoAuditoria[cnpj][ano].cxIniStr = cxIniNovo;
+                window.bancoAuditoria[cnpj][ano].cxIniNum = parseFloat(cxIniNovo.replace(/\./g, '').replace(',', '.')) || 0;
+            }
+            if(cxFimNovo !== "") {
+                window.bancoAuditoria[cnpj][ano].cxFimStr = cxFimNovo;
+                window.bancoAuditoria[cnpj][ano].cxFimNum = parseFloat(cxFimNovo.replace(/\./g, '').replace(',', '.')) || 0;
+            }
+        }
+
+        // Atualiza Controle
+        let idxControle = window.bancoControle.findIndex(e => e.cnpj === cnpj && e.ano === ano);
+        if(idxControle !== -1) {
+            window.bancoControle[idxControle].regime = regimeNovo;
+            window.bancoControle[idxControle].nome = nomeNovo;
+            window.bancoControle[idxControle].situacao = situacaoNova;
+        }
+
+        alert("Dados atualizados com sucesso!");
+        window.recalcularAuditoria();
+        window.renderizarTabelaControle();
+        window.salvarDadosFirebase();
+    }
+
+
+    // ==========================================
+    // CRIAÇÃO E CONTROLE DE EMPRESAS
+    // ==========================================
+    window.processarListaEmpresas = async function() {
+        const textarea = document.getElementById('inputDadosMistos');
+        const textoOriginal = textarea.value.trim();
+        if (!textoOriginal) return alert("Cole as informações da empresa.");
+
+        const anoSelecionado = document.getElementById('selectAnoControle').value;
+        const linhas = textoOriginal.split('\n');
+        
+        window.mostrarLoading("Consultando Receita Federal (Aguarde alguns segundos)...");
+
+        for (let i = 0; i < linhas.length; i++) {
+            let linha = linhas[i].trim();
+            if (linha === '') continue;
+            
+            const regexCNPJ = /(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{14})/g;
+            const matches = linha.match(regexCNPJ);
+
+            let cnpj = matches ? matches[0] : "CNPJ NÃO LOCALIZADO";
+            let nome = matches ? linha.replace(cnpj, '').trim() : linha;
+            nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim() || "EMPRESA";
+            cnpj = window.formatarCNPJ(cnpj);
+
+            if(cnpj !== "CNPJ NÃO LOCALIZADO") {
+                await sleep(350); 
+                
+                let apiData = await window.buscarDadosReceita(cnpj);
+                let infoExtra = { situacao: null, abertura: null, baixa: null, raw: null };
+
+                if (apiData) {
+                    if(nome === "EMPRESA" || nome.length < 3) nome = apiData.nome;
+                    infoExtra.situacao = apiData.situacao;
+                    infoExtra.abertura = apiData.dataAbertura;
+                    infoExtra.baixa = apiData.dataBaixaApi;
+                    infoExtra.raw = apiData.raw;
+                }
+
+                let regimeControle = window.calcRegimeAno(infoExtra.raw, parseInt(anoSelecionado));
+
+                let indexExistente = window.bancoControle.findIndex(e => e.cnpj === cnpj && e.ano === anoSelecionado);
+                if (indexExistente === -1) {
+                    window.bancoControle.push({
+                        ano: anoSelecionado, nome: nome.toUpperCase(), cnpj: cnpj,
+                        status: "Pendente", statusCor: "var(--warning-yellow)",
+                        dataHoraAcao: "-", regime: regimeControle,
+                        situacao: infoExtra.situacao, abertura: infoExtra.abertura, baixa: infoExtra.baixa
+                    });
+                }
+
+                if (!window.bancoAuditoria[cnpj]) window.bancoAuditoria[cnpj] = {};
+                for (let a = window.CONFIG.anoInicio; a <= window.CONFIG.anoFim; a++) {
+                    const anoStr = a.toString();
+                    let regimeAuditoria = window.calcRegimeAno(infoExtra.raw, a);
+
+                    if (!window.bancoAuditoria[cnpj][anoStr]) {
+                        window.bancoAuditoria[cnpj][anoStr] = {
+                            pdfLido: false, justificativa: null,
+                            ano: anoStr, cnpj: cnpj, nome: nome.toUpperCase(),
+                            regime: regimeAuditoria,
+                            situacao: infoExtra.situacao, abertura: infoExtra.abertura, baixa: infoExtra.baixa,
+                            raw: infoExtra.raw
+                        };
+                    }
+                }
+            }
+        }
+        
+        textarea.value = '';
+        window.esconderLoading();
+        window.renderizarTabelaControle();
+        window.recalcularAuditoria();
+        window.salvarDadosFirebase();
     }
 
     // ==========================================
     // RENDERIZADOR ABA CONTROLE
     // ==========================================
     window.renderizarTabelaControle = function() {
+        const anoFiltro = document.getElementById('selectAnoControle').value;
         const tbody = document.getElementById('corpoControle');
         tbody.innerHTML = '';
         
-        window.bancoControle.sort((a, b) => {
-            if (a.nome === b.nome) return a.ano.localeCompare(b.ano);
-            return a.nome.localeCompare(b.nome); 
-        });
+        let dadosFiltrados = window.bancoControle.filter(i => i.ano === anoFiltro);
+        dadosFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
 
-        window.bancoControle.forEach((item, index) => {
+        dadosFiltrados.forEach((item) => {
+            const indexOriginal = window.bancoControle.findIndex(x => x.cnpj === item.cnpj && x.ano === item.ano);
             const tr = document.createElement('tr');
+            
             let badges = '';
             if (item.regime) {
                 let color = item.regime === 'MEI' ? '#6f42c1' : (item.regime.includes('Simples') ? '#00C851' : '#17a2b8');
@@ -562,35 +738,36 @@
                 badges += `<span class="badge" style="background: ${color}20; border: 1px solid ${color}; color: ${color};">${item.situacao.toUpperCase()}</span>`;
             }
 
-            let btnArquivoHTML = '';
-            let indexMemoria = window.arquivosEmMemoria.findIndex(a => a.cnpj === item.cnpj && a.ano === item.ano);
-            if (indexMemoria !== -1) {
-                btnArquivoHTML = `<button class="btn-action" onclick="window.baixarArquivoUnico(${indexMemoria})" style="border-color: var(--info-blue); color: var(--info-blue);" title="Ver Arquivo Importado">📄 PDF</button>`;
-            }
-
-            // ATRIBUTO PARA TORNAR O NOME EDITÁVEL CASO NÃO ENCONTRADO
-            let isNaoIdentificada = item.nome.includes("NÃO IDENTIFICADA") || item.nome === "EMPRESA";
-            let editableAttr = isNaoIdentificada ? `contenteditable="true" style="border-bottom: 1px dashed var(--warning-yellow); cursor: text; outline: none; background: rgba(255,187,51,0.1); padding: 0 4px; border-radius: 4px;" title="Clique para digitar o nome da empresa" onfocus="if(this.innerText.includes('NÃO IDENTIFICADA') || this.innerText === 'EMPRESA') this.innerText='';" onblur="window.atualizarNomeEmpresa('${item.cnpj}', this.innerText)" onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }"` : ``;
+            let btnArquivosHTML = '';
+            let arquivosDestaEmpresa = window.arquivosEmMemoria.filter(a => a.cnpj === item.cnpj && a.ano === item.ano);
+            
+            arquivosDestaEmpresa.forEach((arq) => {
+                let indexGlobalMemoria = window.arquivosEmMemoria.indexOf(arq);
+                let label = arq.tipo === 'Retificadora' ? '📄 Retificadora' : '📄 Original';
+                let corB = arq.tipo === 'Retificadora' ? 'var(--warning-yellow)' : 'var(--info-blue)';
+                btnArquivosHTML += `<button class="btn-action" onclick="window.baixarArquivoUnico(${indexGlobalMemoria})" style="border-color: ${corB}; color: ${corB};" title="Ver Arquivo">${label}</button>`;
+            });
 
             tr.innerHTML = `
-                <td style="text-align: center;">${item.ano}</td>
+                <td style="text-align: center;"><b>${item.ano}</b></td>
                 <td>
-                    <span class="empresa-nome" ${editableAttr}>${item.nome}</span>
+                    <span class="empresa-nome">${item.nome}</span>
                     <span class="empresa-cnpj">${item.cnpj}</span>
-                    <button class="btn-copy" onclick="window.copiarCNPJLimpo('${item.cnpj}')" title="Copiar CNPJ Limpo">📋</button>
+                    <button class="btn-copy" onclick="window.copiarCNPJLimpo('${item.cnpj}')" title="Copiar CNPJ">📋</button>
+                    ${item.abertura ? `<span class="empresa-datas">Abertura: ${item.abertura}</span>` : ''}
                     <br>${badges}
                 </td>
-                <td class="status-cell" style="color: ${item.statusCor}; font-weight: bold; text-align: center;">${item.status}</td>
-                <td class="data-cell" style="color: var(--text-muted); font-size: 13px; text-align: center;">${item.dataHoraAcao}</td>
+                <td style="color: ${item.statusCor}; font-weight: bold; text-align: center;">${item.status}</td>
+                <td style="color: var(--text-muted); font-size: 13px; text-align: center;">${item.dataHoraAcao}</td>
                 <td>
                     <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;">
-                        ${btnArquivoHTML}
-                        <button class="btn-action" onclick="window.executarAcao(${index}, 'Entregue', 'var(--success-green)')">Entregue</button>
-                        <button class="btn-action" onclick="window.executarAcao(${index}, 'Baixada', '#007bff')">Baixada</button>
-                        <button class="btn-action" onclick="window.executarAcao(${index}, 'L. Presumido', '#17a2b8')">L. Presumido</button>
-                        <button class="btn-action" onclick="window.executarAcao(${index}, 'MEI', '#6f42c1')">MEI</button>
-                        <button class="btn-action" onclick="window.executarAcao(${index}, 'Troca', 'var(--danger-red)')">Troca</button>
-                        <button class="btn-action" onclick="window.deletarLinha(${index})" style="color: var(--danger-red); border-color: var(--danger-red);">Excluir</button>
+                        ${btnArquivosHTML}
+                        ${btnArquivosHTML !== '' ? '<span style="color:#555">|</span>' : ''}
+                        <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Entregue (Manual)', 'var(--success-green)')">Ok</button>
+                        <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Baixada', '#007bff')">Baixada</button>
+                        <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Saiu da Base', '#ff8800')">Saiu da Base</button>
+                        <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Sem Resp.', '#888')">Sem Resp.</button>
+                        <button class="btn-action" onclick="window.deletarLinhaControle(${indexOriginal})" style="color: var(--danger-red); border-color: var(--danger-red);">Excluir</button>
                     </div>
                 </td>
             `;
@@ -598,87 +775,39 @@
         });
 
         window.atualizarOpcoesDosFiltros('tabelaControle');
-        window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle');
     }
 
-    window.processarListaEmpresas = async function() {
-        const textarea = document.getElementById('inputDadosMistos');
-        const textoOriginal = textarea.value.trim();
-        if (!textoOriginal) return alert("Cole as informações da empresa.");
-
-        const anoSelecionado = document.getElementById('selectAnoControle').value;
-        const linhas = textoOriginal.split('\n');
-        
-        document.body.style.cursor = 'wait';
-
-        for (let linha of linhas) {
-            if (linha.trim() === '') continue;
-            const regexCNPJ = /(?:\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}|\d{14})/g;
-            const matches = linha.match(regexCNPJ);
-
-            let cnpj = matches ? matches[0] : "CNPJ NÃO LOCALIZADO";
-            let nome = matches ? linha.replace(cnpj, '').trim() : linha;
-            nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim() || "EMPRESA";
-            cnpj = window.formatarCNPJ(cnpj);
-
-            let regime = null, situacao = null;
-            let apiData = await window.buscarDadosReceita(cnpj, anoSelecionado);
-            if (apiData) {
-                if(nome === "EMPRESA" || nome.length < 3) nome = apiData.nome;
-                regime = apiData.regime; situacao = apiData.situacao;
-            }
-
-            let indexExistente = window.bancoControle.findIndex(e => e.cnpj === cnpj && e.ano === anoSelecionado);
-            if (indexExistente === -1) {
-                window.bancoControle.push({
-                    ano: anoSelecionado, nome: nome.toUpperCase(), cnpj: cnpj,
-                    status: "Pendente", statusCor: "var(--warning-yellow)",
-                    dataHoraAcao: "-", regime: regime, situacao: situacao
-                });
-            }
-        }
-        
-        textarea.value = '';
-        document.body.style.cursor = 'default';
-        window.renderizarTabelaControle();
-        window.salvarDadosFirebase();
-    }
-
-    window.executarAcao = function(index, statusNome, cor) {
+    window.executarAcao = function(index, statusNome, cor, dataRealPdf = null) {
         const item = window.bancoControle[index];
         const agora = new Date();
         item.status = statusNome;
         item.statusCor = cor;
-        item.dataHoraAcao = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        // Se veio a data do PDF usa ela, senao usa a data do clique
+        if (dataRealPdf) {
+            item.dataHoraAcao = `${dataRealPdf} (Extraído do PDF)`;
+        } else {
+            item.dataHoraAcao = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        }
         
         window.renderizarTabelaControle();
         window.salvarDadosFirebase();
     }
 
-    window.deletarLinha = function(index) {
-        if(confirm("Deseja excluir esta linha permanentemente?")) {
+    window.deletarLinhaControle = function(index) {
+        if(confirm("Deseja excluir esta linha de controle? (Os dados da auditoria não serão apagados)")) {
             window.bancoControle.splice(index, 1);
             window.renderizarTabelaControle();
             window.salvarDadosFirebase();
         }
     }
 
-    window.apagarControle = function() {
-        if(confirm("ATENÇÃO: Tem certeza que deseja apagar toda a lista da aba de Controle?")) {
-            window.bancoControle = [];
-            window.renderizarTabelaControle();
-            window.salvarDadosFirebase();
-        }
-    }
-
     // ==========================================
-    // LÓGICA DE PDF (DEFIS)
+    // LÓGICA DE PDF (DEFIS) E EXTRAÇÃO DE DATA
     // ==========================================
     window.processarPDF = async function(event) {
         const files = event.target.files;
         if (files.length === 0) return;
-
-        document.body.style.cursor = 'wait';
+        window.mostrarLoading("Lendo e extraindo dados dos PDFs...");
 
         for (let file of files) {
             const reader = new FileReader();
@@ -697,7 +826,7 @@
                         
                         if(extracao && extracao.cnpj) {
                             window.arquivosEmMemoria.push({
-                                file: file, cnpj: extracao.cnpj, ano: extracao.ano, nome: extracao.nome
+                                file: file, cnpj: extracao.cnpj, ano: extracao.ano, nome: extracao.nome, tipo: extracao.tipo
                             });
                         }
                         resolve();
@@ -710,7 +839,7 @@
             });
         }
         
-        document.body.style.cursor = 'default';
+        window.esconderLoading();
         event.target.value = ''; 
         window.salvarDadosFirebase(); 
     }
@@ -721,9 +850,9 @@
         const cnpjMatch = textoLimpo.match(/(?:\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
         const cnpjOriginal = cnpjMatch ? cnpjMatch[0] : "N/A";
         const cnpj = window.formatarCNPJ(cnpjOriginal);
+        if(cnpj === "N/A") return null;
 
-        let anoMatch = textoLimpo.match(/Ano-Calend[aá]rio\s*(\d{4})/i);
-        if(!anoMatch) anoMatch = textoLimpo.match(/abrangido.*?a\s*\d{2}\/\d{2}\/(\d{4})/i); 
+        let anoMatch = textoLimpo.match(/Ano-Calend[aá]rio\s*(\d{4})/i) || textoLimpo.match(/abrangido.*?a\s*\d{2}\/\d{2}\/(\d{4})/i);
         if(!anoMatch) {
             let exMatch = textoLimpo.match(/Exerc[íi]cio\s*(\d{4})/i);
             if (exMatch) anoMatch = [null, (parseInt(exMatch[1]) - 1).toString()]; 
@@ -733,23 +862,26 @@
         const tipoMatch = textoLimpo.match(/Declaração\s+(Original|Retificadora)/i);
         const tipo = tipoMatch ? tipoMatch[1] : "Original";
 
+        // EXTRAÇÃO DA DATA REAL DE ENTREGA DO PDF
+        const regexDataEntrega = /Transmissão:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2}:\d{2})/i;
+        const regexDataEntregaAlt = /Recepção:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2}:\d{2})/i;
+        const matchDataEnt = textoLimpo.match(regexDataEntrega) || textoLimpo.match(regexDataEntregaAlt);
+        const dataRealEntrega = matchDataEnt ? matchDataEnt[1] : null;
+
+        let isExtincao = false;
+        let dataExtincao = null;
+        const checkEspecial = textoLimpo.match(/(?:Situação especial|Extinção|Cisão).*?(\d{2}\/\d{2}\/\d{4})/i);
+        if(checkEspecial) {
+            isExtincao = true;
+            dataExtincao = checkEspecial[1];
+        }
+
         let nome = "EMPRESA NÃO IDENTIFICADA";
         const nomeIdx = textoLimpo.indexOf("Nome empresarial:");
         if (nomeIdx !== -1) {
             const trecho = textoLimpo.substring(nomeIdx, nomeIdx + 150);
             const matchNome = trecho.match(/Nome empresarial:\s*(.*?)\s*(?:Data de abertura|Regime de Apuração|CPF|CNPJ|$)/i);
-            if (matchNome && matchNome[1]) nome = matchNome[1].replace(/["',]/g, '').trim();
-        }
-        nome = nome.replace(/^[^a-zA-Z0-9À-ÿ]+|[^a-zA-Z0-9À-ÿ]+$/g, '').trim();
-        if (nome.length < 3) nome = "EMPRESA NÃO IDENTIFICADA";
-
-        let regime = null, situacao = null;
-        if (cnpj !== "N/A") {
-            let apiData = await window.buscarDadosReceita(cnpj, ano);
-            if (apiData) {
-                if (nome === "EMPRESA NÃO IDENTIFICADA") nome = apiData.nome;
-                regime = apiData.regime; situacao = apiData.situacao;
-            }
+            if (matchNome && matchNome[1]) nome = matchNome[1].replace(/["',]/g, '').trim().toUpperCase();
         }
 
         const getValorBRL = (label) => {
@@ -768,88 +900,143 @@
             return match ? match[1] : "0";
         };
 
-        const dadosDecl = {
-            ano: ano, tipo: tipo, cnpj: cnpj, nome: nome.toUpperCase(),
-            regime: regime, situacao: situacao, retificar: false, 
-            cxIniStr: getValorBRL("Saldo em caixa/banco no início"), cxFimStr: getValorBRL("Saldo em caixa/banco no final"),
-            empIniStr: getEmp("Quantidade de empregados no início"), empFimStr: getEmp("Quantidade de empregados no final"),
+        const cxIniStr = getValorBRL("Saldo em caixa/banco no início");
+        const cxFimStr = getValorBRL("Saldo em caixa/banco no final");
+        const empIniStr = getEmp("Quantidade de empregados no início");
+        const empFimStr = getEmp("Quantidade de empregados no final");
+
+        const dadosExtraidos = {
+            pdfLido: true,
+            justificativa: null,
+            ano: ano, tipo: tipo, cnpj: cnpj, nome: nome, retificar: false, 
+            isExtincao: isExtincao, dataExtincao: dataExtincao,
+            cxIniStr: cxIniStr, cxFimStr: cxFimStr, empIniStr: empIniStr, empFimStr: empFimStr,
             rendIsentos: getValorBRL("Rendimentos isentos pagos ao sócio"), rendTrib: getValorBRL("Rendimentos tributáveis pagos ao sócio"),
-            estIni: getValorBRL("Estoque inicial do período"), estFim: getValorBRL("Estoque final do período"),
-            aqInternas: getValorBRL("Aquisições no mercado interno"), aqTotais: getValorBRL("Total de aquisições de mercadorias"),
-            entradas: getValorBRL("Total de entradas no período"), despesas: getValorBRL("Total de despesas no período"),
-            cxIniNum: parseFloat(getValorBRL("Saldo em caixa/banco no início").replace(/\./g, '').replace(',', '.')) || 0,
-            cxFimNum: parseFloat(getValorBRL("Saldo em caixa/banco no final").replace(/\./g, '').replace(',', '.')) || 0,
-            empIniNum: parseInt(getEmp("Quantidade de empregados no início"), 10) || 0,
-            empFimNum: parseInt(getEmp("Quantidade de empregados no final"), 10) || 0
+            cxIniNum: parseFloat(cxIniStr.replace(/\./g, '').replace(',', '.')) || 0,
+            cxFimNum: parseFloat(cxFimStr.replace(/\./g, '').replace(',', '.')) || 0,
+            empIniNum: parseInt(empIniStr, 10) || 0,
+            empFimNum: parseInt(empFimStr, 10) || 0
         };
 
         if (!window.bancoAuditoria[cnpj]) window.bancoAuditoria[cnpj] = {};
         
-        if(window.bancoAuditoria[cnpj][ano] && window.bancoAuditoria[cnpj][ano].retificar) {
-            dadosDecl.retificar = true;
+        let linhaExistente = window.bancoAuditoria[cnpj][ano];
+        let podeSobrescrever = true;
+
+        if (linhaExistente) {
+            if (linhaExistente.pdfLido && linhaExistente.tipo === 'Retificadora' && tipo === 'Original') {
+                podeSobrescrever = false;
+            }
+            dadosExtraidos.regime = linhaExistente.regime;
+            dadosExtraidos.situacao = linhaExistente.situacao;
+            dadosExtraidos.abertura = linhaExistente.abertura;
+            dadosExtraidos.baixa = linhaExistente.baixa;
+            dadosExtraidos.raw = linhaExistente.raw;
+            dadosExtraidos.retificar = linhaExistente.retificar || false;
         }
 
-        window.bancoAuditoria[cnpj][ano] = dadosDecl;
+        if (podeSobrescrever) {
+            if (!dadosExtraidos.abertura) {
+                let apiData = await window.buscarDadosReceita(cnpj);
+                if(apiData) {
+                    dadosExtraidos.regime = window.calcRegimeAno(apiData.raw, parseInt(ano));
+                    dadosExtraidos.situacao = apiData.situacao;
+                    dadosExtraidos.abertura = apiData.dataAbertura;
+                    dadosExtraidos.baixa = apiData.dataBaixaApi;
+                    dadosExtraidos.raw = apiData.raw;
+                }
+            }
+            window.bancoAuditoria[cnpj][ano] = dadosExtraidos;
+        }
 
         window.recalcularAuditoria();
-        window.tentarAutoBaixa(cnpj, ano, dadosDecl.nome, regime, situacao);
+        window.tentarAutoBaixa(cnpj, ano, nome, dadosExtraidos.regime, dadosExtraidos.situacao, dataRealEntrega);
         
-        return { cnpj: cnpj, ano: ano, nome: dadosDecl.nome };
+        return { cnpj: cnpj, ano: ano, nome: nome, tipo: tipo };
+    }
+
+    window.tentarAutoBaixa = function(cnpjImportado, anoImportado, nomeImportado, regime, situacao, dataRealEntrega) {
+        let indexExistente = window.bancoControle.findIndex(e => e.cnpj === cnpjImportado && e.ano === anoImportado);
+        if (indexExistente !== -1) {
+            let item = window.bancoControle[indexExistente];
+            item.regime = regime || item.regime;
+            item.situacao = situacao || item.situacao;
+            if (item.status.includes('Pendente')) {
+                // Passa a data real extraida do PDF para a função de ação
+                window.executarAcao(indexExistente, "Entregue (Auto PDF)", "#00C851", dataRealEntrega);
+            }
+        }
     }
 
     // ==========================================
-    // CRUZAMENTO DE SALDOS E DASHBOARD
+    // AUDITORIA CONTÍNUA
     // ==========================================
+    window.setJustificativa = function(cnpj, ano, motivo) {
+        if(window.bancoAuditoria[cnpj] && window.bancoAuditoria[cnpj][ano]) {
+            window.bancoAuditoria[cnpj][ano].justificativa = motivo;
+            window.recalcularAuditoria();
+            window.salvarDadosFirebase();
+        }
+    }
+    
+    window.atualizarRangeAnos = function() {
+        const inicio = parseInt(document.getElementById('anoInicioAudit').value);
+        const fim = parseInt(document.getElementById('anoFimAudit').value);
+        if (isNaN(inicio) || isNaN(fim) || inicio > fim) return alert("Período inválido.");
+
+        window.CONFIG.anoInicio = inicio;
+        window.CONFIG.anoFim = fim;
+
+        for (let cnpj in window.bancoAuditoria) {
+            let infoExemplo = Object.values(window.bancoAuditoria[cnpj]).find(x => x && x.raw) || Object.values(window.bancoAuditoria[cnpj])[0];
+            for (let a = inicio; a <= fim; a++) {
+                const anoStr = a.toString();
+                if (!window.bancoAuditoria[cnpj][anoStr]) {
+                    window.bancoAuditoria[cnpj][anoStr] = {
+                        pdfLido: false, ano: anoStr, cnpj: cnpj, nome: infoExemplo.nome,
+                        regime: window.calcRegimeAno(infoExemplo.raw, a),
+                        situacao: infoExemplo.situacao, abertura: infoExemplo.abertura, baixa: infoExemplo.baixa,
+                        raw: infoExemplo.raw, justificativa: null
+                    };
+                }
+            }
+        }
+        window.recalcularAuditoria();
+        window.salvarDadosFirebase();
+    }
+
     window.recalcularAuditoria = function() {
         const tbody = document.getElementById('corpoAuditoria');
         tbody.innerHTML = ''; 
 
-        let totalDeclaracoes = 0, countCruzamentosOk = 0, countDivergencias = 0, countRetificar = 0;
+        let countPdfLido = 0, countOk = 0, countErro = 0, countRetificar = 0;
 
         let empresas = [];
         for (let cnpj in window.bancoAuditoria) {
-            let anos = Object.keys(window.bancoAuditoria[cnpj]);
-            let nome = window.bancoAuditoria[cnpj][anos[0]].nome;
-            empresas.push({ cnpj: cnpj, nome: nome });
+            let info = Object.values(window.bancoAuditoria[cnpj]).find(x => x);
+            if(info) empresas.push({ cnpj: cnpj, nome: info.nome });
         }
-        
         empresas.sort((a, b) => a.nome.localeCompare(b.nome));
 
         for (let empresa of empresas) {
             let cnpj = empresa.cnpj;
+            for (let a = window.CONFIG.anoInicio; a <= window.CONFIG.anoFim; a++) {
+                if(!window.bancoAuditoria[cnpj][a]) {
+                    let infoExemplo = Object.values(window.bancoAuditoria[cnpj]).find(x => x && x.raw) || Object.values(window.bancoAuditoria[cnpj])[0];
+                    window.bancoAuditoria[cnpj][a] = { 
+                        ano: a.toString(), cnpj: cnpj, nome: empresa.nome, pdfLido: false, justificativa: null,
+                        regime: window.calcRegimeAno(infoExemplo.raw, a),
+                        situacao: infoExemplo.situacao, abertura: infoExemplo.abertura, baixa: infoExemplo.baixa, raw: infoExemplo.raw
+                    };
+                }
+            }
+
             let anos = Object.keys(window.bancoAuditoria[cnpj]).sort();
             
             for (let i = 0; i < anos.length; i++) {
                 let anoAtual = anos[i];
                 let declAtual = window.bancoAuditoria[cnpj][anoAtual];
-                totalDeclaracoes++; 
                 
-                let statusHTML = `✔ Inicial (S/ Ano Anterior)`;
-                let statusCSS = `color: #33b5e5; font-weight: bold;`;
-                let temErro = false;
-                
-                if (i > 0) {
-                    let anoAnterior = anos[i - 1];
-                    let declAnt = window.bancoAuditoria[cnpj][anoAnterior];
-                    let erros = [];
-
-                    if (declAtual.cxIniNum !== declAnt.cxFimNum) erros.push(`Caixa Inicial difere de ${anoAnterior}`);
-                    if (declAtual.empIniNum !== declAnt.empFimNum) erros.push(`Empregados difere de ${anoAnterior}`);
-
-                    if (erros.length > 0) {
-                        temErro = true;
-                        statusHTML = `⚠️ ERRO: ${erros.join(" | ")}`;
-                        statusCSS = `color: var(--danger-red); font-weight: bold;`;
-                        countDivergencias++; 
-                    } else {
-                        statusHTML = `✔ Conferido (Bate com ${anoAnterior})`;
-                        statusCSS = `color: var(--success-green); font-weight: bold;`;
-                        countCruzamentosOk++; 
-                    }
-                }
-
-                if (declAtual.retificar) countRetificar++; 
-
                 let badges = '';
                 if (declAtual.regime) {
                     let color = declAtual.regime === 'MEI' ? '#6f42c1' : (declAtual.regime.includes('Simples') ? '#00C851' : '#17a2b8');
@@ -860,121 +1047,176 @@
                     badges += `<span class="badge" style="background: ${color}20; border: 1px solid ${color}; color: ${color};">${declAtual.situacao.toUpperCase()}</span>`;
                 }
 
-                let btnArquivoHTML = '';
-                let indexMemoria = window.arquivosEmMemoria.findIndex(a => a.cnpj === declAtual.cnpj && a.ano === declAtual.ano);
-                if (indexMemoria !== -1) {
-                    btnArquivoHTML = `<button class="btn-action" onclick="window.baixarArquivoUnico(${indexMemoria})" style="border-color: var(--info-blue); color: var(--info-blue);" title="Ver Arquivo Importado">📄 PDF</button>`;
+                let infoEmpresaHTML = `
+                    <span class="empresa-nome">${declAtual.nome}</span>
+                    <span class="empresa-cnpj">${declAtual.cnpj}</span>
+                    <div style="margin-top: 4px; font-size: 11px; color: var(--info-blue);">
+                        ${declAtual.abertura ? `Abertura: ${declAtual.abertura}` : ''}
+                        ${declAtual.baixa ? `<br>Baixa RFB: ${declAtual.baixa.split('-').reverse().join('/')}` : ''}
+                    </div>
+                    ${badges}
+                `;
+
+                if(!declAtual.pdfLido) {
+                    const tr = document.createElement('tr');
+                    tr.className = 'linha-pendente';
+                    
+                    let acaoHtml = '';
+                    if(declAtual.justificativa) {
+                        let corJust = "#aa66cc";
+                        if(declAtual.justificativa === 'Não Aberta' || declAtual.justificativa === 'Saiu/Transferida') corJust = "#888";
+                        if(declAtual.justificativa === 'Não Cliente') corJust = "var(--danger-red)";
+                        if(declAtual.justificativa === 'Lucro') corJust = "var(--info-blue)";
+                        
+                        acaoHtml = `<div style="text-align:center;">
+                                        <span style="color:${corJust}; font-weight:bold; font-size:14px; display:block; margin-bottom:5px;">[ ${declAtual.justificativa.toUpperCase()} ]</span>
+                                        <button class="btn-action" onclick="window.setJustificativa('${cnpj}', '${anoAtual}', null)" style="font-size:10px;">Desfazer</button>
+                                    </div>`;
+                    } else {
+                        acaoHtml = `
+                            <div style="text-align:center; padding: 5px;">
+                                <span style="color:#777; font-size:11px; display:block; margin-bottom:6px;">Por que não tem DEFIS?</span>
+                                <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">
+                                    <button class="btn-action" onclick="window.setJustificativa('${cnpj}', '${anoAtual}', 'MEI')">MEI</button>
+                                    <button class="btn-action" onclick="window.setJustificativa('${cnpj}', '${anoAtual}', 'Lucro')">Lucro</button>
+                                    <button class="btn-action" onclick="window.setJustificativa('${cnpj}', '${anoAtual}', 'Não Cliente')">Não Cliente</button>
+                                    <button class="btn-action" onclick="window.setJustificativa('${cnpj}', '${anoAtual}', 'Não Aberta')">Não Aberta</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    tr.innerHTML = `
+                        <td>${infoEmpresaHTML}</td>
+                        <td><b>${declAtual.ano}</b></td>
+                        <td colspan="7" style="text-align:center; vertical-align:middle;">${acaoHtml}</td>
+                        <td style="text-align:center;"><span style="color:#555;">Pendente</span></td>
+                        <td>-</td>
+                    `;
+                    tbody.appendChild(tr);
+                    continue;
                 }
 
-                const tr = document.createElement('tr');
+                countPdfLido++; 
+                let statusHTML = `✔ OK (Verificação Base)`;
+                let statusCSS = `color: #33b5e5; font-weight: bold;`;
+                let temErro = false;
+                let erros = [];
                 
+                if (i > 0) {
+                    let anoAnterior = anos[i - 1];
+                    let declAnt = window.bancoAuditoria[cnpj][anoAnterior];
+
+                    if (declAnt && declAnt.pdfLido) {
+                        if (declAtual.cxIniNum !== declAnt.cxFimNum) erros.push(`Caixa Ini (${declAtual.ano}) $\\neq$ Caixa Fim (${anoAnterior})`);
+                        if (declAtual.empIniNum !== declAnt.empFimNum) erros.push(`Empregados difere de ${anoAnterior}`);
+                    }
+                }
+
+                if (declAtual.baixa && declAtual.baixa.startsWith(declAtual.ano)) {
+                    if (!declAtual.isExtincao) {
+                        erros.push(`Baixada na RFB em ${declAtual.baixa.split('-').reverse().join('/')}, mas DEFIS não é de Extinção`);
+                    } else {
+                        statusHTML += `<br><span style="color:var(--purple);font-size:11px;">(Extinção Validada)</span>`;
+                    }
+                } else if (declAtual.isExtincao) {
+                     erros.push(`DEFIS de Extinção (${declAtual.dataExtincao}), mas API não confirma baixa neste ano`);
+                }
+
+                if (erros.length > 0) {
+                    temErro = true;
+                    statusHTML = `⚠️ ERRO:<br><span style="font-size:12px; font-weight:normal;">${erros.join("<br>")}</span>`;
+                    statusCSS = `color: var(--danger-red); font-weight: bold;`;
+                    countErro++; 
+                } else {
+                    statusHTML = `✔ Conformidade Validada`;
+                    statusCSS = `color: var(--success-green); font-weight: bold;`;
+                    countOk++; 
+                }
+
+                if (declAtual.retificar) countRetificar++; 
+                let tipoLabel = declAtual.tipo === 'Retificadora' ? `<span style="color:var(--warning-yellow); font-weight:bold;">Retificadora</span>` : `Original`;
+
+                const tr = document.createElement('tr');
                 if (declAtual.retificar) tr.className = 'linha-retificar';
                 else if (temErro) tr.className = 'linha-erro';
 
                 let btnRetificarTexto = declAtual.retificar ? "Desmarcar Retificação" : "Sinalizar Retificação";
-                
-                let isNaoIdentificada = declAtual.nome.includes("NÃO IDENTIFICADA") || declAtual.nome === "EMPRESA";
-                let editableAttr = isNaoIdentificada ? `contenteditable="true" style="border-bottom: 1px dashed var(--warning-yellow); cursor: text; outline: none; background: rgba(255,187,51,0.1); padding: 0 4px; border-radius: 4px;" title="Clique para digitar o nome da empresa" onfocus="if(this.innerText.includes('NÃO IDENTIFICADA') || this.innerText === 'EMPRESA') this.innerText='';" onblur="window.atualizarNomeEmpresa('${declAtual.cnpj}', this.innerText)" onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }"` : ``;
 
                 tr.innerHTML = `
-                    <td>
-                        <span class="empresa-nome" ${editableAttr}>${declAtual.nome}</span>
-                        <span class="empresa-cnpj">${declAtual.cnpj}</span>
-                        <button class="btn-copy" onclick="window.copiarCNPJLimpo('${declAtual.cnpj}')" title="Copiar CNPJ">📋</button>
-                        <br>${badges}
-                    </td>
+                    <td>${infoEmpresaHTML}</td>
                     <td><b>${declAtual.ano}</b></td>
-                    <td>${declAtual.tipo}</td>
+                    <td>${tipoLabel}</td>
                     <td>R$ ${declAtual.cxIniStr}</td>
                     <td>R$ ${declAtual.cxFimStr}</td>
                     <td>${declAtual.empIniStr}</td>
                     <td>${declAtual.empFimStr}</td>
                     <td>R$ ${declAtual.rendIsentos}</td>
                     <td>R$ ${declAtual.rendTrib}</td>
-                    <td>R$ ${declAtual.estIni}</td>
-                    <td>R$ ${declAtual.estFim}</td>
-                    <td>R$ ${declAtual.aqInternas}</td>
-                    <td>R$ ${declAtual.entradas}</td>
-                    <td>R$ ${declAtual.despesas}</td>
                     <td><span style="${statusCSS}">${statusHTML}</span></td>
                     <td>
-                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                            ${btnArquivoHTML}
-                            <button class="btn-action" onclick="window.toggleRetificar('${declAtual.cnpj}', '${declAtual.ano}')" style="border-color: var(--warning-yellow); color: var(--warning-yellow); font-weight: bold;">${btnRetificarTexto}</button>
-                        </div>
+                        <button class="btn-action" onclick="window.toggleRetificar('${declAtual.cnpj}', '${declAtual.ano}')" style="border-color: var(--warning-yellow); color: var(--warning-yellow);">${btnRetificarTexto}</button>
                     </td>
                 `;
                 tbody.appendChild(tr); 
             }
         }
         
-        document.getElementById('dash-total').innerText = totalDeclaracoes;
-        document.getElementById('dash-ok').innerText = countCruzamentosOk;
-        document.getElementById('dash-erro').innerText = countDivergencias;
+        document.getElementById('dash-total').innerText = countPdfLido;
+        document.getElementById('dash-ok').innerText = countOk;
+        document.getElementById('dash-erro').innerText = countErro;
         document.getElementById('dash-retificar').innerText = countRetificar;
 
         window.atualizarOpcoesDosFiltros('tabelaAuditoria');
-        window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria');
     }
 
     window.toggleRetificar = function(cnpj, ano) {
         if(window.bancoAuditoria[cnpj] && window.bancoAuditoria[cnpj][ano]) {
-            const estadoAnterior = window.bancoAuditoria[cnpj][ano].retificar;
-            window.bancoAuditoria[cnpj][ano].retificar = !estadoAnterior;
+            window.bancoAuditoria[cnpj][ano].retificar = !window.bancoAuditoria[cnpj][ano].retificar;
             window.recalcularAuditoria();
             window.salvarDadosFirebase();
         }
     }
 
     window.apagarAuditoria = function() {
-        if(confirm("ATENÇÃO: Tem certeza que deseja apagar todo o histórico de Auditoria?")) {
+        if(confirm("ATENÇÃO: Apagar a auditoria limpará os dados extraídos dos PDFs. Tem certeza?")) {
             window.bancoAuditoria = {};
+            window.arquivosEmMemoria = [];
             window.recalcularAuditoria();
             window.salvarDadosFirebase();
         }
     }
 
     // ==========================================
-    // AUTO BAIXA CONTROLE
+    // EXPORTAÇÃO (HISTÓRICO COM PLANILHAS SALVAS)
     // ==========================================
-    window.tentarAutoBaixa = function(cnpjImportado, anoImportado, nomeImportado, regime, situacao) {
-        const anoSelecionado = document.getElementById('selectAnoControle').value;
-        if (anoImportado !== anoSelecionado) return;
-
-        let indexExistente = window.bancoControle.findIndex(e => e.cnpj === cnpjImportado && e.ano === anoImportado);
+    window.baixarArquivoDoHistorico = function(index) {
+        const log = window.bancoHistorico[index];
+        if(!log || !log.csvData) return alert("Dados do CSV não encontrados.");
         
-        if (indexExistente !== -1) {
-            let item = window.bancoControle[indexExistente];
-            item.nome = nomeImportado;
-            item.regime = regime || item.regime;
-            item.situacao = situacao || item.situacao;
-            
-            if (item.status.includes('Pendente')) {
-                const agora = new Date();
-                item.status = "Entregue (Auto)";
-                item.statusCor = "#00C851";
-                item.dataHoraAcao = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
-            }
-        } else {
-            const agora = new Date();
-            window.bancoControle.push({
-                ano: anoImportado,
-                nome: nomeImportado.toUpperCase(),
-                cnpj: cnpjImportado,
-                status: "Entregue (Auto)",
-                statusCor: "#00C851",
-                dataHoraAcao: `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`,
-                regime: regime,
-                situacao: situacao
-            });
-        }
-        window.renderizarTabelaControle();
+        const csvFile = new Blob(["\ufeff" + log.csvData], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.download = `${log.nomeArquivo}.csv`;
+        link.href = window.URL.createObjectURL(csvFile);
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
-    // ==========================================
-    // FILTROS & EXCEL EXATAMENTE COMO A TELA
-    // ==========================================
-    window.exportarCSV = function(idTabela, nomeArquivo) {
+    window.renderizarHistorico = function() {
+        const tbody = document.getElementById('corpoHistorico');
+        tbody.innerHTML = '';
+        window.bancoHistorico.forEach((log, index) => {
+            const tr = document.createElement('tr');
+            let botaoDownload = log.csvData ? `<button class="btn-primary" onclick="window.baixarArquivoDoHistorico(${index})" style="background-color: var(--info-blue); color: black; padding: 6px 12px;">📥 Baixar Novamente</button>` : `<span style="color:#666">N/A</span>`;
+            
+            tr.innerHTML = `<td>${log.data}</td><td><b>${log.modulo}</b></td><td>${log.detalhes}</td><td style="text-align: center;">${botaoDownload}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.exportarParaCSV = function(idTabela, nomeArquivoBase, descricaoModulo) {
         const tabela = document.getElementById(idTabela);
         let csv = [];
         const linhas = tabela.querySelectorAll("tr");
@@ -987,7 +1229,7 @@
             
             for (let j = 0; j < colunas.length; j++) {
                 let isActionsColumn = false;
-                if (colunas[j].tagName === 'TH' && (colunas[j].innerText.includes('Ações'))) isActionsColumn = true;
+                if (colunas[j].tagName === 'TH' && (colunas[j].innerText.includes('Ações') || colunas[j].innerText.includes('Arquivos'))) isActionsColumn = true;
                 if (colunas[j].tagName === 'TD' && !colunas[j].querySelector('.empresa-nome') && colunas[j].querySelector('.btn-action')) isActionsColumn = true;
                 
                 if (isActionsColumn) continue;
@@ -995,9 +1237,7 @@
                 let clonado = colunas[j].cloneNode(true);
                 if (clonado.querySelector('select')) clonado.querySelector('select').remove();
                 clonado.querySelectorAll('.btn-copy, .btn-action').forEach(b => b.remove());
-                clonado.querySelectorAll('.badge').forEach(b => {
-                    b.innerText = ` [${b.innerText}] `;
-                });
+                clonado.querySelectorAll('.badge').forEach(b => { b.innerText = ` [${b.innerText}] `; });
 
                 let texto = clonado.innerText.replace(/(\r\n|\n|\r)/gm, " - ").replace(/\s+/g, " ").trim();
                 linhaArray.push(`"${texto.replace(/"/g, '""')}"`);
@@ -1005,19 +1245,75 @@
             if(linhaArray.length > 0) csv.push(linhaArray.join(";"));
         }
         
-        const csvFile = new Blob(["\ufeff" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const csvStringFinal = csv.join("\n");
+        const nomeArquivoFinal = `${nomeArquivoBase}_${new Date().toISOString().split('T')[0]}`;
+        
+        // Baixa na hora
+        const csvFile = new Blob(["\ufeff" + csvStringFinal], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
-        link.download = `${nomeArquivo}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.download = `${nomeArquivoFinal}.csv`;
         link.href = window.URL.createObjectURL(csvFile);
         link.style.display = "none";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.registrarHistorico("Exportação Excel", `Tabela [${idTabela}] exportada com sucesso.`);
+        
+        // Registra no histórico COM o conteudo
+        const agora = new Date();
+        const dataStr = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        
+        window.bancoHistorico.unshift({ 
+            data: dataStr, 
+            modulo: descricaoModulo, 
+            detalhes: `Tabela [${idTabela}] gerada com ${linhas.length - 1} registros.`,
+            csvData: csvStringFinal,
+            nomeArquivo: nomeArquivoFinal
+        }); 
+        
+        // Limita a 20 pra nao estourar a memoria do Firebase (Documentos max 1MB)
+        if(window.bancoHistorico.length > 20) window.bancoHistorico.pop();
+        
+        window.renderizarHistorico();
+        window.salvarDadosFirebase();
+    }
+
+    // ==========================================
+    // JSZIP (BAIXAR LOTE) E FILTROS 
+    // ==========================================
+    window.baixarLotePDFs = async function() {
+        if (window.arquivosEmMemoria.length === 0) return alert("Nenhum PDF na memória.");
+        window.mostrarLoading("Compactando PDFs...");
+        
+        const zip = new JSZip();
+        window.arquivosEmMemoria.forEach((arq) => {
+            const nomeL = arq.nome.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
+            const cnpjL = arq.cnpj.replace(/\D/g, "");
+            const suffix = arq.tipo === 'Retificadora' ? 'RETIF' : 'ORIGINAL';
+            const fileName = `${nomeL}_${cnpjL}_${arq.ano}_${suffix}.pdf`;
+            zip.file(fileName, arq.file);
+        });
+
+        zip.generateAsync({type:"blob"}).then(function(content) {
+            window.esconderLoading();
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(content);
+            link.download = `Lote_DEFIS_${new Date().getTime()}.zip`;
+            link.click();
+        });
+    }
+
+    window.baixarArquivoUnico = function(indexMemoria) {
+        const arq = window.arquivosEmMemoria[indexMemoria];
+        if(!arq) return;
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(arq.file);
+        link.download = `${arq.file.name.replace('.pdf', '')}_(${arq.tipo}).pdf`;
+        link.click();
     }
 
     window.atualizarOpcoesDosFiltros = function(tableId) {
         const table = document.getElementById(tableId);
+        if(!table) return;
         const theadSelects = table.querySelectorAll('thead .col-filter');
         const trs = table.querySelectorAll('tbody tr');
 
@@ -1026,11 +1322,12 @@
             let valoresUnicos = new Set();
             trs.forEach(tr => {
                 const td = tr.cells[index];
-                if (td) {
+                if (td && tr.style.display !== 'none') {
                     let clonado = td.cloneNode(true);
                     clonado.querySelectorAll('.badge, .btn-copy, .btn-action').forEach(b => b.remove());
+                    clonado.querySelectorAll('div[style*="font-size: 11px"]').forEach(d => d.remove());
                     const textoLimpo = clonado.innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/\s+/g, " ").trim();
-                    if (textoLimpo !== "" && td.id !== 'acoes') valoresUnicos.add(textoLimpo);
+                    if (textoLimpo !== "") valoresUnicos.add(textoLimpo);
                 }
             });
             select.innerHTML = '<option value="">(Todos)</option>';
@@ -1063,6 +1360,7 @@
                         if (td) {
                             let clonado = td.cloneNode(true);
                             clonado.querySelectorAll('.badge, .btn-copy, .btn-action').forEach(b => b.remove());
+                            clonado.querySelectorAll('div[style*="font-size: 11px"]').forEach(d => d.remove());
                             const tdText = clonado.innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/\s+/g, " ").trim().toUpperCase();
                             if (tdText !== filterValue) showRow = false;
                         }
