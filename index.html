@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditor DEFIS Avançado v2.0</title>
+    <title>Auditor DEFIS Avançado v2.1</title>
     <!-- BIBLIOTECAS: PDF.JS (Ler PDF) e JSZip (Baixar em Lote) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
@@ -201,7 +201,7 @@
                 <button class="btn-primary" onclick="document.getElementById('pdfInputGlobal').click()">Importar PDFs (DEFIS)</button>
                 <button class="btn-secondary" onclick="window.exportarParaCSV('tabelaAuditoria', 'Auditoria_DEFIS', 'Exportação de Auditoria Contínua')">Exportar Auditoria (.CSV)</button>
                 <button class="btn-secondary" onclick="window.apagarAuditoria()" style="background-color: var(--danger-red); color: white; border-color: var(--danger-red);">Apagar Todos os Dados</button>
-                <span id="loading-indicator-auditoria" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Salvando...</span>
+                <span id="loading-indicator-auditoria" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Salvando (Nuvem/Local)...</span>
             </div>
             <input type="text" id="filtroAuditoria" placeholder="🔍 Busca Geral (Digite CNPJ, Nome, Erro, Status...)..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaAuditoria', 'filtroAuditoria')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
         </div>
@@ -252,7 +252,7 @@
                 <button class="btn-primary" style="background-color: #00C851; color: white;" onclick="document.getElementById('pdfInputGlobal').click()">Importar DEFIS (Gera Baixa com Data Real)</button>
                 <button class="btn-secondary" onclick="window.exportarParaCSV('tabelaControle', 'Controle_Entregas_DEFIS', 'Exportação do Controle de Entregas')">Exportar Controle (.CSV)</button>
                 <button class="btn-secondary" onclick="window.baixarLotePDFs()" style="background-color: var(--info-blue); color: #000; font-weight: bold; border: none;">📦 Baixar Lote (PDFs)</button>
-                <span id="loading-indicator-controle" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Salvando...</span>
+                <span id="loading-indicator-controle" style="display: none; color: var(--primary-orange); font-weight: bold; font-size: 13px;">⏳ Salvando (Nuvem/Local)...</span>
             </div>
             <input type="text" id="filtroControle" placeholder="🔍 Busca Geral..." onkeyup="window.aplicarFiltrosGlobaisEColunas('tabelaControle', 'filtroControle')" style="width: 100%; margin-top: 15px; padding: 12px; border-radius: 6px; background: #111; color: white; border: 1px solid var(--border-gray); font-size: 14px;">
         </div>
@@ -359,6 +359,18 @@
                 </div>
             </div>
         </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-gray);">
+            <h2 style="font-size: 18px; color: var(--primary-orange); margin-bottom: 10px;">💾 Backup do Sistema (Especial para GitHub Pages)</h2>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">
+                Como você usa o sistema hospedado estaticamente (Ex: GitHub), seus dados ficam salvos automaticamente no <b>cache do seu navegador (IndexedDB)</b>. Se você precisar acessar de outro computador ou limpar os dados de navegação, use os botões abaixo para Exportar e Importar todo o seu trabalho.
+            </p>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="window.exportarBackup()" style="background: var(--info-blue); color: #000;">⬇️ Baixar Backup Completo (.json)</button>
+                <button class="btn-secondary" onclick="document.getElementById('inputBackup').click()">⬆️ Restaurar Backup</button>
+                <input type="file" id="inputBackup" accept=".json" style="display: none;" onchange="window.importarBackup(event)">
+            </div>
+        </div>
     </div>
 
 </div>
@@ -381,39 +393,109 @@
     let userId = null;
     let appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-    try {
-        if (typeof __firebase_config !== 'undefined') {
-            const firebaseConfig = JSON.parse(__firebase_config);
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            const initAuth = async () => {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token);
-                else await signInAnonymously(auth);
-            };
-            initAuth();
-
-            onAuthStateChanged(auth, async (user) => {
-                if (user) { userId = user.uid; await window.carregarDadosFirebase(); }
+    // INDEXED DB FALLBACK (Garante funcionamento offline ou quando o limite da nuvem estoura)
+    window.salvarDadosLocais = async function(dados) {
+        try {
+            const dbLocal = await new Promise((resolve, reject) => {
+                const req = indexedDB.open("DefisAuditorDB", 1);
+                req.onupgradeneeded = e => e.target.result.createObjectStore("store");
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror = e => reject(e.target.error);
             });
-        }
-    } catch(e) { console.error("Firebase init error:", e); }
+            const tx = dbLocal.transaction("store", "readwrite");
+            tx.objectStore("store").put(dados, "estado_geral");
+        } catch(e) { console.warn("Erro ao salvar localmente", e); }
+    };
 
-    window.salvarDadosFirebase = async function() {
-        if (!userId || !db) return;
+    window.carregarDadosLocais = async function() {
+        try {
+            const dbLocal = await new Promise((resolve, reject) => {
+                const req = indexedDB.open("DefisAuditorDB", 1);
+                req.onupgradeneeded = e => e.target.result.createObjectStore("store");
+                req.onsuccess = e => resolve(e.target.result);
+                req.onerror = e => reject(e.target.error);
+            });
+            const tx = dbLocal.transaction("store", "readonly");
+            const req = tx.objectStore("store").get("estado_geral");
+            req.onsuccess = () => {
+                if(req.result) window.aplicarDados(req.result);
+            };
+        } catch(e) { console.warn("Nenhum dado local encontrado", e); }
+    };
+
+    window.aplicarDados = function(data) {
+        if(data.config) {
+            window.CONFIG = data.config;
+            document.getElementById('anoInicioAudit').value = window.CONFIG.anoInicio;
+            document.getElementById('anoFimAudit').value = window.CONFIG.anoFim;
+        }
+        window.bancoAuditoria = data.auditoria || {};
+        window.bancoControle = data.controle || [];
+        window.bancoHistorico = data.historico || [];
+        window.recalcularAuditoria();
+        window.renderizarTabelaControle();
+        window.renderizarHistorico();
+    };
+
+    // INICIALIZAÇÃO UNIVERSAL
+    const initApp = async () => {
+        if (typeof __firebase_config !== 'undefined') {
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+                await initAuth();
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) { 
+                        userId = user.uid; 
+                        await window.carregarDadosFirebase(); 
+                    }
+                });
+            } catch(e) { 
+                console.error("Firebase indisponível, ativando modo offline:", e);
+                await window.carregarDadosLocais();
+            }
+        } else {
+            // Se o usuário baixou o HTML para rodar localmente no PC ou GitHub
+            await window.carregarDadosLocais();
+        }
+    };
+    initApp();
+
+    window.salvarDados = async function() {
         document.getElementById('loading-indicator-controle').style.display = 'inline-block';
         document.getElementById('loading-indicator-auditoria').style.display = 'inline-block';
         
-        try {
-            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'defis_data', 'estado_geral');
-            await setDoc(docRef, {
-                config: window.CONFIG,
-                auditoria: window.bancoAuditoria,
-                controle: window.bancoControle,
-                historico: window.bancoHistorico
-            });
-        } catch(e) { console.error("Erro ao salvar:", e); }
+        const dadosParaSalvar = {
+            config: window.CONFIG,
+            auditoria: window.bancoAuditoria,
+            controle: window.bancoControle,
+            historico: window.bancoHistorico
+        };
+
+        let salvoNaNuvem = false;
+        if (userId && db) {
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'defis_data', 'estado_geral');
+                await setDoc(docRef, dadosParaSalvar);
+                salvoNaNuvem = true;
+            } catch(e) { 
+                console.error("Erro na nuvem. Salvando no PC local...", e); 
+            }
+        } 
+        
+        // Sempre salva localmente também como um backup de segurança blindado
+        await window.salvarDadosLocais(dadosParaSalvar);
         
         setTimeout(() => {
             document.getElementById('loading-indicator-controle').style.display = 'none';
@@ -427,20 +509,14 @@
             const docRef = doc(db, 'artifacts', appId, 'users', userId, 'defis_data', 'estado_geral');
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
-                const data = docSnap.data();
-                if(data.config) {
-                    window.CONFIG = data.config;
-                    document.getElementById('anoInicioAudit').value = window.CONFIG.anoInicio;
-                    document.getElementById('anoFimAudit').value = window.CONFIG.anoFim;
-                }
-                window.bancoAuditoria = data.auditoria || {};
-                window.bancoControle = data.controle || [];
-                window.bancoHistorico = data.historico || [];
-                window.recalcularAuditoria();
-                window.renderizarTabelaControle();
-                window.renderizarHistorico();
+                window.aplicarDados(docSnap.data());
+            } else {
+                await window.carregarDadosLocais();
             }
-        } catch(e) { console.error("Erro ao carregar:", e); }
+        } catch(e) { 
+            console.error("Erro ao carregar da nuvem. Puxando base local:", e);
+            await window.carregarDadosLocais();
+        }
     }
 
     window.mostrarLoading = function(texto) {
@@ -452,7 +528,7 @@
     }
 
     // ==========================================
-    // UTILS
+    // UTILS E NAVEGAÇÃO
     // ==========================================
     window.formatarCNPJ = function(cnpj) {
         let n = String(cnpj).replace(/\D/g, '');
@@ -462,7 +538,7 @@
 
     window.copiarCNPJLimpo = function(cnpjStr) {
         const limpo = String(cnpjStr).replace(/\D/g, '');
-        document.execCommand('copy'); // Fallback robusto
+        document.execCommand('copy');
         navigator.clipboard.writeText(limpo).catch(()=>{});
     }
 
@@ -470,7 +546,10 @@
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(idAba).classList.add('active');
-        event.currentTarget.classList.add('active');
+        
+        // Ativa o botão correspondente no menu visualmente (para cliques via atalho)
+        const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(idAba));
+        if(btn) btn.classList.add('active');
     }
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -515,12 +594,20 @@
                     dataAberturaFormatada = data.data_inicio_atividade.split('-').reverse().join('/');
                 }
 
+                // Extraímos APENAS o estritamente necessário para manter o DB limpo
                 return { 
                     nome: data.razao_social || data.nome_fantasia || "", 
                     situacao: situacao,
                     dataAbertura: dataAberturaFormatada,
                     dataBaixaApi: dataBaixa, 
-                    raw: data 
+                    raw: {
+                        opcao_pelo_mei: data.opcao_pelo_mei,
+                        data_opcao_pelo_mei: data.data_opcao_pelo_mei,
+                        data_exclusao_do_mei: data.data_exclusao_do_mei,
+                        opcao_pelo_simples: data.opcao_pelo_simples,
+                        data_opcao_pelo_simples: data.data_opcao_pelo_simples,
+                        data_exclusao_do_simples: data.data_exclusao_do_simples
+                    } 
                 };
             }
         } catch (e) { console.warn("Erro API Receita", e); }
@@ -528,8 +615,24 @@
     }
 
     // ==========================================
-    // ADMINISTRAÇÃO MANUAL
+    // ADMINISTRAÇÃO MANUAL & ATALHOS 
     // ==========================================
+    window.abrirAdminComDados = function(cnpj, ano) {
+        window.abrirAba('aba-admin');
+        window.popularSelectsAdmin();
+        const selectCnpj = document.getElementById('adminSelectCnpj');
+        
+        // Timeout pequeno para garantir o rendering visual
+        setTimeout(() => {
+            selectCnpj.value = cnpj;
+            window.carregarAnosAdmin();
+            const selectAno = document.getElementById('adminSelectAno');
+            selectAno.value = ano;
+            window.carregarDadosParaEdicaoAdmin();
+            selectCnpj.focus();
+        }, 50);
+    }
+
     window.popularSelectsAdmin = function() {
         const selectCnpj = document.getElementById('adminSelectCnpj');
         selectCnpj.innerHTML = '<option value="">-- Selecione uma Empresa --</option>';
@@ -605,7 +708,6 @@
         const cxIniNovo = document.getElementById('adminInputCxIni').value;
         const cxFimNovo = document.getElementById('adminInputCxFim').value;
 
-        // Atualiza Auditoria
         if(window.bancoAuditoria[cnpj][ano]) {
             window.bancoAuditoria[cnpj][ano].regime = regimeNovo;
             window.bancoAuditoria[cnpj][ano].nome = nomeNovo;
@@ -622,7 +724,6 @@
             }
         }
 
-        // Atualiza Controle
         let idxControle = window.bancoControle.findIndex(e => e.cnpj === cnpj && e.ano === ano);
         if(idxControle !== -1) {
             window.bancoControle[idxControle].regime = regimeNovo;
@@ -633,8 +734,46 @@
         alert("Dados atualizados com sucesso!");
         window.recalcularAuditoria();
         window.renderizarTabelaControle();
-        window.salvarDadosFirebase();
+        window.salvarDados();
     }
+
+
+    // ==========================================
+    // BACKUP E RESTAURAÇÃO (.JSON)
+    // ==========================================
+    window.exportarBackup = function() {
+        const data = {
+            config: window.CONFIG,
+            auditoria: window.bancoAuditoria,
+            controle: window.bancoControle,
+            historico: window.bancoHistorico
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Backup_DefisManager_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+    };
+
+    window.importarBackup = function(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                window.aplicarDados(data);
+                await window.salvarDados();
+                alert("Backup restaurado com sucesso! Seus dados estão salvos no navegador.");
+                window.abrirAba('aba-controle');
+            } catch(err) {
+                alert("Arquivo de backup inválido ou corrompido.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // reseta o input file
+    };
 
 
     // ==========================================
@@ -710,7 +849,7 @@
         window.esconderLoading();
         window.renderizarTabelaControle();
         window.recalcularAuditoria();
-        window.salvarDadosFirebase();
+        window.salvarDados();
     }
 
     // ==========================================
@@ -749,7 +888,9 @@
             });
 
             tr.innerHTML = `
-                <td style="text-align: center;"><b>${item.ano}</b></td>
+                <td style="text-align: center;">
+                    <b>${item.ano}</b>
+                </td>
                 <td>
                     <span class="empresa-nome">${item.nome}</span>
                     <span class="empresa-cnpj">${item.cnpj}</span>
@@ -767,6 +908,7 @@
                         <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Baixada', '#007bff')">Baixada</button>
                         <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Saiu da Base', '#ff8800')">Saiu da Base</button>
                         <button class="btn-action" onclick="window.executarAcao(${indexOriginal}, 'Sem Resp.', '#888')">Sem Resp.</button>
+                        <button class="btn-action" onclick="window.abrirAdminComDados('${item.cnpj}', '${item.ano}')" style="color: var(--primary-orange); border-color: var(--primary-orange);" title="Ajuste Manual e Regimes">⚙️ Editar</button>
                         <button class="btn-action" onclick="window.deletarLinhaControle(${indexOriginal})" style="color: var(--danger-red); border-color: var(--danger-red);">Excluir</button>
                     </div>
                 </td>
@@ -782,7 +924,6 @@
         const agora = new Date();
         item.status = statusNome;
         item.statusCor = cor;
-        // Se veio a data do PDF usa ela, senao usa a data do clique
         if (dataRealPdf) {
             item.dataHoraAcao = `${dataRealPdf} (Extraído do PDF)`;
         } else {
@@ -790,14 +931,14 @@
         }
         
         window.renderizarTabelaControle();
-        window.salvarDadosFirebase();
+        window.salvarDados();
     }
 
     window.deletarLinhaControle = function(index) {
         if(confirm("Deseja excluir esta linha de controle? (Os dados da auditoria não serão apagados)")) {
             window.bancoControle.splice(index, 1);
             window.renderizarTabelaControle();
-            window.salvarDadosFirebase();
+            window.salvarDados();
         }
     }
 
@@ -841,7 +982,7 @@
         
         window.esconderLoading();
         event.target.value = ''; 
-        window.salvarDadosFirebase(); 
+        window.salvarDados(); 
     }
 
     window.extrairEProcessarDEFIS = async function(texto) {
@@ -862,7 +1003,6 @@
         const tipoMatch = textoLimpo.match(/Declaração\s+(Original|Retificadora)/i);
         const tipo = tipoMatch ? tipoMatch[1] : "Original";
 
-        // EXTRAÇÃO DA DATA REAL DE ENTREGA DO PDF
         const regexDataEntrega = /Transmissão:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2}:\d{2})/i;
         const regexDataEntregaAlt = /Recepção:\s*(\d{2}\/\d{2}\/\d{4}\s*\d{2}:\d{2}:\d{2})/i;
         const matchDataEnt = textoLimpo.match(regexDataEntrega) || textoLimpo.match(regexDataEntregaAlt);
@@ -962,7 +1102,6 @@
             item.regime = regime || item.regime;
             item.situacao = situacao || item.situacao;
             if (item.status.includes('Pendente')) {
-                // Passa a data real extraida do PDF para a função de ação
                 window.executarAcao(indexExistente, "Entregue (Auto PDF)", "#00C851", dataRealEntrega);
             }
         }
@@ -975,7 +1114,7 @@
         if(window.bancoAuditoria[cnpj] && window.bancoAuditoria[cnpj][ano]) {
             window.bancoAuditoria[cnpj][ano].justificativa = motivo;
             window.recalcularAuditoria();
-            window.salvarDadosFirebase();
+            window.salvarDados();
         }
     }
     
@@ -1002,7 +1141,7 @@
             }
         }
         window.recalcularAuditoria();
-        window.salvarDadosFirebase();
+        window.salvarDados();
     }
 
     window.recalcularAuditoria = function() {
@@ -1091,7 +1230,9 @@
                         <td><b>${declAtual.ano}</b></td>
                         <td colspan="7" style="text-align:center; vertical-align:middle;">${acaoHtml}</td>
                         <td style="text-align:center;"><span style="color:#555;">Pendente</span></td>
-                        <td>-</td>
+                        <td>
+                            <button class="btn-action" onclick="window.abrirAdminComDados('${declAtual.cnpj}', '${declAtual.ano}')" style="color: var(--primary-orange); border-color: var(--primary-orange);" title="Ajuste Manual e Regimes">⚙️ Ajustar</button>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                     continue;
@@ -1155,7 +1296,8 @@
                     <td>R$ ${declAtual.rendTrib}</td>
                     <td><span style="${statusCSS}">${statusHTML}</span></td>
                     <td>
-                        <button class="btn-action" onclick="window.toggleRetificar('${declAtual.cnpj}', '${declAtual.ano}')" style="border-color: var(--warning-yellow); color: var(--warning-yellow);">${btnRetificarTexto}</button>
+                        <button class="btn-action" onclick="window.toggleRetificar('${declAtual.cnpj}', '${declAtual.ano}')" style="border-color: var(--warning-yellow); color: var(--warning-yellow); margin-bottom: 5px; width: 100%;">${btnRetificarTexto}</button>
+                        <button class="btn-action" onclick="window.abrirAdminComDados('${declAtual.cnpj}', '${declAtual.ano}')" style="color: var(--primary-orange); border-color: var(--primary-orange); width: 100%;" title="Ajuste Manual e Regimes">⚙️ Ajustar Valores/Regime</button>
                     </td>
                 `;
                 tbody.appendChild(tr); 
@@ -1174,7 +1316,7 @@
         if(window.bancoAuditoria[cnpj] && window.bancoAuditoria[cnpj][ano]) {
             window.bancoAuditoria[cnpj][ano].retificar = !window.bancoAuditoria[cnpj][ano].retificar;
             window.recalcularAuditoria();
-            window.salvarDadosFirebase();
+            window.salvarDados();
         }
     }
 
@@ -1183,7 +1325,7 @@
             window.bancoAuditoria = {};
             window.arquivosEmMemoria = [];
             window.recalcularAuditoria();
-            window.salvarDadosFirebase();
+            window.salvarDados();
         }
     }
 
@@ -1258,7 +1400,6 @@
         link.click();
         document.body.removeChild(link);
         
-        // Registra no histórico COM o conteudo
         const agora = new Date();
         const dataStr = `${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
         
@@ -1270,11 +1411,11 @@
             nomeArquivo: nomeArquivoFinal
         }); 
         
-        // Limita a 20 pra nao estourar a memoria do Firebase (Documentos max 1MB)
-        if(window.bancoHistorico.length > 20) window.bancoHistorico.pop();
+        // Limita os CSVs salvos a 5 para poupar memória
+        if(window.bancoHistorico.length > 5) window.bancoHistorico.pop();
         
         window.renderizarHistorico();
-        window.salvarDadosFirebase();
+        window.salvarDados();
     }
 
     // ==========================================
